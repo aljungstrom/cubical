@@ -154,6 +154,10 @@ module _ (P : ∀ y → x ≡ y → Type ℓ') (d : P x refl) where
   JRefl : J refl ≡ d
   JRefl = transportRefl d
 
+module _ (P : ∀ y → y ≡ x → Type ℓ') (d : P x refl) where
+  Jright : (p : y ≡ x) → P y p
+  Jright p = transport (λ i → P (p (~ i)) λ j → p ((~ i) ∨ j)) d
+
 -- Contractibility of singletons
 
 singl : (a : A) → Type _

@@ -1,7 +1,6 @@
 {-# OPTIONS --cubical --safe #-}
 module Cubical.ZCohomology.Base where
 
-
 open import Cubical.Data.Int.Base
 open import Cubical.Data.Nat.Base
 open import Cubical.Data.NatMinusTwo.Base
@@ -20,7 +19,6 @@ private
     ℓ : Level
     A : Type ℓ
 
-
 --- Cohomology ---
 
 {- Types Kₙ from Brunerie 2016 -}
@@ -31,7 +29,6 @@ coHomK (suc n) = ∥ S₊ (suc n) ∥  (suc (ℕ→ℕ₋₂ n))
 {- Cohomology -}
 coHom : (n : ℕ) → Type ℓ → Type ℓ
 coHom n A = ∥ (A → coHomK n) ∥₀
-
 
 --- Reduced cohomology ---
 
