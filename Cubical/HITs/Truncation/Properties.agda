@@ -15,7 +15,7 @@ open import Cubical.Data.Empty
 open import Cubical.Data.Nat
 open import Cubical.Data.NatMinusOne  using (ℕ₋₁; neg1; suc; ℕ→ℕ₋₁) renaming (-1+_ to -1+₋₁_ ; 1+_ to 1+₋₁_)
 import Cubical.Data.NatMinusOne as ℕ₋₁
-open import Cubical.Data.NatMinusTwo 
+open import Cubical.Data.NatMinusTwo
 open import Cubical.HITs.Sn
 open import Cubical.HITs.Susp
 open import Cubical.HITs.Nullification
@@ -152,9 +152,6 @@ ind2 : {n : ℕ₋₂}
        B x y
 ind2 {n = n} hB g = ind (λ _ → isOfHLevelPi (2+ n) (λ _ → hB _ _)) λ a →
                     ind (λ _ → hB _ _) (λ b → g a b)
-
-
-
 
 ind3 : {n : ℕ₋₂}
        {B : (x y z : ∥ A ∥ n) → Type ℓ'}
