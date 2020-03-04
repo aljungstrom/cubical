@@ -178,6 +178,21 @@ isModalIsProp (TruncModality n) = isPropIsOfHLevel (2+ n)
 idemTrunc : (n : ℕ₋₂) → isOfHLevel (2+ n) A → A ≃ (∥ A ∥ n)
 idemTrunc n hA = ∣_∣ , isModalToIsEquiv (TruncModality n) hA
 
+-- universal property
+
+univTrunc : ∀ {ℓ} (n : ℕ₋₂) {B : HLevel ℓ (2+ n)} → (∥ A ∥ n → (fst B)) ≃ (A → (fst B))
+univTrunc neg2 {B , lev} = isoToEquiv
+                             (iso ((λ g a → g ∣ a ∣))
+                             ((ind (λ _ → lev)))
+                             ((λ b → refl))
+                             λ b → funExt λ x → sym ((snd lev) (ind (λ _ → lev) (λ a → b ∣ a ∣) x)) ∙ (snd lev) (b x)  )
+univTrunc (suc n) {B , lev} = isoToEquiv
+                               (iso
+                                 (λ g a → g ∣ a ∣)
+                                 (ind (λ _ → lev))
+                                 (λ b → refl)
+                                 λ b → funExt (ind (λ x → (isOfHLevelSuc (2+ (suc n)) lev) ((ind (λ _ → lev) (λ a → b ∣ a ∣) x)) (b x)) λ a → refl))
+
 -- equivalences to prop/set/groupoid truncations
 
 propTrunc≃Trunc-1 : ∥ A ∥₋₁ ≃ ∥ A ∥ -1

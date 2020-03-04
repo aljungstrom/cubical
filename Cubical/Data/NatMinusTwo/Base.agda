@@ -3,8 +3,10 @@ module Cubical.Data.NatMinusTwo.Base where
 
 open import Cubical.Core.Primitives
 open import Cubical.Data.Nat
+open import Cubical.Foundations.Prelude
 open import Cubical.Data.Bool
 open import Cubical.Data.Empty
+open import Cubical.Data.Unit
 
 import Cubical.Data.NatMinusOne as ℕ₋₁
 open import Cubical.Data.NatMinusOne using (ℕ₋₁; neg1; suc; ℕ→ℕ₋₁)
@@ -33,21 +35,43 @@ data ℕ₋₂ : Set where
 ℕ→ℕ₋₂ : ℕ → ℕ₋₂
 ℕ→ℕ₋₂ n = ℕ₋₁→ℕ₋₂ (ℕ→ℕ₋₁ n)
 
-_<₋₂_ : ℕ₋₂ → ℕ₋₂ → Bool
-neg2 <₋₂ m = true
-suc n <₋₂ neg2 = false
-suc n <₋₂ suc m = n <₋₂ m
-
 _+₋₂_ : ℕ₋₂ → ℕ₋₂ → ℕ₋₂
-neg2 +₋₂ m = m
-suc n +₋₂ neg2 = suc n
-suc n +₋₂ suc m = suc (suc ( n +₋₂ m ))
+neg2 +₋₂ neg2 = neg2
+neg2 +₋₂ suc neg2 = neg2
+neg2 +₋₂ suc (suc m) = m
+suc neg2 +₋₂ neg2 = neg2
+suc neg2 +₋₂ suc m = m
+suc (suc neg2) +₋₂ m = m
+suc (suc (suc n)) +₋₂ m = suc ((suc (suc n)) +₋₂ m )
 
 _-₋₂_ : ℕ₋₂ → ℕ₋₂ → ℕ₋₂
-neg2 -₋₂ m = neg2
-suc n -₋₂ neg2 = suc n
-suc n -₋₂ suc m = n -₋₂ m
+neg2 -₋₂ neg2 = suc (suc neg2)
+neg2 -₋₂ suc neg2 = suc neg2
+neg2 -₋₂ suc (suc n) = neg2
+suc neg2 -₋₂ neg2 = suc (suc (suc neg2))
+suc neg2 -₋₂ suc neg2 = suc (suc neg2)
+suc neg2 -₋₂ suc (suc neg2) = suc neg2
+suc neg2 -₋₂ suc (suc (suc n)) = neg2
+suc (suc neg2) -₋₂ neg2 = suc (suc (suc (suc neg2)))
+suc (suc neg2) -₋₂ suc neg2 = suc (suc (suc neg2))
+suc (suc neg2) -₋₂ suc (suc neg2) = suc (suc neg2)
+suc (suc neg2) -₋₂ suc (suc (suc neg2)) = suc neg2
+suc (suc neg2) -₋₂ suc (suc (suc (suc n))) = neg2
+suc (suc (suc k)) -₋₂ neg2 = suc (suc (suc (suc (suc k))))
+suc (suc (suc k)) -₋₂ suc neg2 = suc (suc (suc (suc k)))
+suc (suc (suc k)) -₋₂ suc (suc neg2) = suc (suc (suc k))
+suc (suc (suc k)) -₋₂ suc (suc (suc n)) = suc (suc k) -₋₂ (suc (suc n))
 
+pred₋₂ : ℕ₋₂ → ℕ₋₂
+pred₋₂ neg2 = neg2
+pred₋₂ (suc n) = n
+
+neg2≠suc : (n : ℕ₋₂) → neg2 ≡ suc n → ⊥
+neg2≠suc n id = transport (λ i → (cong (λ x → fun x) id) (~ i)) tt where
+
+  fun : ℕ₋₂ → Type₀
+  fun neg2 = ⊥
+  fun (suc n) = Unit
 
 -- Natural number and negative integer literals for ℕ₋₂
 

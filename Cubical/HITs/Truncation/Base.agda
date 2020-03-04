@@ -1,11 +1,13 @@
 {-# OPTIONS --cubical --safe #-}
 module Cubical.HITs.Truncation.Base where
 
+open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.NatMinusOne using (ℕ₋₁; neg1; suc)
 open import Cubical.Data.NatMinusTwo
 open import Cubical.HITs.Nullification
 open import Cubical.HITs.Sn
+open import Cubical.Data.Unit
 
 -- For the hub-and-spoke construction discussed in the HoTT book, which only works for n ≥ -1, see
 --  `HITs.Truncation.FromNegOne`. The definition of truncation here contains two more constructors
@@ -22,3 +24,12 @@ open import Cubical.HITs.Sn
 
 ∥_∥_ : ∀ {ℓ} → Type ℓ → ℕ₋₂ → Type ℓ
 ∥ A ∥ n = Null (S (1+ n)) A
+
+is-_-Connected : ∀{ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} (n : ℕ₋₂) (f : A → B) → Type (ℓ-max ℓ ℓ')
+is-_-Connected {B = B} n f = ((b : B) → isContr (∥ fiber f b ∥ n ))
+
+is-_-ConnectedType : ∀ {ℓ} (n : ℕ₋₂) (A : Type ℓ) → Type ℓ
+is- n -ConnectedType A = isContr (∥ A ∥ n)
+
+is-_-ConnectedType2 : ∀ {ℓ} (n : ℕ₋₂) (A : Type ℓ) → Type ℓ
+is- n -ConnectedType2 A = is- n -Connected (λ (x : A) → tt)
