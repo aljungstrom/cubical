@@ -8,8 +8,9 @@ open import Cubical.Data.Equality public
 open import Cubical.Data.Fin public
 open import Cubical.Data.Nat public
 open import Cubical.Data.Nat.Algebra public
-open import Cubical.Data.NatMinusOne hiding (1+_; -1+_) public
+open import Cubical.Data.NatMinusOne hiding (neg1; -1+_; 1+_; -1+Path) public
 open import Cubical.Data.NatMinusTwo public
+open import Cubical.Data.NatPlusOne hiding (1+_; 2+_; -1+_) public
 open import Cubical.Data.Int public renaming (_+_ to _+Int_ ; +-assoc to +Int-assoc; +-comm to +Int-comm)
 open import Cubical.Data.Sum public
 open import Cubical.Data.Prod public
@@ -21,3 +22,4 @@ open import Cubical.Data.HomotopyGroup public
 open import Cubical.Data.List public
 open import Cubical.Data.Graph public
 open import Cubical.Data.InfNat public renaming (_*_ to _*ℕ+∞_; _+_ to _+ℕ+∞_; suc to ∞suc; zero to ∞zero)
+open import Cubical.Data.Queue public
