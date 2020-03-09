@@ -142,6 +142,14 @@ ind : {n : ℕ₋₂}
       B x
 ind hB = Null-ind (λ x → isOfHLevel→isSnNull (hB x))
 
+indId : {n : ℕ₋₂}
+      {B : ∥ A ∥ n → Type ℓ'}
+      (hB : (x : ∥ A ∥ n) → isOfHLevel (2+ n) (B x))
+      (g : (a : A) → B (∣ a ∣))
+      (y : A) →
+      (ind {B = B} hB g (∣ y ∣)) ≡ g y
+indId hB g y = refl
+
 ind2 : {n : ℕ₋₂}
        {B : ∥ A ∥ n → ∥ A ∥ n → Type ℓ'}
        (hB : ((x y : ∥ A ∥ n) → isOfHLevel (2+ n) (B x y)))
@@ -178,18 +186,22 @@ idemTrunc n hA = ∣_∣ , isModalToIsEquiv (TruncModality n) hA
 
 -- universal property
 
-univTrunc : ∀ {ℓ} (n : ℕ₋₂) {B : HLevel ℓ (2+ n)} → (∥ A ∥ n → (fst B)) ≃ (A → (fst B))
-univTrunc neg2 {B , lev} = isoToEquiv
-                             (iso ((λ g a → g ∣ a ∣))
-                             ((ind (λ _ → lev)))
-                             ((λ b → refl))
-                             λ b → funExt λ x → sym ((snd lev) (ind (λ _ → lev) (λ a → b ∣ a ∣) x)) ∙ (snd lev) (b x)  )
-univTrunc (suc n) {B , lev} = isoToEquiv
-                               (iso
-                                 (λ g a → g ∣ a ∣)
-                                 (ind (λ _ → lev))
-                                 (λ b → refl)
-                                 λ b → funExt (ind (λ x → (isOfHLevelSuc (2+ (suc n)) lev) ((ind (λ _ → lev) (λ a → b ∣ a ∣) x)) (b x)) λ a → refl))
+module univTrunc where
+  fun : ∀ {ℓ} (n : ℕ₋₂) {B : HLevel ℓ (2+ n)} → (∥ A ∥ n → (fst B)) → (A → (fst B)) 
+  fun n {B , lev} = λ g a → g ∣ a ∣
+  
+  inv : ∀ {ℓ} (n : ℕ₋₂) {B : HLevel ℓ (2+ n)} → (A → (fst B)) → (∥ A ∥ n → (fst B)) 
+  inv n {B , lev} = ind (λ _ → lev)
+  
+  sect : ∀ {ℓ} (n : ℕ₋₂) {B : HLevel ℓ (2+ n)} → section {A = (∥ A ∥ n → (fst B))} {B = (A → (fst B))} (fun n {B}) (inv n {B})
+  sect n {B , lev} b = refl
+  
+  retr : ∀ {ℓ} (n : ℕ₋₂) {B : HLevel ℓ (2+ n)} → retract {A = (∥ A ∥ n → (fst B))} {B = (A → (fst B))} (fun n {B}) (inv n {B})
+  retr neg2 {B , lev} b = funExt λ x → sym ((snd lev) (ind (λ _ → lev) (λ a → b ∣ a ∣) x)) ∙ (snd lev) (b x)
+  retr (-1+ n) {B , lev} b = funExt (ind (λ x → (isOfHLevelSuc (2+ (-1+ n) ) lev) ((ind (λ _ → lev) (λ a → b ∣ a ∣) x)) (b x)) λ a → refl)
+  
+  univTrunc : ∀ {ℓ} (n : ℕ₋₂) {B : HLevel ℓ (2+ n)} → (∥ A ∥ n → (fst B)) ≃ (A → (fst B)) 
+  univTrunc n {B} = isoToEquiv (iso (fun n {B}) (inv n {B}) (sect n {B}) (retr n {B}))
 
 -- equivalences to prop/set/groupoid truncations
 

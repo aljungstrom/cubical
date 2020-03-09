@@ -24,43 +24,28 @@ pattern -1+_ n = -2+ (suc n)
 suc₋₂ : ℕ₋₂ → ℕ₋₂
 suc₋₂ (-2+ n) = -2+ (suc n)
 
-_+₋₂_ : ℕ₋₂ → ℕ₋₂ → ℕ₋₂
-neg2 +₋₂ neg2 = neg2
-neg2 +₋₂ suc neg2 = neg2
-neg2 +₋₂ suc (suc m) = m
-suc neg2 +₋₂ neg2 = neg2
-suc neg2 +₋₂ suc m = m
-suc (suc neg2) +₋₂ m = m
-suc (suc (suc n)) +₋₂ m = suc ((suc (suc n)) +₋₂ m )
-
-_-₋₂_ : ℕ₋₂ → ℕ₋₂ → ℕ₋₂
-neg2 -₋₂ neg2 = suc (suc neg2)
-neg2 -₋₂ suc neg2 = suc neg2
-neg2 -₋₂ suc (suc n) = neg2
-suc neg2 -₋₂ neg2 = suc (suc (suc neg2))
-suc neg2 -₋₂ suc neg2 = suc (suc neg2)
-suc neg2 -₋₂ suc (suc neg2) = suc neg2
-suc neg2 -₋₂ suc (suc (suc n)) = neg2
-suc (suc neg2) -₋₂ neg2 = suc (suc (suc (suc neg2)))
-suc (suc neg2) -₋₂ suc neg2 = suc (suc (suc neg2))
-suc (suc neg2) -₋₂ suc (suc neg2) = suc (suc neg2)
-suc (suc neg2) -₋₂ suc (suc (suc neg2)) = suc neg2
-suc (suc neg2) -₋₂ suc (suc (suc (suc n))) = neg2
-suc (suc (suc k)) -₋₂ neg2 = suc (suc (suc (suc (suc k))))
-suc (suc (suc k)) -₋₂ suc neg2 = suc (suc (suc (suc k)))
-suc (suc (suc k)) -₋₂ suc (suc neg2) = suc (suc (suc k))
-suc (suc (suc k)) -₋₂ suc (suc (suc n)) = suc (suc k) -₋₂ (suc (suc n))
-
 pred₋₂ : ℕ₋₂ → ℕ₋₂
 pred₋₂ neg2 = neg2
-pred₋₂ (suc n) = n
+pred₋₂ neg1 = neg2
+pred₋₂ (ℕ→ℕ₋₂ zero) = neg1
+pred₋₂ (ℕ→ℕ₋₂ (suc n)) = (ℕ→ℕ₋₂ n)
 
-neg2≠suc : (n : ℕ₋₂) → neg2 ≡ suc n → ⊥
-neg2≠suc n id = transport (λ i → (cong (λ x → fun x) id) (~ i)) tt where
+_-₋₂_ : ℕ₋₂ → ℕ₋₂ → ℕ₋₂
+n -₋₂ neg2 = suc₋₂ (suc₋₂ n)
+n -₋₂ neg1 = suc₋₂ n
+n -₋₂ ℕ→ℕ₋₂ zero = n
+neg2 -₋₂ ℕ→ℕ₋₂ (suc m) = neg2
+neg1 -₋₂ ℕ→ℕ₋₂ (suc m) = neg2
+ℕ→ℕ₋₂ zero -₋₂ ℕ→ℕ₋₂ (suc zero) = neg1
+ℕ→ℕ₋₂ zero -₋₂ ℕ→ℕ₋₂ (suc (suc m)) = neg2
+ℕ→ℕ₋₂ (suc n) -₋₂ ℕ→ℕ₋₂ (suc m) = ℕ→ℕ₋₂ n -₋₂ ℕ→ℕ₋₂ m
 
-  fun : ℕ₋₂ → Type₀
-  fun neg2 = ⊥
-  fun (suc n) = Unit
+_+₋₂_ : ℕ₋₂ → ℕ₋₂ → ℕ₋₂
+neg2 +₋₂ m = pred₋₂ (pred₋₂ m)
+neg1 +₋₂ m = pred₋₂ m
+ℕ→ℕ₋₂ n +₋₂ neg2 = pred₋₂ (pred₋₂ (ℕ→ℕ₋₂ n))
+ℕ→ℕ₋₂ n +₋₂ neg1 = pred₋₂ (ℕ→ℕ₋₂ n)
+ℕ→ℕ₋₂ n +₋₂ ℕ→ℕ₋₂ m = ℕ→ℕ₋₂ (n + m)
 
 -- Natural number and negative integer literals for ℕ₋₂
 
