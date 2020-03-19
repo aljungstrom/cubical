@@ -6,6 +6,7 @@ module Cubical.ZCohomology.FreudenthalFix.Prelim where
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Pointed
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.GroupoidLaws
@@ -157,6 +158,19 @@ switcherCancellerIdGeneral : ∀ {ℓ} {A : Type ℓ} {a b : A} → (p q : a ≡
 switcherCancellerIdGeneral {ℓ} {A} {a} {b} p q = J {ℓ} {a ≡ b} {p} (λ q _ → (P : p ∙ (sym p) ≡ q ∙ (sym p)) → canceller (sym p) p q  P ≡ switcher p q p P) (J {ℓ} {A} {a} (λ b p → (P : p ∙ (sym p) ≡ p ∙ (sym p)) → canceller (sym p) p p  P ≡ switcher p p p P) (λ P → switcherCancellerId P) p)
 
 
+symTypeId : {a b : A} → (a ≡ b) ≡ (b ≡ a)
+symTypeId {A = A} {a = a} {b = b} = isoToPath (iso sym sym (λ x → refl) λ x → refl)
+
+
+Lemma296b2 : ∀{ℓ ℓ' ℓ''} {X : Type ℓ} {x y : X} {A : X → Type ℓ'} {B : X → Type ℓ''}
+           (p : x ≡ y)
+           (f : (A x) → (B x))
+           (g : (A y) → (B y)) →
+           (transport (λ i → (A (p i)) → (B (p i))) f ≡ g) ≡ ((a : A y) → transport (λ i → B (p (~ i) )) (g a) ≡ f (transport (λ i → A (p (~ i))) a))
+Lemma296b2 {ℓ = ℓ} {X = X} {x = x} {y = y} {A = A} {B = B} = J {ℓ} {X} {x} (λ y p → (f : (A x) → (B x)) (g : (A y) → (B y)) →
+                                                                     (transport (λ i → (A (p i)) → (B (p i))) f ≡ g) ≡
+                                                                          ((a : A y) → transport (λ i → B (p (~ i))) (g a) ≡ f (transport (λ i → A (p (~ i))) a)))
+                                                                          λ f g → (λ i → ((transportRefl f i) ≡ g) ) ∙ symTypeId ∙ isoToPath (iso funExt⁻  funExt (λ x → refl) λ x → refl) ∙ λ j → ((a : A x) → (transportRefl (g a) (~ j) ≡ f (transportRefl a  (~ j))))
 
 
 Lemma296b : ∀{ℓ ℓ' ℓ''} {X : Type ℓ} {x y : X} {A : X → Type ℓ'} {B : X → Type ℓ''}

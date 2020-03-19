@@ -174,7 +174,6 @@ module _ {A : I → Type ℓ} {x : A i0} {y : A i1} where
   fromPathP : PathP A x y → transp A i0 x ≡ y
   fromPathP p i = transp (λ j → A (i ∨ j)) i (p i)
 
-
 -- Direct definitions of lower h-levels
 
 isContr : Type ℓ → Type ℓ

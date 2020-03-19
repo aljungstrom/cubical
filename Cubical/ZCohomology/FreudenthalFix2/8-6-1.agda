@@ -1,11 +1,11 @@
 {-# OPTIONS --cubical --safe #-}
-module Cubical.ZCohomology.FreudenthalFix.8-6-1 where
+module Cubical.ZCohomology.FreudenthalFix2.8-6-1 where
 
 
 open import Cubical.ZCohomology.Base
-open import Cubical.ZCohomology.FreudenthalFix.Prelim
-open import Cubical.ZCohomology.FreudenthalFix.7-5-7
-open import Cubical.ZCohomology.FreudenthalFix.trivFunConnected
+open import Cubical.ZCohomology.FreudenthalFix2.Prelim
+open import Cubical.ZCohomology.FreudenthalFix2.7-5-7
+open import Cubical.ZCohomology.FreudenthalFix2.trivFunConnected
 open import Cubical.HITs.Sn
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
@@ -141,28 +141,29 @@ Lemma861 {A = A} {B = B} {ℓ = ℓ} n (suc (suc k)) f iscon P l = transport (λ
 -- (n + (2+ ℕ→ℕ₋₂ m)))
 -- want : (2+ ℕ→ℕ₋₂ (n + m))
 
+abstract
 
-Lemma861Gen : ∀{ℓ} (n : ℕ₋₂) (k : ℕ) (expr : ℕ₋₂ → ℕ → ℕ) →
-              ((expr n k) ≡ (k + (2+ n))) →
-              (f : A → B) →
-              (is- n -Connected f) →
-              (P : B → HLevel ℓ (expr n k)) →
-              is- (-2+ k) -Truncated (inducedFun {k = -2+ (expr n k)} f P)
-Lemma861Gen {A = A} {B = B} {ℓ = ℓ} n k expr path f iscon = transport (λ i → helper i) (Lemma861 n k f iscon) -- transport (λ i → {!Lemma861!}) (Lemma861 n k)
-  where
-    helper : ((P : B → HLevel ℓ (k + (2+ n))) → is- -2+ k -Truncated (inducedFun f P)) ≡ ((P : B → HLevel ℓ (expr n k)) → is- -2+ k -Truncated (inducedFun f P))
-    helper i = ((P : B → HLevel ℓ (path (~ i))) → is- -2+ k -Truncated (inducedFun f P))
-
-Lemma861GenNats : ∀{ℓ} (n k : ℕ) (expr : ℕ → ℕ → ℕ) →
-                ((expr n k) ≡ k + (2+ ℕ→ℕ₋₂ n) ) →
+  Lemma861Gen : ∀{ℓ} (n : ℕ₋₂) (k : ℕ) (expr : ℕ₋₂ → ℕ → ℕ) →
+                ((expr n k) ≡ (k + (2+ n))) →
                 (f : A → B) →
-                (is- (ℕ→ℕ₋₂ n) -Connected f) →
+                (is- n -Connected f) →
                 (P : B → HLevel ℓ (expr n k)) →
                 is- (-2+ k) -Truncated (inducedFun {k = -2+ (expr n k)} f P)
-Lemma861GenNats {A = A} {B = B} {ℓ = ℓ} n k expr path f iscon = transport (λ i → helper (~ i)) (Lemma861 (ℕ→ℕ₋₂ n) k f iscon)
-  where
-  helper : ((P : B → HLevel ℓ (expr n k)) → is- -2+ k -Truncated (inducedFun f P)) ≡ ((P : B → HLevel ℓ (k + (2+ ℕ→ℕ₋₂ n))) → is- -2+ k -Truncated (inducedFun f P))
-  helper i = ((P : B → HLevel ℓ (path i)) → is- -2+ k -Truncated (inducedFun f P))
+  Lemma861Gen {A = A} {B = B} {ℓ = ℓ} n k expr path f iscon = transport (λ i → helper i) (Lemma861 n k f iscon) -- transport (λ i → {!Lemma861!}) (Lemma861 n k)
+    where
+      helper : ((P : B → HLevel ℓ (k + (2+ n))) → is- -2+ k -Truncated (inducedFun f P)) ≡ ((P : B → HLevel ℓ (expr n k)) → is- -2+ k -Truncated (inducedFun f P))
+      helper i = ((P : B → HLevel ℓ (path (~ i))) → is- -2+ k -Truncated (inducedFun f P))
+
+  Lemma861GenNats : ∀{ℓ} (n k : ℕ) (expr : ℕ → ℕ → ℕ) →
+                  ((expr n k) ≡ k + (2+ ℕ→ℕ₋₂ n) ) →
+                  (f : A → B) →
+                  (is- (ℕ→ℕ₋₂ n) -Connected f) →
+                  (P : B → HLevel ℓ (expr n k)) →
+                  is- (-2+ k) -Truncated (inducedFun {k = -2+ (expr n k)} f P)
+  Lemma861GenNats {A = A} {B = B} {ℓ = ℓ} n k expr path f iscon = transport (λ i → helper (~ i)) (Lemma861 (ℕ→ℕ₋₂ n) k f iscon)
+    where
+    helper : ((P : B → HLevel ℓ (expr n k)) → is- -2+ k -Truncated (inducedFun f P)) ≡ ((P : B → HLevel ℓ (k + (2+ ℕ→ℕ₋₂ n))) → is- -2+ k -Truncated (inducedFun f P))
+    helper i = ((P : B → HLevel ℓ (path i)) → is- -2+ k -Truncated (inducedFun f P))
 
 -- transport (λ i → helper i) (Lemma861 n k f iscon) -- transport (λ i → {!Lemma861!}) (Lemma861 n k)
   {-
