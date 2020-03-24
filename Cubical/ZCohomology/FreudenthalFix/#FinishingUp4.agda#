@@ -163,18 +163,43 @@ reflCase {ℓ} {A} n a x1 iscon = c n a iscon north (σ x1) ≡⟨ cId n a iscon
   wowie = wowie2 (south) (merid x1) 
     where
     wowie2 : (y : Susp A) → (p : north ≡ y) → (transport (λ i → uncurry (code' {a = a} n iscon) (pair⁼'' p (transpRCancel (λ i₁ → north ≡ p i₁) p) i))) ∣ a , rCancel (merid a) ∙ sym (rCancel p) ∙ sym (pairLemma3 p (sym p)) ∣ ≡ transport (λ i → (uncurry (code' {a = a} n iscon) (pair⁼'' p (pairLemma2 p) i))) ∣ a , rCancel (merid a) ∣
-    wowie2 y = J (λ y p → (transport (λ i → uncurry (code' {a = a} n iscon) (pair⁼'' p (transpRCancel (λ i₁ → north ≡ p i₁) p) i))) ∣ a , rCancel (merid a) ∙ sym (rCancel p) ∙ sym (pairLemma3 p (sym p)) ∣ ≡ transport (λ i → (uncurry (code' {a = a} n iscon) (pair⁼'' p (pairLemma2 p) i))) ∣ a , rCancel (merid a) ∣)
-                   ((transport (λ i → uncurry (code' n iscon) (pair⁼'' refl (transpRCancel (λ i₁ → north ≡ refl i₁) refl) i))) ∣ a , rCancel (merid a) ∙ (sym (rCancel refl)) ∙ (sym (pairLemma3 refl refl)) ∣ ≡⟨ (λ j → transport (λ i → uncurry (code' {a = a} n iscon) (pair⁼'' refl (transpRCancelRefl refl j) i)) ∣ a , rCancel (merid a) ∙ (sym (rCancel refl)) ∙ (sym (pairLemma3ReflRefl j)) ∣) ⟩ transport (λ i → uncurry (code' n iscon) (pair⁼'' refl (((transportRefl (transport refl refl)) ∙ (transportRefl refl))) i)) ∣ a , rCancel (merid a) ∙ (sym (rCancel refl)) ∙ sym (transportRefl refl ∙ sym (rCancel refl)) ∣ ≡⟨ stupidAgda ⟩
-        _ ≡⟨ (λ j → transport (λ i → uncurry (code' {a = a} n iscon) (north , assoc ((sym (transportRefl (transport (λ z → _≡_ {A = Susp A}  north north) (λ _ → north))))) (transportRefl (transport (λ z → _≡_ {A = Susp A} north  north) (λ _ → north)) ) (transportRefl (λ _ → north)) j i)) ∣ a , rCancel (merid a) ∙ (λ i → rCancel (λ _ → north) (~ i)) ∙ (λ i → pairLemma3ReflRefl i1 (~ i)) ∣) ⟩
-        _
-          ≡⟨ (λ j → transport (λ i → uncurry (code' {a = a} n iscon) (north , (lCancel (transportRefl (transport (λ z → _≡_ {A = Susp A} north  north) (λ _ → north))) j ∙ (transportRefl (λ _ → north))) i)) ∣ a , rCancel (merid a) ∙ (λ i → rCancel (λ _ → north) (~ i)) ∙ (λ i → pairLemma3ReflRefl i1 (~ i)) ∣) ⟩
-          transport (λ i →  uncurry (code' {a = a} n iscon) (north , (refl ∙ (transportRefl (λ _ → north))) i)) ∣ a , rCancel (merid a) ∙ (λ i → rCancel (λ _ → north) (~ i)) ∙ sym (transportRefl refl ∙ lUnit refl) ∣
-          ≡⟨ (λ j → transport (λ i →  uncurry (code' {a = a} n iscon) (north , (lUnit (transportRefl (λ _ → north)) (~ j)) i)) ∣ a , rCancel (merid a) ∙ (λ i → rCancel (λ _ → north) (~ i)) ∙ (λ i → pairLemma3ReflRefl i1 (~ i)) ∣) ⟩
-          transport (λ i →  uncurry (code' {a = a} n iscon) (north , ((transportRefl (λ _ → north))) i)) ∣ a , rCancel (merid a) ∙ (λ i → rCancel (λ _ → north) (~ i)) ∙ (λ i → pairLemma3ReflRefl i1 (~ i)) ∣ ≡⟨  (λ j → transport (λ i →  uncurry (code' {a = a} n iscon) (north , ((transportRefl (λ _ → north))) i)) ∣ a , cancelHelper j ∣ ) ⟩ transport (λ i →  uncurry (code' {a = a} n iscon) (north , ((transportRefl (λ _ → north))) i)) ∣ a , rCancel (merid a) ∙ (sym (transportRefl refl)) ∣
-          ≡⟨ pathPtest2 ⟩
-          (transport (λ i → uncurry (code' {a = a} n iscon) (north , λ _ → north)) ∣ a , rCancel (merid a)∣)
-          ≡⟨ sym (backAgain) ⟩
-          refl)
+    wowie2 y = J (λ y p → (transport (λ i → uncurry (code' {a = a} n iscon) (pair⁼'' p (transpRCancel (λ i₁ → north ≡ p i₁) p) i)))
+                          ∣ a , rCancel (merid a) ∙ sym (rCancel p) ∙ sym (pairLemma3 p (sym p)) ∣
+                         ≡ transport (λ i → (uncurry (code' {a = a} n iscon) (pair⁼'' p (pairLemma2 p) i)))
+                          ∣ a , rCancel (merid a) ∣)
+                   ((transport (λ i → uncurry (code' n iscon) (pair⁼'' refl (transpRCancel (λ i₁ → north ≡ refl i₁) refl) i)))
+                               ∣ a , rCancel (merid a) ∙ (sym (rCancel refl)) ∙ (sym (pairLemma3 refl refl)) ∣
+                 ≡⟨ (λ j → transport (λ i → uncurry (code' {a = a} n iscon) (pair⁼'' refl (transpRCancelRefl refl j) i))
+                                     ∣ a , rCancel (merid a) ∙ (sym (rCancel refl)) ∙ (sym (pairLemma3ReflRefl j)) ∣) ⟩
+                    transport (λ i → uncurry (code' n iscon) (pair⁼'' refl (((transportRefl (transport refl refl)) ∙ (transportRefl refl))) i))
+                              ∣ a , rCancel (merid a) ∙ (sym (rCancel refl)) ∙ sym (transportRefl refl ∙ sym (rCancel refl)) ∣
+                 ≡⟨ stupidAgda ⟩ _
+                 ≡⟨ (λ j → transport (λ i → uncurry (code' {a = a} n iscon)
+                                                    (north , assoc ((sym (transportRefl (transport (λ z → _≡_ {A = Susp A}  north north)
+                                                                                                   (λ _ → north)))))
+                                                                   (transportRefl (transport (λ z → _≡_ {A = Susp A} north  north) (λ _ → north)))
+                                                                   (transportRefl (λ _ → north)) j i))
+                                     ∣ a , rCancel (merid a) ∙ (λ i → rCancel (λ _ → north) (~ i)) ∙ (λ i → pairLemma3ReflRefl i1 (~ i)) ∣) ⟩ _
+                 ≡⟨ (λ j → transport (λ i → uncurry (code' {a = a} n iscon)
+                                                    (north , (lCancel (transportRefl (transport (λ z → _≡_ {A = Susp A} north  north)
+                                                                                     (λ _ → north))) j ∙
+                                                                                     (transportRefl (λ _ → north))) i))
+                                     ∣ a , rCancel (merid a) ∙ (λ i → rCancel (λ _ → north) (~ i)) ∙ (λ i → pairLemma3ReflRefl i1 (~ i)) ∣) ⟩
+                     transport (λ i →  uncurry (code' {a = a} n iscon) (north , (refl ∙ (transportRefl (λ _ → north))) i))
+                               ∣ a , rCancel (merid a) ∙ (λ i → rCancel (λ _ → north) (~ i)) ∙ sym (transportRefl refl ∙ lUnit refl) ∣
+                 ≡⟨ (λ j → transport (λ i →  uncurry (code' {a = a} n iscon)
+                                                     (north , (lUnit (transportRefl (λ _ → north)) (~ j)) i))
+                                     ∣ a , rCancel (merid a) ∙ (λ i → rCancel (λ _ → north) (~ i)) ∙ (λ i → pairLemma3ReflRefl i1 (~ i)) ∣) ⟩
+                     transport (λ i →  uncurry (code' {a = a} n iscon)
+                                               (north , ((transportRefl (λ _ → north))) i))
+                               ∣ a , rCancel (merid a) ∙ (λ i → rCancel (λ _ → north) (~ i)) ∙ (λ i → pairLemma3ReflRefl i1 (~ i)) ∣
+                 ≡⟨  (λ j → transport (λ i →  uncurry (code' {a = a} n iscon) (north , ((transportRefl (λ _ → north))) i)) ∣ a , cancelHelper j ∣ ) ⟩
+                     transport (λ i →  uncurry (code' {a = a} n iscon) (north , ((transportRefl (λ _ → north))) i))
+                               ∣ a , rCancel (merid a) ∙ (sym (transportRefl refl)) ∣
+                 ≡⟨ pathPtest2 ⟩
+                 (transport (λ i → uncurry (code' {a = a} n iscon) (north , λ _ → north)) ∣ a , rCancel (merid a)∣)
+                 ≡⟨ sym (backAgain) ⟩
+                 refl)
         where
         backAgain : transport (λ i → uncurry (code' {a = a} n iscon) (pair⁼'' refl (pairLemma2 refl) i)) ∣ a , rCancel (merid a) ∣ ≡ (transport (λ i → uncurry (code' {a = a} n iscon) (north , λ _ → north)) ∣ a , rCancel (merid a)∣)
         backAgain = (λ j → transport (λ i → uncurry (code' {a = a} n iscon) (pair⁼'' refl (pairLemma2Refl j) i)) ∣ a , rCancel (merid a) ∣) ∙

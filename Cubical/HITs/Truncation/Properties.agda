@@ -171,6 +171,11 @@ ind3 : {n : ℕ₋₂}
 ind3 {n = n} hB g = ind2 (λ _ _ → isOfHLevelPi (2+ n) (hB _ _)) λ a b →
                     ind (λ _ → hB _ _ _) (λ c → g a b c)
 
+∥_∥-fun : ∀ {ℓ'} {B : Type ℓ'} (f : A → B) (n : ℕ₋₂) → ∥ A ∥ n → ∥ B ∥ n
+∥ f ∥-fun n = ind (λ _ → isOfHLevel∥∥ n) λ a → ∣ f a ∣
+
+
+
 TruncModality : ∀ {ℓ} (n : ℕ₋₂) → Modality ℓ
 isModal       (TruncModality n) = isOfHLevel (2+ n)
 isModalIsProp (TruncModality n) = isPropIsOfHLevel (2+ n)

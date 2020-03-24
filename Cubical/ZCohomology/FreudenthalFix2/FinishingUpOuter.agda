@@ -23,7 +23,7 @@ private
     A : Type ℓ
     B : Type ℓ'
 
-{- funExt⁻ (Lemma296Funs.inv'' {X = Susp A} {A = λ y → north ≡ y} {B = λ _ → Type ℓ}
+{- funExt⁻ (Lemma296Funs.inv'' {X = Sutestsp A} {A = λ y → north ≡ y} {B = λ _ → Type ℓ}
                                                                                       (merid a) (λ p → ∥ fiber (λ y → σ y {a}) p ∥ ℕ→ℕ₋₂ (n + n))
                                                                                       (λ q → ∥ fiber merid q ∥ ℕ→ℕ₋₂ (n + n))
                                                                                       (equivTest' {X = Susp A} (merid a)
