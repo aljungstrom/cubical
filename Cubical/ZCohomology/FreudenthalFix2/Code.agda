@@ -68,6 +68,14 @@ sufMap2Id {A = A} n a x1 iscon = (proj₂ (Lemma862 (A , a) (A , a) n n iscon is
                                             (λ x r → ∣ x , canceller (sym (merid a)) (merid x) (merid x1) r ∣) (λ x r → ∣ x , switcher (merid a) (merid x1) (merid x) r ∣) (funExt (λ x i → ∣ (refl i) , ((switcherCancellerIdGeneral (merid a) (merid x1) (canceller (sym (merid a)) (merid a) (merid x1) x ) x i) ) ∣)) .snd .fst) x1)
 -- sufMap2 n x1 a a iscon (merid x1)
 
+sufMap2Id2 : ∀{ℓ} {A : Type ℓ} (n : ℕ) (a x1 : A) (iscon : is- (ℕ→ℕ₋₂ n) -ConnectedType A) → sufMap2 n a a x1 iscon (merid x1) refl ≡ ∣ x1 , canceller (sym (merid a)) (merid x1) (merid x1) refl ∣
+sufMap2Id2 {A = A} n a x1 iscon i = (proj₁ (Lemma862 (A , a) (A , a) n n iscon iscon
+                                            (λ x₂ c → ((merid x₂  ∙ sym (merid a)) ≡ ((merid x1) ∙ sym (merid c)) → ∥ Σ A (λ x → merid x ≡ (merid x1)) ∥ (ℕ→ℕ₋₂ (n + n))) ,
+                                               isOfHLevelPi (2+ ((ℕ→ℕ₋₂ (n + n)))) λ _ → isOfHLevel∥∥ (ℕ→ℕ₋₂ (n + n)))
+                                            (λ x r → ∣ x , canceller (sym (merid a)) (merid x) (merid x1) r ∣) (λ x r → ∣ x , switcher (merid a) (merid x1) (merid x) r ∣) (funExt (λ x i → ∣ (refl i) , ((switcherCancellerIdGeneral (merid a) (merid x1) (canceller (sym (merid a)) (merid a) (merid x1) x ) x i) ) ∣)) .snd .fst) x1) i
+                                            refl
+
+
 
 
 RlFun2 : ∀{ℓ} {A : Type ℓ} (a c : A) (n : ℕ) → (iscon : is- (ℕ→ℕ₋₂ n) -ConnectedType A) → (q : north ≡ south) →
@@ -188,8 +196,8 @@ equivTest {ℓ' = ℓ'} {x = x} = J (λ y p → {A : x ≡ x → Type ℓ'} {B :
                                         ((q : x ≡ y) → A (q ∙ (sym p)) ≡ B q) → (q : x ≡ x) → transport (λ i₁ → Type ℓ') (A q) ≡ B (transport (λ i → x ≡ p i) q ) )
                               λ {A} {B} k q → transportRefl (A q) ∙ cong (λ x → A x) (rUnit q) ∙ k q ∙ cong (λ x → B x) (sym (transportRefl q))
 
-equivTestRefl : ∀ {ℓ ℓ'} {X : Type ℓ} {x y : X} (p : x ≡ y) {A : x ≡ x → Type ℓ'} {B : x ≡ x → Type ℓ'} → equivTest {X = X} (refl {x = x}) {A = A} {B = B}  ≡ λ k q → transportRefl (A q) ∙ cong (λ x → A x) (rUnit q) ∙ k q ∙ cong (λ x → B x) (sym (transportRefl q)) 
-equivTestRefl {ℓ' = ℓ'} {x = x} p {A = A} {B = B} = cong (λ x → x {A} {B}) (JRefl (λ y p → {A : x ≡ x → Type ℓ'} {B : x ≡ y → Type ℓ'} →
+equivTestRefl : ∀ {ℓ ℓ'} {X : Type ℓ} {x : X} {A : x ≡ x → Type ℓ'} {B : x ≡ x → Type ℓ'} → equivTest {X = X} (refl {x = x}) {A = A} {B = B}  ≡ λ k q → transportRefl (A q) ∙ cong (λ x → A x) (rUnit q) ∙ k q ∙ cong (λ x → B x) (sym (transportRefl q)) 
+equivTestRefl {ℓ' = ℓ'} {x = x} {A = A} {B = B} = cong (λ x → x {A} {B}) (JRefl (λ y p → {A : x ≡ x → Type ℓ'} {B : x ≡ y → Type ℓ'} →
                                                   ((q : x ≡ y) → A (q ∙ (sym p)) ≡ B q) → (q : x ≡ x) → transport (λ i₁ → Type ℓ') (A q) ≡ B (transport (λ i → x ≡ p i) q ) )
                               λ {A} {B} k q → transportRefl (A q) ∙ cong (λ x → A x) (rUnit q) ∙ k q ∙ cong (λ x → B x) (sym (transportRefl q)))
 

@@ -371,119 +371,24 @@ outerTranspId4 {ℓ} {A = A} n a x1 iscon = transportLemma {B = C}
                            rCancel (rUnit (refl ∙ (λ _ → a))))
 -}
 
-outerTranspId3 : (n : ℕ) (a x1 : A) (iscon : is- (ℕ→ℕ₋₂ n) -ConnectedType A) →
-                 transport (λ i → uncurry (CODE' {a = a} n iscon) (pair⁼'' (λ i₁ → merid a (~ i₁))
-                                                                           (transpRCancel (λ i → north ≡ (merid a (~ i))) (merid x1 ∙ (sym (merid a)))) i))
-                           ∣ x1 , rUnit (merid x1) ∙ sym (cong (λ x → merid x1 ∙ x) (lCancel (merid a))) ∙
-                                  assocJ (merid x1) (sym (merid a)) (merid a) ∙
-                                  sym (pairLemma3 {a1 = north} (merid x1 ∙ (sym (merid a))) (merid a)) ∣ 
-                ≡ ∣ x1 , refl ∣
-outerTranspId3 {ℓ}{A = A} n a x1 iscon = transportLemma {B = uncurry (CODE' {a = a} n iscon)}
-                                                        (sym (pair⁼'' (λ i₁ → merid a (~ i₁))
-                                                                      (transpRCancel (λ i → north ≡ (merid a (~ i))) (merid x1 ∙ (sym (merid a))))))
-                                                        (∣ x1 , refl ∣)
-                                                        (∣ x1 , rUnit (merid x1) ∙ sym (cong (λ x → merid x1 ∙ x) (lCancel (merid a))) ∙
-                                                                                   assocJ (merid x1) (sym (merid a)) (merid a) ∙
-                                                                                   sym (pairLemma3 {a1 = north} (merid x1 ∙ (sym (merid a))) (merid a)) ∣)
-                                         ((λ k → transport (λ i → uncurry (CODE' {a = a} n iscon)
-                                                                           (pair⁼''Sym (λ i₁ → merid a (~ i₁))
-                                                                                    (transpRCancel (λ i₁ → north ≡ merid a (~ i₁))
-                                                                                                   (merid x1 ∙ (λ i₁ → merid a (~ i₁)))) k i))
-                                                  ∣ x1 , (λ _ → σ x1 {a}) ∣)
-                                         ∙ (λ k → transport (λ i → uncurry (CODE' {a = a} n iscon)
-                                                                           (pair⁼'' (merid a) (transportLemma {B = λ y → north ≡ y} (sym (merid a)) (transport (λ i₁ → north ≡ merid a i₁) (merid x1 ∙ (sym (merid a) ))) (merid x1 ∙ (sym (merid a))) ((transpRCancel (λ i₁ → north ≡ merid a (~ i₁)) (merid x1 ∙ (λ i₁ → merid a (~ i₁)))))) i) )
-                                                  ∣ x1 , (λ _ → σ x1 {a}) ∣) ∙
-                                           (λ k → transport (λ i → uncurry (CODE' {a = a} n iscon)
-                                                                           (pair⁼'' (merid a) (wowie south (merid a) (merid x1) k) i) )
-                                                  ∣ x1 , (λ _ → σ x1 {a}) ∣) ∙
-                                           -- cong (λ x → x ∣ x1 , (λ _ → σ x1 {a}) ∣) (Lemma8610Refl'' (CODE' {a = a} n iscon) (merid a) (σ x1 {a})) ∙
-                                           (λ k → transport (λ i → uncurry (CODE''Id {A = A} {a = a} n iscon k)
-                                                                           (pair⁼'' {x = north , σ x1 {a}} {y = south , _} (merid a) (λ _ → transport (λ i₁ → _≡_ {A = Susp A} north (merid a i₁)) (σ x1 {a})) i) )
-                                                  ∣ x1 , (λ _ → σ x1 {a}) ∣) ∙
-                                           cong (λ x → x ∣ x1 , (λ _ → σ x1 {a}) ∣) (Lemma8610Refl'' (CODE'' {a = a} n iscon) (merid a) (σ x1 {a})) ∙
-                                           (λ k → transport ((λ i → ∥ fiber (λ y → σ y {a})
-                                                              (transpRCancel
-                                                                 (λ i₁ → north ≡ merid a (~ i₁)) (σ x1 {a}) (~ i)) ∥ ℕ→ℕ₋₂ (n + n)) ∙
-                                                              funExt⁻ (toPathCancel {A = λ i → north ≡ merid a i → Type ℓ}
-                                                                                {x = λ p → (∥ fiber (λ y → σ y {a}) p ∥ (ℕ→ℕ₋₂ (n + n)))}
-                                                                                {y = λ q → ∥ fiber merid q ∥ (ℕ→ℕ₋₂ (n + n))}
-                                                                        (Lemma296Funs.inv'' {X = Susp A} {A = λ y → north ≡ y} {B = λ _ → Type ℓ}
-                                                                                            (merid a) (λ p → ∥ fiber (λ y → σ y {a}) p ∥ ℕ→ℕ₋₂ (n + n))
-                                                                                            (λ q → ∥ fiber merid q ∥ ℕ→ℕ₋₂ (n + n))
-                                                                                            (equivTest' {X = Susp A} (merid a)
-                                                                                                        {A = λ q → ∥ fiber (λ y → σ y {a}) q ∥ ℕ→ℕ₋₂ (n + n)}
-                                                                                                        {B = λ q → ∥ fiber merid q ∥ ℕ→ℕ₋₂ (n + n)}
-                                                                                              (λ q → ua' (RlFun2 a a n iscon q , RlFunEquiv2 a a n iscon q)))) k )
-                                                                      (transport (λ i → north ≡ merid a i) (σ x1 {a})))
-                                                             ∣ x1 , (λ _ → σ x1 {a}) ∣)  ∙
-                                           (λ k → transport ((λ i → ∥ fiber (λ y → σ y {a})
-                                                              (transpRCancel
-                                                                 (λ i₁ → north ≡ merid a (~ i₁)) (σ x1 {a}) (~ i)) ∥ ℕ→ℕ₋₂ (n + n)) ∙
-                                                                 {!(Lemma296Funs.inv'' {X = Susp A} {A = λ y → north ≡ y} {B = λ _ → Type ℓ}
-                                                                                      (merid a) (λ p → ∥ fiber (λ y → σ y {a}) p ∥ ℕ→ℕ₋₂ (n + n))
-                                                                                      (λ q → ∥ fiber merid q ∥ ℕ→ℕ₋₂ (n + n))
-                                                                                      (equivTest' {X = Susp A} (merid a)
-                                                                                                  {A = λ q → ∥ fiber (λ y → σ y {a}) q ∥ ℕ→ℕ₋₂ (n + n)}
-                                                                                                  {B = λ q → ∥ fiber merid q ∥ ℕ→ℕ₋₂ (n + n)}
-                                                                                        (λ q → ua' (RlFun2 a a n iscon q , RlFunEquiv2 a a n iscon q))))
-                                                                                       (transport (λ i → north ≡ merid a i) (σ x1 {a}))!})
-                                                             ∣ x1 , (λ _ → σ x1 {a}) ∣) ∙
-                                           {!!} ∙
-                                           {!!} ∙
-                                           {!!} ∙
-                                           {!!})
-
-  where
-  ma : _≡_ {A = Susp A} north south
-  ma = merid a
-  mx1 : _≡_ {A = Susp A} north south
-  mx1 = merid x1
-  
-  guyid : (transport (λ i → north ≡ merid a i) (σ x1 {a})) ≡ merid x1
-  guyid = pairLemma3 {a1 = north} (σ x1 {a}) (merid a) ∙ sym (assoc (merid x1) (sym (merid a)) (merid a)) ∙
-          (λ i → merid x1 ∙ (lCancel (merid a)) i) ∙ sym (rUnit (merid x1))
-
-  test : (y : Susp A) (mx1 : north ≡ y) → (transport (λ i → uncurry (CODE' {a = a} n iscon)
-                                                                           (pair⁼'' {x = north , {!!}} {y = south , _} (merid a) refl i) )
-                                                     ∣ {!!} , {!!} ∣) ≡ {!pair⁼'' {x = north , ?} {y = }!}
-                                                     
-  test = {!!}
-
-  wowie : (y : Susp A) (ma mx1 : north ≡ y) → (transportLemma {B = λ y → north ≡ y} (sym ma) (transport (λ i₁ → north ≡ ma i₁) (mx1 ∙ (sym ma))) (mx1 ∙ (sym ma)) (transpRCancel (λ i₁ → north ≡ ma (~ i₁)) (mx1 ∙ (sym ma)))) ≡ refl
-  wowie y  = J (λ y ma → (mx1 : north ≡ y) → (transportLemma {B = λ y → north ≡ y} (sym ma) (transport (λ i₁ → north ≡ ma i₁) (mx1 ∙ (sym ma))) (mx1 ∙ (sym ma)) (transpRCancel (λ i₁ → north ≡ ma (~ i₁)) (mx1 ∙ (sym ma)))) ≡ refl)
-                 λ p → (λ i → transportLemmaRefl {a = north} {B = λ y → _≡_ {A = Susp A} north y}
-                                           (λ _ → north) (λ _ → north) i
-                                           (transport (λ i₁ → _≡_ {A = Susp A} north north) (p ∙ (λ _ → north)))
-                                           (p ∙ (λ _ → north))
-                                           (transpRCancel {A = _≡_ {A = Susp A} north north} {B = _≡_ {A = Susp A} north north} (λ i₁ → _≡_ {A = Susp A} north north) (p ∙ (λ _ → north)))) ∙
-                       (λ k → transportRefl (p ∙ (λ _ → north)) ∙
-                              sym (transpRCancel {A = _≡_ {A = Susp A} north north} {B = _≡_ {A = Susp A} north north}
-                                                 (λ i₁ → _≡_ {A = Susp A} north north) (p ∙ (λ _ → north))) ∙
-                              transportRefl (transport (λ i₁ → _≡_ {A = Susp A} north north) (p ∙ (λ _ → north)))) ∙
-                       (λ k → transportRefl (p ∙ (λ _ → north)) ∙
-                              sym (transpRCancelRefl {A = north ≡ north} (p ∙ (λ _ → north)) k) ∙
-                              transportRefl (transport (λ i₁ → _≡_ {A = Susp A} north north) (p ∙ (λ _ → north)))) ∙
-                       (λ k → transportRefl (p ∙ (λ _ → north)) ∙
-                              symDistr (transportRefl (transport refl (p ∙ (λ _ → north)))) (transportRefl (p ∙ (λ _ → north))) k  ∙
-                              transportRefl (transport (λ i₁ → _≡_ {A = Susp A} north north) (p ∙ (λ _ → north)))) ∙
-                       (λ k → transportRefl (p ∙ (λ _ → north)) ∙
-                              assoc (sym (transportRefl (p ∙ (λ _ → north))))
-                                    (sym (transportRefl (transport refl (p ∙ (λ _ → north)))))
-                                    (transportRefl (transport (λ i₁ → _≡_ {A = Susp A} north north) (p ∙ (λ _ → north)))) (~ k) ) ∙
-                       (λ k → transportRefl (p ∙ (λ _ → north)) ∙
-                              sym (transportRefl (p ∙ (λ _ → north))) ∙
-                              lCancel (transportRefl (transport (λ i₁ → _≡_ {A = Susp A} north north) (p ∙ (λ _ → north)))) k) ∙
-                       (λ k →  transportRefl (p ∙ (λ _ → north)) ∙ (rUnit (sym (transportRefl (p ∙ (λ _ → north)))) (~ k))) ∙
-                       (rCancel (transportRefl (p ∙ (λ _ → north))) )
-    where
-    helper : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y) → transportRefl (p ∙ λ _ → y) ∙ {!sym (transport (λ i₁ → x ≡ y) (p ∙ (λ _ → y))) !} ∙ transportRefl (transport (λ i₁ → x ≡ y) (p ∙ (λ _ → y))) ≡ {!!}
-    helper = {!!}
-
-  wowie2 : (transportLemma {B = λ y → north ≡ y} (sym (merid a)) (transport (λ i₁ → north ≡ merid a i₁) (merid x1 ∙ (sym (merid a)))) (merid x1 ∙ (sym (merid a))) (transpRCancel (λ i₁ → north ≡ merid a (~ i₁)) (merid x1 ∙ (sym (merid a))))) ≡ {!!}
-  wowie2 = {!!}
-
 -- outerTranspId : (n : ℕ) (a x1 : A) (iscon : is- (ℕ→ℕ₋₂ n) -ConnectedType A) →
---                 transport (λ i → uncurry (CODE' {a = a} n iscon) (pair⁼'' (λ i₁ → merid a (~ i₁)) (pairLemma3 (merid x1) (λ i₁ → merid a (~ i₁))) i)) ∣ x1 , refl ∣
+--                 transport (λ i → uncurry (CODE' {a = a} n iscon) (pair⁼'' (λ i₁ → merid a (~ i₁)e
+open import Cubical.Foundations.Everything
+open import Cubical.Data.NatMinusTwo.Base
+open import Cubical.Data.Sigma
+open import Cubical.Data.Prod
+open import Cubical.HITs.Susp
+open import Cubical.HITs.Nullification
+open import Cubical.Data.Int hiding (_+_ ; _-_ ; +-comm )
+open import Cubical.Data.Nat
+open import Cubical.HITs.Truncation
+open import Cubical.Data.HomotopyGroup
+
+private
+  variable
+    ℓ ℓ' : Level
+    A : Type ℓ
+) (pairLemma3 (merid x1) (λ i₁ → merid a (~ i₁))) i)) ∣ x1 , refl ∣
 --                 ≡ transport (λ i → uncurry (CODE' {a = a} n iscon) (pair⁼'' (λ i₁ → merid a (~ i₁)) (transpRCancel (λ i → north ≡ (merid a (~ i))) (merid x1 ∙ (sym (merid a)))) i)) ∣ x1 , rUnit (merid x1) ∙ sym (cong (λ x → merid x1 ∙ x) (lCancel (merid a)))  ∙ assocJ (merid x1) (sym (merid a)) (merid a) ∙ sym (pairLemma3 {a1 = north} (merid x1 ∙ (sym (merid a))) (merid a)) ∣
 -- outerTranspId {ℓ} {A = A} n a x1 iscon = sym (wowie north (sym (merid a)))
                 
