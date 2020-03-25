@@ -1,27 +1,17 @@
 {-# OPTIONS --cubical --safe #-}
-module Cubical.ZCohomology.Freudenthal.7-5-7 where
+module Cubical.HITs.Truncation.Connected.FreudenthalProof.7-5-7 where
 
-
-open import Cubical.ZCohomology.Base
-open import Cubical.ZCohomology.Freudenthal.Prelim
-open import Cubical.HITs.Sn
+open import Cubical.HITs.Truncation.Connected.Base
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Equiv
-open import Cubical.Foundations.Everything
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Pointed
 open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Data.NatMinusTwo.Base
-open import Cubical.Data.Sigma
-open import Cubical.Data.Prod.Base
-open import Cubical.HITs.Susp
-open import Cubical.HITs.SetTruncation 
 open import Cubical.HITs.Nullification
-open import Cubical.Data.Nat
-open import Cubical.HITs.Truncation
+open import Cubical.HITs.Truncation.Base
+open import Cubical.HITs.Truncation.Properties
 
-open import Cubical.Data.Bool
 private
   variable
     ℓ ℓ' : Level
@@ -29,14 +19,11 @@ private
     B : Type ℓ'
 
 
-{- TODO: Prove Kₙ ≡ Ω Kₙ₊₁  -}
-
-
-Lemma757i→ii :  (f : A → B) (n : ℕ₋₂) →
+conInd-i→ii :  (f : A → B) (n : ℕ₋₂) →
                 is- n -Connected f →
                 (P : B → HLevel ℓ (2+ n)) →
-                isEquiv (inducedFun f P)
-Lemma757i→ii {A = A} {B = B} f n isCon P = isoToEquiv (compIso (compIso (compIso firstIso secondIso) thirdIso) fourthIso ) .snd
+                isEquiv (indConFun f P)
+conInd-i→ii {A = A} {B = B} f n isCon P = isoToEquiv (compIso (compIso (compIso firstIso secondIso) thirdIso) fourthIso ) .snd
   where
   fib₀ : (b : B) → ∥ fiber f b ∥ n
   fib₀ b = isCon b .fst
@@ -70,31 +57,31 @@ Lemma757i→ii {A = A} {B = B} f n isCon P = isoToEquiv (compIso (compIso (compI
                                                             (transportRefl (b (f a) a refl)))
 
 
-Lemma757ii→iii : ∀ {ℓ} (f : A → B) (n : ℕ₋₂) →
+conInd-ii→iii : ∀ {ℓ} (f : A → B) (n : ℕ₋₂) →
                 (P : B → HLevel ℓ (2+ n)) →
-                isEquiv (inducedFun f P) →
-                hasSection (inducedFun f P)
-Lemma757ii→iii f n P record { equiv-proof = eqpf } = (λ g → (eqpf g) .fst .fst) , (λ b  → (eqpf b) .fst .snd)
+                isEquiv (indConFun f P) →
+                hasSection (indConFun f P)
+conInd-ii→iii f n P record { equiv-proof = eqpf } = (λ g → (eqpf g) .fst .fst) , (λ b  → (eqpf b) .fst .snd)
 
-Lemma757i→iii : ∀ {ℓ} (f : A → B) (n : ℕ₋₂) →
+conInd-i→iii : ∀ {ℓ} (f : A → B) (n : ℕ₋₂) →
                 is- n -Connected f →
                 (P : B → HLevel ℓ (2+ n)) →
-                hasSection (inducedFun f P)
-Lemma757i→iii f n isCon P = Lemma757ii→iii f n P (Lemma757i→ii f n isCon P )
+                hasSection (indConFun f P)
+conInd-i→iii f n isCon P = conInd-ii→iii f n P (conInd-i→ii f n isCon P )
 
-Lemma757iii→i : (f : A → B) (n : ℕ₋₂) →
+conInd-iii→i : (f : A → B) (n : ℕ₋₂) →
                 (∀ {ℓ} (P : B → HLevel ℓ (2+ n)) →
-                hasSection (inducedFun f P)) →
+                hasSection (indConFun f P)) →
                 is- n -Connected f
-Lemma757iii→i {A = A} {B = B} f n P→hasSection = λ b → (c n P→hasSection b) , (λ y → sym (fun n P→hasSection b y))
+conInd-iii→i {A = A} {B = B} f n P→hasSection = λ b → (c n P→hasSection b) , (λ y → sym (fun n P→hasSection b y))
   where 
-  P : (n : ℕ₋₂) → (∀ {ℓ} (P : B → HLevel ℓ (2+ n)) → hasSection (inducedFun f P)) → B → Type _
+  P : (n : ℕ₋₂) → (∀ {ℓ} (P : B → HLevel ℓ (2+ n)) → hasSection (indConFun f P)) → B → Type _
   P n s b = ∥ fiber f b ∥ n
 
-  c : (n : ℕ₋₂) → (∀ {ℓ} (P : B → HLevel ℓ (2+ n)) → hasSection (inducedFun f P)) → (b : B) → ∥ fiber f b ∥ n
+  c : (n : ℕ₋₂) → (∀ {ℓ} (P : B → HLevel ℓ (2+ n)) → hasSection (indConFun f P)) → (b : B) → ∥ fiber f b ∥ n
   c n s = (s λ b → ( ∥ fiber f b ∥ n , isOfHLevel∥∥ _)) .fst λ a → ∣ a , refl ∣
 
-  fun : (n : ℕ₋₂) → (s : (∀ {ℓ} (P : B → HLevel ℓ (2+ n)) → hasSection (inducedFun f P))) → (b : B) (w : (∥ fiber f b ∥ n) ) → w ≡ c n s b
+  fun : (n : ℕ₋₂) → (s : (∀ {ℓ} (P : B → HLevel ℓ (2+ n)) → hasSection (indConFun f P))) → (b : B) (w : (∥ fiber f b ∥ n) ) → w ≡ c n s b
   fun neg2 s b w = isOfHLevelSuc (2+ neg2) (isOfHLevel∥∥ neg2) w (c neg2 s b) 
   fun (-1+ n) s b = ind (λ x → (isOfHLevelSuc (2+ (-1+ n)) (isOfHLevel∥∥ {A = (fiber f b)} (-1+ n))) x (c (-1+ n) s b) ) (λ a → witness b (fst a) (snd a))
     where
@@ -113,4 +100,3 @@ Lemma757iii→i {A = A} {B = B} f n P→hasSection = λ b → (c n P→hasSectio
 
     witness : ((b : B) (a : A) (p : f (a) ≡ b) → ∣ (a , p) ∣ ≡ c (-1+ n) s b)
     witness = transport (λ i → eqtyp i) c*
-

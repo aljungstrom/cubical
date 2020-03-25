@@ -1,27 +1,16 @@
 {-# OPTIONS --cubical --safe #-}
-module Cubical.ZCohomology.FreudenthalCleanup.7-5-14 where
+module Cubical.HITs.Truncation.Connected.FreudenthalProof.7-5-14 where
 
-
-open import Cubical.ZCohomology.Base
-open import Cubical.ZCohomology.FreudenthalCleanup.Prelim
-open import Cubical.HITs.Sn
+open import Cubical.HITs.Truncation.Connected.Base
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
-open import Cubical.Foundations.Everything
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Pointed
 open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Data.NatMinusTwo.Base
-open import Cubical.Data.Sigma
-open import Cubical.Data.Prod.Base
-open import Cubical.HITs.Susp
-open import Cubical.HITs.SetTruncation 
 open import Cubical.HITs.Nullification
-open import Cubical.Data.Nat
-open import Cubical.HITs.Truncation
+open import Cubical.HITs.Truncation.Base
+open import Cubical.HITs.Truncation.Properties
 
-open import Cubical.Data.Bool
 private
   variable
     ℓ ℓ' : Level

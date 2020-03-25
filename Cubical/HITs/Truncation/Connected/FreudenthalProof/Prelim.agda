@@ -1,8 +1,9 @@
 {-# OPTIONS --cubical --safe #-}
-module Cubical.ZCohomology.FreudenthalCleanup.Prelim where
+module Cubical.HITs.Truncation.Connected.FreudenthalProof.Prelim where
 
-
--- open import Cubical.ZCohomology.Base
+open import Cubical.HITs.Truncation.Connected.Base 
+open import Cubical.Foundations.Path
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Prelude
@@ -13,7 +14,8 @@ open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Data.NatMinusTwo.Base
 open import Cubical.Data.Nat
 open import Cubical.Data.Unit
-open import Cubical.HITs.Truncation
+open import Cubical.HITs.Truncation.Base
+open import Cubical.HITs.Truncation.Properties
 
 open import Cubical.Data.Sum.Base
 open import Cubical.Data.HomotopyGroup
@@ -23,14 +25,6 @@ private
     ℓ ℓ' : Level
     A : Type ℓ
     B : Type ℓ'
-
-{- should be in base -}
-is-_-Truncated : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
-                 (n : ℕ₋₂) → (f : A → B) → Type (ℓ-max ℓ ℓ')
-is-_-Truncated {A = A} {B = B} n f = (b : B) → isOfHLevel (2+ n) (fiber f b)
-
-
-
 
 -- some cong stuff --
 congComp2 : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} {a b c : A} (f : A → B) (p : a ≡ b) (q : b ≡ c) →
@@ -53,15 +47,17 @@ congComp3  {A = A}{a = a} {b = b} {c = c} {d = d} f p q r =
 
 --- ℕ₋₂ stuff ---
 
+{-
 _-_ : ℕ → ℕ → ℕ
 zero - m = zero
 suc n - zero = suc n
 suc n - suc m = n - m
-
+-}
 pmId : (n : ℕ) → suc₋₂ (pred₋₂ (ℕ→ℕ₋₂ n)) ≡ (ℕ→ℕ₋₂ n)
 pmId zero = refl
 pmId (suc n) = refl
 
+{-
 minusId : (n : ℕ) → n - n ≡ 0
 minusId zero = refl
 minusId (suc n) = minusId n
@@ -73,22 +69,7 @@ minusId (suc n) = minusId n
 -assocHelp {suc a} {suc b} = (λ i → ((+-suc a b i) - b)) ∙ (λ i → ((suc (+-comm a b i)) - b)) ∙
                              (λ i → (+-suc b a (~ i)) - b) ∙ ((λ i → ((+-comm b (suc a) i) - b))) ∙
                              -assocHelp {suc a} {b}
-
-------------------
-{- Induced function for induction principle of connected functions -}
-inducedFun : ∀{ℓ''} {k : ℕ₋₂}
-             (f : A → B) →
-             (P : (B → HLevel ℓ'' (2+ k))) →
-             (((b : B) → fst (P b)) → (a : A) → fst (P (f a)) )
-inducedFun  f P  = λ g a → g (f a)
-
--------------------
-{- The two definitions of connected types are equivalent -}
-conTyp→conTyp2 : ∀ {ℓ} (n : ℕ₋₂) (A : Type ℓ) → is- n -ConnectedType A → is- n -ConnectedType2 A
-conTyp→conTyp2 n A iscon = λ b → transport (λ i → isContr (∥ helper b i ∥ n)) iscon  where
-  helper : (b : Unit) → A ≡ fiber (λ (x : A) → tt) b
-  helper tt = isoToPath (iso (λ x → x , refl) (λ x → fst x) (λ b i → (refl {x = fst b} i) , ((isOfHLevelSuc 1 (isPropUnit) tt tt (snd b) refl) i)) λ a → refl)
-
+-}
 -------------------
 {- Functions used in definitions of Code -}
 canceller : ∀ {ℓ} {A : Type ℓ} {a b c : A} → (r : b ≡ c) (p q : a ≡ b) → p ∙ r ≡ q ∙ r → p ≡ q
@@ -228,12 +209,14 @@ transpFunctRefl {A = A} {x = x} {B = B} u =
 cancelReflMid : ∀ {ℓ} {A : Type ℓ} {a b : A} (p : a ≡ b) (q : b ≡ a) → p ∙ refl ∙ q ≡ p ∙ q
 cancelReflMid {ℓ = ℓ}{A = A} {a = a} {b = b} p q = J {ℓ} {A} {a} {ℓ} (λ b p → ((q : b ≡ a) →  p ∙ refl ∙ q ≡ p ∙ q)) (λ r → sym (lUnit (refl  ∙ r ))) {b} p q
 
+{- (2.9.4) in the HoTT Book -}
 Lemma294 : ∀ {ℓ ℓ' ℓ''} {X : Type ℓ} {A : X → Type ℓ'} {B : X → Type ℓ''} {x1 x2 : X} (p : x1 ≡ x2) (f : A (x1) → B (x1)) → transport (λ i → A (p i) → B (p i)) f ≡ λ x → transport (λ i → B (p i)) (f (transport (λ i → A (p (~ i))) x))
 Lemma294 {A = A} {B = B} {x1 = x1}  = J (λ x2 p → (f : A (x1) → B (x1)) → transport (λ i → A (p i) → B (p i)) f ≡ λ x → transport (λ i → B (p i)) (f (transport (λ i → A (p (~ i))) x)) ) λ f → refl
 
 Lemma294Refl : ∀ {ℓ ℓ' ℓ''} {X : Type ℓ} {A : X → Type ℓ'} {B : X → Type ℓ''} {x1 : X} (f : A (x1) → B (x1)) → Lemma294 {A = A} {B = B} (λ _ → x1) f ≡ refl
 Lemma294Refl {A = A} {B = B} {x1 = x1} f = cong (λ g → g f) (JRefl (λ x2 p → (f : A (x1) → B (x1)) → transport (λ i → A (p i) → B (p i)) f ≡ λ x → transport (λ i → B (p i)) (f (transport (λ i → A (p (~ i))) x)) ) λ f → refl)
 
+{- The (inverse) function from Lemma 2.9.6 in the HoTT book -}
 abstract
   Lemma296-fun : ∀ {ℓ ℓ' ℓ''} {X : Type ℓ} {x y : X} {A : X → Type ℓ'} {B : X → Type ℓ''}
                  (p : x ≡ y)
@@ -287,3 +270,76 @@ Lemma296 {ℓ = ℓ} {X = X} {x = x} {y = y} {A = A} {B = B} = J {ℓ} {X} {x}
 
 
 
+-------------------- Some useful lemmas. Using J to prove them makes life a lot easier later ------------------------------
+symDistr : {x y z : A} (p : x ≡ y) (q : y ≡ z) → sym (p ∙ q) ≡ (sym q) ∙ (sym p)
+symDistr {x = x} {z = z} = J (λ y p → (q : y ≡ z) → sym (p ∙ q) ≡ (sym q) ∙ (sym p))
+                             (J (λ z q → sym (refl ∙ q) ≡ (sym q) ∙ (sym refl) )
+                                refl)
+
+toPathCancel : ∀ {ℓ} {A : I → Type ℓ} {x : A i0} {y : A i1} → (z : transp A i0 x ≡ y) → fromPathP (toPathP {A = A} {x = x} {y = y} z) ≡ z
+toPathCancel {A = A} {x = x} {y = y} z = cong (λ x → fst x) (equiv-proof (toPathP-isEquiv A {x = x} {y = y}) (toPathP z) .snd (z , refl))
+
+
+transportLemma : {a b : A} {B : (z : A) → Type ℓ'} (p : a ≡ b) (x : B a) (y : B b) → transport (λ i → B (p i)) x ≡ y → transport (λ i → B (p (~ i))) y ≡ x
+transportLemma {a = a} {B = B} x y = J (λ b p → (x : B a) (y : B b) → transport (λ i → B (p i)) x ≡ y → transport (λ i → B (p (~ i))) y ≡ x)
+                                       (λ x y id → transportRefl y ∙  (sym id) ∙ transportRefl x)
+                                        x y 
+transportLemmaRefl : {a : A} {B : (z : A) → Type ℓ'} → (x y : B a) →  transportLemma {B = B} (λ _ → a) ≡ λ x y id → transportRefl y ∙  (sym id) ∙ transportRefl x
+transportLemmaRefl {ℓ} {A = A} {a = a} {B = B} x y = JRefl {ℓ} {A} {a} (λ b p → (x y : B a) → transport (λ i → B a) x ≡ y → transport (λ i → B a) y ≡ x)
+                                       (λ x y id → transportRefl y ∙  (sym id) ∙ transportRefl x)
+
+transpRCancel : (p : A ≡ B) (b : B) → transport p (transport⁻ p b) ≡ b
+transpRCancel {A = A} = J (λ B p → (b : B) → transport p (transport⁻ p b) ≡ b) λ b → transportRefl (transport refl b) ∙ transportRefl b
+
+transpRCancelRefl : (a : A) → transpRCancel refl a ≡ transportRefl (transport refl a) ∙ transportRefl a
+transpRCancelRefl {A = A} a = cong (λ x → x a) (JRefl (λ A p → (a : A) → transport p (transport⁻ p a) ≡ a) λ b → transportRefl (transport refl b) ∙ transportRefl b)
+
+pairLemma2 : ∀ {ℓ} {A : Type ℓ} {a b : A} (p : a ≡ b) → transport (λ i → a ≡ p i) refl ≡ p
+pairLemma2 {ℓ} {A} {a} = J (λ b p →  transport (λ i → a ≡ p i) refl ≡ p) (transportRefl refl)
+
+pairLemma2Refl : ∀ {ℓ} {A : Type ℓ} {a : A} → pairLemma2 (refl {x = a}) ≡ (transportRefl refl)
+pairLemma2Refl {ℓ} {A} {a} = JRefl (λ b p →  transport (λ i → a ≡ p i) refl ≡ p) (transportRefl refl)
+
+pairLemma : ∀ {ℓ} {A : Type ℓ} {a1 b c : A} (p : a1 ≡ b) (q : b ≡ c) → transport (λ i₁ → a1 ≡ q i₁) p ≡ p ∙ q
+pairLemma {A = A} {a1 = a1} {b = b} {c = c} p q = J (λ b p → (c : A) →  (q : b ≡ c) → transport (λ i₁ → a1 ≡ q i₁) p ≡ p ∙ q )
+                                                      (λ c q → pairLemma2 q ∙ lUnit q)
+                                                      p c q
+
+pairLemmaRefl : ∀ {ℓ} {A : Type ℓ} {a1 : A} (q : a1 ≡ a1) → pairLemma (λ _ → a1) q ≡ pairLemma2 q ∙ lUnit q
+pairLemmaRefl {A = A} {a1 = a1} q = cong (λ x → x a1 q) (JRefl (λ b p → (c : A) →  (q : b ≡ c) → transport (λ i₁ → a1 ≡ q i₁) p ≡ p ∙ q ) (λ c q → pairLemma2 q ∙ lUnit q))
+
+
+pairLemma* : ∀ {ℓ} {A : Type ℓ} {a1 b c : A} (q : b ≡ c) (p : a1 ≡ b) → transport (λ i₁ → a1 ≡ q i₁) p ≡ p ∙ q
+pairLemma* {a1 = a1} {b = b}  = J (λ c q → (p : a1 ≡ b) → transport (λ i₁ → a1 ≡ q i₁) p ≡ p ∙ q)
+                                   λ p → transportRefl p ∙ rUnit p
+
+pairLemma*Refl : ∀ {ℓ} {A : Type ℓ} {a1 b : A} (p : a1 ≡ b) → pairLemma* refl p ≡ transportRefl p ∙ rUnit p
+pairLemma*Refl {a1 = a1} {b = b} p = cong (λ x → x p) (JRefl (λ c q → (p : a1 ≡ b) → transport (λ i₁ → a1 ≡ q i₁) p ≡ p ∙ q)
+                                                               λ p → transportRefl p ∙ rUnit p)
+
+pairLemmaId : ∀ {ℓ} {A : Type ℓ} {a1 b c : A} (p : a1 ≡ b) (q : b ≡ c)  → pairLemma p q ≡ pairLemma* q p
+pairLemmaId {ℓ} {A} {a1} {b} {c} = J (λ b p → (q : b ≡ c)  → pairLemma p q ≡ pairLemma* q p)
+                                      (J (λ c q → pairLemma refl q ≡ pairLemma* q refl)
+                                      (pairLemmaRefl refl ∙ sym (pairLemma*Refl refl ∙ λ k → (pairLemma2Refl (~ k)) ∙ rUnit refl)))
+
+pairLemmaReflRefl : {a1 : A} → pairLemma (λ _ → a1) (λ _ → a1) ≡ (transportRefl refl) ∙ lUnit refl
+pairLemmaReflRefl = pairLemmaRefl refl ∙ λ i → pairLemma2Refl i ∙ lUnit refl
+
+substComposite-∙ : ∀ {ℓ ℓ′} {A : Type ℓ} → (B : A → Type ℓ′)
+                     → {x y z : A} (p : x ≡ y) (q : y ≡ z) (u : B x)
+                     → subst B (p ∙ q) u ≡ subst B q (subst B p u)
+substComposite-∙ {A = A} B p q u = transport (λ i → subst B (□≡∙ p q i) u ≡ subst B q (subst B p u)) (substComposite-□ B p q u)
+
+inv-rUnit : ∀ {ℓ} {A : Type ℓ} (x : A) → (λ i → rUnit (rUnit (λ _ → x) (~ i)) i ) ≡ refl
+inv-rUnit x = transport (λ i → PathP (λ j → (lCancel (λ k → (λ _ → x) ∙ (λ _ → x) ≡ rUnit (λ _ → x) k) i) j)
+                                 (λ i → rUnit (rUnit (λ _ → x) (~ i)) i )
+                                 refl)
+                    (helper x)
+  where
+  helper : ∀ {ℓ} {A : Type ℓ} (x : A) →
+           PathP (λ i → ((λ k → (λ _ → x) ∙ (λ _ → x) ≡ rUnit (λ _ → x) (~ k)) ∙
+                          λ k → (λ _ → x) ∙ (λ _ → x) ≡ rUnit (λ _ → x) k) i)
+                 (λ i → rUnit (rUnit (λ _ → x) (~ i)) i )
+                 refl
+  helper x = compPathP (λ k i → rUnit (rUnit (λ _ → x) (~ i)) (i ∧ (~ k)))
+                       λ k i → rUnit (λ _ → x) (~ i ∨ k)

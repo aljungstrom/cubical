@@ -23,12 +23,3 @@ open import Cubical.Data.Unit
 
 ∥_∥_ : ∀ {ℓ} → Type ℓ → ℕ₋₂ → Type ℓ
 ∥ A ∥ n = Null (S (1+ n)) A
-
-is-_-Connected : ∀{ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} (n : ℕ₋₂) (f : A → B) → Type (ℓ-max ℓ ℓ')
-is-_-Connected {B = B} n f = ((b : B) → isContr (∥ fiber f b ∥ n ))
-
-is-_-ConnectedType : ∀ {ℓ} (n : ℕ₋₂) (A : Type ℓ) → Type ℓ
-is- n -ConnectedType A = isContr (∥ A ∥ n)
-
-is-_-ConnectedType2 : ∀ {ℓ} (n : ℕ₋₂) (A : Type ℓ) → Type ℓ
-is- n -ConnectedType2 A = is- n -Connected (λ (x : A) → tt)
