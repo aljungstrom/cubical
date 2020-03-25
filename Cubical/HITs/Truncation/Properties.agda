@@ -159,9 +159,6 @@ ind2 : {n : ℕ₋₂}
 ind2 {n = n} hB g = ind (λ _ → isOfHLevelPi (2+ n) (λ _ → hB _ _)) λ a →
                     ind (λ _ → hB _ _) (λ b → g a b)
 
-
-
-
 ind3 : {n : ℕ₋₂}
        {B : (x y z : ∥ A ∥ n) → Type ℓ'}
        (hB : ((x y z : ∥ A ∥ n) → isOfHLevel (2+ n) (B x y z)))
