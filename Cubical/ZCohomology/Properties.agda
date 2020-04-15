@@ -84,15 +84,19 @@ isEquivKn→ΩKn+1 zero = compEquiv (looper , isEquivLooper) (cong ∣_∣ , isE
                  (transport (λ i → isSet (helper (~ i))) isSetInt refl)
     where
     helper : (x ≡ x) ≡ Int
-    helper = (λ i → transp (λ j → ua S1≃SuspBool (~ j ∨ ~ i)) (~ i) x ≡ transp (λ j → ua S1≃SuspBool (~ j ∨ ~ i)) (~ i) x) ∙
-           (λ i → transp (λ j → S¹≡SuspBool (~ j ∨ ~ i)) (~ i) (transport (sym (ua S1≃SuspBool)) x) ≡ transp (λ j → S¹≡SuspBool (~ j ∨ ~ i)) (~ i) (transport (sym (ua S1≃SuspBool)) x)) ∙
-           basedΩS¹≡Int (transport (sym S¹≡SuspBool) (transport (sym (ua S1≃SuspBool)) x))
+    helper = (λ i → transp (λ j → ua S1≃SuspBool (~ j ∨ ~ i)) (~ i) x
+                   ≡ transp (λ j → ua S1≃SuspBool (~ j ∨ ~ i)) (~ i) x) ∙
+             (λ i → transp (λ j → S¹≡SuspBool (~ j ∨ ~ i)) (~ i) (transport (sym (ua S1≃SuspBool)) x)
+                   ≡ transp (λ j → S¹≡SuspBool (~ j ∨ ~ i)) (~ i) (transport (sym (ua S1≃SuspBool)) x)) ∙
+             basedΩS¹≡Int (transport (sym S¹≡SuspBool)
+                                     (transport (sym (ua S1≃SuspBool)) x))
 isEquivKn→ΩKn+1 (suc zero) = transport (λ i → isEquiv (Kn→ΩKn+1Sucn zero (~ i)))
                                         (compEquiv (trElim (λ _ → isOfHLevelTrunc (2 + (suc zero))) (λ a → ∣ ϕ north a ∣) ,
                                                      isEquiv∣ϕ∣)
                                                    (truncEquivΩ (ℕ→ℕ₋₂ (suc zero))) .snd)
 isEquivKn→ΩKn+1 (suc (suc n)) = transport (λ i → isEquiv (Kn→ΩKn+1Sucn (suc n) (~ i)))
-                                      (compEquiv (conEquiv3 (4 + n) _ (ϕ north) (n , λ i → suc (suc (suc (+-suc n n (~ i))))) (FthalFun-2nConnected (suc n) _ (sphereConnected _)))
+                                      (compEquiv (conEquiv3 (4 + n) _ (ϕ north) (n , λ i → suc (suc (suc (+-suc n n (~ i)))))
+                                                                                (FthalFun-2nConnected (suc n) _ (sphereConnected _)))
                                                  (truncEquivΩ (ℕ→ℕ₋₂ (suc (suc n)))) .snd)
 
 Kn≃ΩKn+1 : (n : ℕ) → coHomK n ≃ typ (Ω (coHomK-ptd (suc n)))
