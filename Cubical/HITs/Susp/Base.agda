@@ -22,14 +22,14 @@ data Susp {ℓ} (A : Type ℓ) : Type ℓ where
 ∙Susp : ∀ {ℓ} (A : Type ℓ) → Pointed ℓ
 ∙Susp A = Susp A , north
 
+IsoBoolSusp⊥ : Iso Bool (Susp ⊥)
+Iso.fun IsoBoolSusp⊥ = λ {true  → north; false → south}
+Iso.inv IsoBoolSusp⊥ = λ {north → true;  south → false}
+Iso.rightInv IsoBoolSusp⊥ = λ {north → refl;  south → refl}
+Iso.leftInv IsoBoolSusp⊥ = λ {true  → refl;  false → refl}
+
 Bool≃Susp⊥ : Bool ≃ Susp ⊥
-Bool≃Susp⊥ =
-  isoToEquiv
-    (iso
-      (λ {true  → north; false → south})
-      (λ {north → true;  south → false})
-      (λ {north → refl;  south → refl})
-      (λ {true  → refl;  false → refl}))
+Bool≃Susp⊥ = isoToEquiv IsoBoolSusp⊥
 
 SuspBool : Type₀
 SuspBool = Susp Bool

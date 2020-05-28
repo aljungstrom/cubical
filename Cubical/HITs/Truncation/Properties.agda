@@ -118,13 +118,13 @@ isOfHLevelTrunc (suc n) = isSphereFilled→isOfHLevelSuc isSphereFilledTrunc
 -- This more direct definition should behave better than recElim
 -- below. Commented for now as it breaks some cohomology code if we
 -- use it instead of recElim.
--- rec : {n : ℕ}
---       {B : Type ℓ'} →
---       isOfHLevel n B →
---       (A → B) →
---       hLevelTrunc n A →
---       B
--- rec h = Null.rec (isOfHLevel→isSnNull h)
+rec : {n : ℕ}
+      {B : Type ℓ'} →
+      isOfHLevel n B →
+      (A → B) →
+      hLevelTrunc n A →
+      B
+rec h = Null.rec (isOfHLevel→isSnNull h)
 
 -- TODO: remove this
 recElim : {n : ℕ}

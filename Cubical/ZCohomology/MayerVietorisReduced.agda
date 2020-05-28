@@ -147,11 +147,12 @@ module MV {ℓ ℓ' ℓ''} (A : Type ℓ) (B : Type ℓ') (C : Type ℓ'') (f : 
   dHomHelper zero h l (push a i) j = dHomHelperPath zero h l a i j
   dHomHelper (suc n) h l (push a i) j = dHomHelperPath (suc n) h l a i j
 
-  dIsHom : (n : ℕ) → isMorph (coHomGr n C) (coHomGr (suc n) D) (d n)
-  dIsHom zero = sElim2 (λ _ _ → isOfHLevelPath 2 setTruncIsSet _ _)
-                   λ f g i → ∣ funExt (λ x → dHomHelper zero f g x) i ∣₀
-  dIsHom (suc n) = sElim2 (λ _ _ → isOfHLevelPath 2 setTruncIsSet _ _)
-                   λ f g i → ∣ funExt (λ x → dHomHelper (suc n) f g x) i ∣₀
+  abstract
+    dIsHom : (n : ℕ) → isMorph (coHomGr n C) (coHomGr (suc n) D) (d n)
+    dIsHom zero = sElim2 (λ _ _ → isOfHLevelPath 2 setTruncIsSet _ _)
+                     λ f g i → ∣ funExt (λ x → dHomHelper zero f g x) i ∣₀
+    dIsHom (suc n) = sElim2 (λ _ _ → isOfHLevelPath 2 setTruncIsSet _ _)
+                     λ f g i → ∣ funExt (λ x → dHomHelper (suc n) f g x) i ∣₀
 
   -- Long Exact Sequence
 
@@ -225,8 +226,7 @@ module MV {ℓ ℓ' ℓ''} (A : Type ℓ) (B : Type ℓ') (C : Type ℓ'') (f : 
           Fa
           Fb
     where
-    helper : (n : ℕ) (Fa : A → coHomK n) (Fb : B → coHomK n) (Fd : D → coHomK n)
-          → (i n ∣ Fd ∣₀ ≡ (∣ Fa ∣₀ , ∣ Fb ∣₀))
+    helper : (n : ℕ) (Fa : A → coHomK n) (Fb : B → coHomK n) (Fd : D → coHomK n) → (i n ∣ Fd ∣₀ ≡ (∣ Fa ∣₀ , ∣ Fb ∣₀))
           → (Δ n) (∣ Fa ∣₀ , ∣ Fb ∣₀) ≡ 0ₕ
     helper zero Fa Fb Fd p = cong (Δ zero) (sym p)
                            ∙ (λ i → ∣ (λ x → Fd (inl (f x))) ∣₀ +ₕ -ₕ ∣ (λ x → Fd (push x (~ i))) ∣₀)

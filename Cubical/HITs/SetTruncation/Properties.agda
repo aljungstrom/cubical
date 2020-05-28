@@ -22,7 +22,7 @@ open import Cubical.Data.Prod
 private
   variable
     ℓ : Level
-    A : Type ℓ
+    A B : Type ℓ
 
 rec : {B : Type ℓ} → isSet B → (A → B) → ∥ A ∥₀ → B
 rec Bset f ∣ x ∣₀ = f x
@@ -76,6 +76,13 @@ setTruncIdempotent≃ {A = A} hA = isoToEquiv f
 
 setTruncIdempotent : isSet A → ∥ A ∥₀ ≡ A
 setTruncIdempotent hA = ua (setTruncIdempotent≃ hA)
+
+
+setTruncIso : Iso A B → Iso ∥ A ∥₀ ∥ B ∥₀
+Iso.fun (setTruncIso (iso fun _ _ _)) = rec setTruncIsSet λ x → ∣ fun x ∣₀
+Iso.inv (setTruncIso (iso _ inv _ _)) = rec setTruncIsSet λ x → ∣ inv x ∣₀
+Iso.rightInv (setTruncIso (iso _ _ rightInv _)) = elim (λ _ → isOfHLevelPath 2 setTruncIsSet _ _) λ b → cong ∣_∣₀ (rightInv b)
+Iso.leftInv (setTruncIso (iso _ _ _ leftInv)) = elim (λ _ → isOfHLevelPath 2 setTruncIsSet _ _) λ a → cong ∣_∣₀ (leftInv a)
 
 
 setSigmaIso : ∀ {ℓ} {B : A → Type ℓ} → Iso ∥ Σ A B ∥₀ ∥ Σ A (λ x → ∥ B x ∥₀) ∥₀
