@@ -287,3 +287,77 @@ private
                                        (λ n → n - m)
                                        (minusPlus m)
                                        (plusMinus m))
+
+
+open import Cubical.Data.Sigma
+EudQuant : (f : Int → Int) → Int → Int → Int
+EudQuant f m n = f (m + n) - (f m + f n)
+
+Eud : (f : Int → Int) → Int → Int → Int
+Eud f m n = (f (m + n) - f m) - f n
+
+isBounded₁ : (f : Int → Int) → Type₀
+isBounded₁ f = (Σ[ (z , dif) ∈ Int × ℕ ] ((m : Int) → f m + (pos dif) ≡ z)) × (Σ[ (z , dif) ∈ Int × ℕ ] ((m : Int) → f m ≡ z + (pos dif)))
+
+isBounded₂ : (f : Int → Int → Int) → Type₀
+isBounded₂ f = (Σ[ (z , dif) ∈ Int × ℕ ] ((m n : Int) → f m n + (pos dif) ≡ z)) × (Σ[ (z , dif) ∈ Int × ℕ ] ((m n : Int) → f m n ≡ z + (pos dif)))
+
+almostLinear : (f : Int → Int) → Type₀
+almostLinear f = isBounded₂ (Eud f)
+
+linFuns : Type₀
+linFuns = Σ[ f ∈ (Int → Int) ] almostLinear f
+
+quot : (f g : linFuns) → Type₀
+quot f g = isBounded₁ λ x → fst f x - fst g x
+
+data ℝ : Type₀ where
+  ι : linFuns → ℝ
+  _/_ : (f g : linFuns) → quot f g → ι f ≡ ι g
+  isSetℝ : isSet ℝ
+
+ℤ→ℝ : Int → ℝ
+ℤ→ℝ n = ι ((λ _ → n) , ((((0 - n) , 0) , λ _ _ → cong (_- n) (cong (_- n) (pos0+ n) ∙ plusMinus n 0)) , (((0 - n) , 0) , λ _ _ → cong (_- n) (cong (_- n) (pos0+ n) ∙ plusMinus n 0))))
+
+upperB : (f : linFuns) → Int
+upperB f = fst (fst (fst (snd f)))
+
+dif⁺ : (f : linFuns) → ℕ
+dif⁺ f = snd (fst (fst (snd f)))
+
+lowerB : (f : linFuns) → Int
+lowerB f = fst (fst (snd (snd f)))
+
+test : (f g : linFuns) → (m n : Int) → Eud (λ x → fst f x + fst g x) m n ≡ (Eud (fst f) m n + Eud (fst g) m n)
+test f g m n = {!!} ∙∙ {!!} ∙∙ {!!}
+
+dif⁻ : (f : linFuns) → ℕ
+dif⁻ f = snd (fst (snd (snd f)))
+
+isSetLinFuns : isSet linFuns 
+isSetLinFuns  = isOfHLevelΣ 2 (isOfHLevelΠ 2 (λ _ → isSetInt))
+                              λ f → isOfHLevelΣ 2 (isOfHLevelΣ 2 (isOfHLevel× 2 isSetInt (isSetℕ))
+                                                   λ _ → {!!})
+                                                   {!!} 
+
+open import Cubical.Functions.Embedding
+hLevelEmbedding : (A B : Type₀) (f : A → B) → (isSet A) → ((x y : A) → Σ[ g ∈ (f x ≡ f y → x ≡ y) ] retract (cong f) g) → isSet B
+hLevelEmbedding = {!!}
+
+univP : (A : ℝ → Type₀) → ((x : ℝ) → isSet (A x))
+        → (g : (f : linFuns) → A (ι f))
+        → ((f h : linFuns) (x : quot f h) → PathP (λ i → A ((f / h) x i)) (g f) (g h))
+        → (x : ℝ) → A x
+univP A isset g _ (ι x) = g x
+univP A isset g p ((f / h) x i) = p f h x i
+univP A isset g p (isSetℝ x y z w i j) =
+  isOfHLevel→isOfHLevelDep 2 isset
+          (univP A isset g p x) (univP A isset g p y)
+          (cong (univP A isset g p) z) (cong (univP A isset g p) w)
+          (isSetℝ x y z w) i j
+
+univP2 : linFuns → ℝ → ℝ
+univP2 f = univP (λ _ → ℝ) (λ _ → isSetℝ)
+                            (λ g → ι ((λ x → fst f x + fst g x) , {!!}))
+                            λ g h x → {!!} -- λ f h q → (f / h) q
+
