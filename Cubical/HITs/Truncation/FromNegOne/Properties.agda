@@ -413,10 +413,11 @@ PathΩ : {a : A} (n : HLevel) → (Path (∥ A ∥ (suc n)) ∣ a ∣ ∣ a ∣)
 PathΩ n = PathIdTrunc n
 
 {- Special case using direct defs of truncations -}
-PathIdTrunc₀Iso : {a b : A} → Iso (∣ a ∣₂ ≡ ∣ b ∣₂) ∥ a ≡ b ∥₁
-PathIdTrunc₀Iso = compIso (congIso setTruncTrunc2Iso)
-                    (compIso (ΩTrunc.IsoFinal _ ∣ _ ∣ ∣ _ ∣)
-                             (invIso propTruncTrunc1Iso))
+abstract
+  PathIdTrunc₀Iso : {a b : A} → Iso (∣ a ∣₂ ≡ ∣ b ∣₂) ∥ a ≡ b ∥₁
+  PathIdTrunc₀Iso = compIso (congIso setTruncTrunc2Iso)
+                      (compIso (ΩTrunc.IsoFinal _ ∣ _ ∣ ∣ _ ∣)
+                               (invIso propTruncTrunc1Iso))
 
 -------------------------
 

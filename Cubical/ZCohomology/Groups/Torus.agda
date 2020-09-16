@@ -155,7 +155,7 @@ H²-T²≅ℤ = invGroupIso (ℤ≅H²-T² tt*)
 
       mapIsHom : (x y : Group.Carrier intGroup)
               → Iso.fun typIso (x +ℤ y) ≡ ((Iso.fun typIso x) +H Iso.fun typIso y)
-      mapIsHom a b =
+      mapIsHom a b = {!!} {-
           (cong f ((GroupHom.isHom (GroupIso.map (invGroupIso (dirProdGroupIso H²-S¹≅0 (invGroupIso (Hⁿ-Sⁿ≅ℤ 0)))))
                                                               (_ , a) (_ , b))
                 ∙ λ i → guyId i , +H≡+ₕ key _ (~ i) (g a) (g b)))
@@ -199,7 +199,7 @@ H²-T²≅ℤ = invGroupIso (ℤ≅H²-T² tt*)
             helper3 a b = cong (cong (0₂ +K_)) (+K→∙ key 1 a b)
                         ∙ (congFunct (0₂ +K_) (Kn→ΩKn+1 1 a) (Kn→ΩKn+1 1 b)
                         ∙∙ (λ i → congLemma.main key 2 (Kn→ΩKn+1 1 a) i ∙ cong (_+K_ ∣ north ∣) (λ i → Kn→ΩKn+1 1 b i))
-                        ∙∙ sym (cong₂Funct (_+K_) (Kn→ΩKn+1 1 a) (Kn→ΩKn+1 1 b)))
+                        ∙∙ sym (cong₂Funct (_+K_) (Kn→ΩKn+1 1 a) (Kn→ΩKn+1 1 b))) -}
 
       ℤ≅H²-T² : GroupIso intGroup (coHomGr 2 (S₊ 1 × S₊ 1))
       fun (map ℤ≅H²-T²) = Iso.fun typIso
