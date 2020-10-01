@@ -143,7 +143,7 @@ open import Cubical.Homotopy.Connected
 open import Cubical.HITs.Sn
 open import Cubical.Data.Nat
 open import Cubical.Data.Unit
-open import Cubical.HITs.Truncation.FromNegOne renaming (rec to trRec ; elim to trElim ; elim2 to trElim2)
+open import Cubical.HITs.Truncation.FromNegOne renaming (rec to trRec ; elim to trElim ; elim2 to trElim2 ; map to trMap)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum
 open import Cubical.Data.Bool
@@ -254,6 +254,9 @@ data James {ℓ} (A : Pointed ℓ) : Type ℓ where
   α : typ A → James A → James A
   δ : (x : James A) → x ≡ α (pt A) x 
 
+natδ : ∀ {ℓ} {A : Pointed ℓ} → (x : James A) → Path (Path (James A) _ _) (cong (α (pt A)) (δ x)) (δ (α (pt A) x))
+natδ {A = (A , a)} x = {!!}
+{-
 mainlemma : ∀ {ℓ} {A : Pointed ℓ} → isConnected 2 (typ A) → Iso (James A) (Path (Susp (typ A)) north north)
 mainlemma {ℓ} {A = A , a} con = {!!}
   where
@@ -351,7 +354,7 @@ mainlemma {ℓ} {A = A , a} con = {!!}
                      ; (j = i0) → TPathHelp x (i ∧ k)
                      ; (i = i1) → TPathHelp x k})
             {!!}
-
+-}
 {-
 j = i0 ⊢ TPathHelp x i
 j = i1 ⊢ ((λ i₁ → inr (δ (αcurry (a , x)) i₁)) ∙∙
@@ -363,3 +366,153 @@ j = i1 ⊢ ((λ i₁ → inr (δ (αcurry (a , x)) i₁)) ∙∙
 i = i0 ⊢ push (a , x) j
 i = i1 ⊢ inl €
 -}
+
+open import Cubical.HITs.S2
+
+J=S1 : Iso (hLevelTrunc 3 (James (S¹ , base))) (hLevelTrunc 3 (S¹))
+J=S1 = {!trRec (isOfHLevelTrunc 3) theFun!}
+  where
+  module _ where
+  indPrincGroupoid : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Type ℓ'}
+                     → (isOfHLevel 3 B)
+                     → (€c : B)
+                     → (αc : ((x : typ A) (y : James A) → B))
+                     → (δ€ : Path B €c (αc (pt A) €))
+                     → (δα : ((x : typ A) (y : James A) → Path B (αc x y) (αc (pt A) (α x y))))
+                     → (δδ€ : PathP (λ i → Path B (δ€ i) (αc (pt A) (δ € i))) δ€ (δα (pt A) €))
+                     → (δδα : ((x : typ A) (y : James A) → PathP (λ i → Path B (δα x y i) (δα (pt A) (α x y) i)) (δα x y) λ i₁ → αc (pt A) (δ (α x y) i₁)))
+                     → (x : James A) → B
+  indPrincGroupoid hlev €c αc δ€ δα δδ€ δδα € = €c
+  indPrincGroupoid hlev €c αc δ€ δα δδ€ δδα (α x x₁) = αc x x₁
+  indPrincGroupoid hlev €c αc δ€ δα δδ€ δδα (δ € i) = δ€ i
+  indPrincGroupoid hlev €c αc δ€ δα δδ€ δδα (δ (α x x₁) i) = δα x x₁ i
+  indPrincGroupoid hlev €c αc δ€ δα δδ€ δδα (δ (δ € i₁) i) = δδ€ i₁ i -- δδ€ i₁ i
+  indPrincGroupoid hlev €c αc δ€ δα δδ€ δδα (δ (δ (α x x₁) i₁) i) = δδα x x₁ i i₁
+  indPrincGroupoid {A = A} {B = B} hlev €c αc δ€ δα δδ€ δδα (δ (δ (δ x i₂) i₁) i) = {!isOfHLevel→isOfHLevelDep 3 {A = James A} {B = λ _ → B}  !}
+
+  theFun : (James (S¹ , base)) → S¹
+  theFun € = base
+  theFun (α base x₁) = theFun x₁
+  theFun (α (loop i) €) = loop (~ i)
+  theFun (α (loop i) (α base x₁)) = theFun (α (loop i) x₁)
+  theFun (α (loop i) (α (loop i₁) x₁)) = {!!}
+  theFun (α (loop i) (δ € i₁)) = {!!}
+  theFun (α (loop i) (δ (α base €) i₁)) = {!!}
+  theFun (α (loop i) (δ (α base (α x x₁)) i₁)) = {!!}
+  theFun (α (loop i) (δ (α base (δ x₁ i₂)) i₁)) = {!!}
+  theFun (α (loop i) (δ (α (loop i₂) x₁) i₁)) = {!!} -- not needed
+  theFun (α (loop i) (δ (δ x₁ i₂) i₁)) = {!!} -- not needed
+  theFun (δ x i) = theFun x
+
+-- J=S2 : Iso (hLevelTrunc 4 (James (S² , base))) (hLevelTrunc 4 (S²))
+-- Iso.fun J=S2 = {!trRec (isOfHLevelTrunc 4) theFun!}
+--   module _ where
+--   theFun : (James (S² , base)) → (hLevelTrunc 4 (S²))
+--   theFun € = ∣ base ∣
+--   theFun (α base y) = ∣ base ∣
+--   theFun (α (surf i i₁) €) = ∣ base ∣
+--   theFun (α (surf i i₁) (α base y)) = ∣ base ∣
+--   theFun (α (surf i i₁) (α (surf i₂ i₃) y)) = ∣ base ∣
+--   theFun (α (surf i i₁) (δ € i₂)) = ∣ base ∣
+--   theFun (α (surf i i₁) (δ (α x y) i₂)) = {!!}
+--   theFun (α (surf i i₁) (δ (δ y i₃) i₂)) = {!!}
+--   theFun (δ € i) = ∣ base ∣
+--   theFun (δ (α x x₁) i) = {!!} -- theFun (α x x₁)
+--   theFun (δ (δ € i₁) i) = ∣ base ∣
+--   theFun (δ (δ (α base €) i₁) i) = {!!}
+--   theFun (δ (δ (α (surf i₂ i₃) €) i₁) i) = {!!}
+--   theFun (δ (δ (α x (α x₁ x₂)) i₁) i) = {!!}
+--   theFun (δ (δ (α x (δ x₁ i₂)) i₁) i) = {!!}
+--   theFun (δ (δ (δ x i₂) i₁) i) = {!!}
+-- Iso.inv J=S2 = {!!}
+-- Iso.rightInv J=S2 = {!!}
+-- Iso.leftInv J=S2 = {!!}
+
+
+-- -- J=S2 : Iso (hLevelTrunc 4 (James (S² , base))) (hLevelTrunc 4 (S²))
+-- -- Iso.fun J=S2 = trRec (isOfHLevelTrunc 4) theFun
+-- --   module _ where
+-- --   theFun : (James (S² , base)) → (hLevelTrunc 4 (S²))
+-- --   theFun € = ∣ base ∣
+-- --   theFun (α x €) = ∣ x ∣
+-- --   theFun (α base (α x₁ y)) = theFun (α x₁ y)
+-- --   theFun (α (surf i i₁) (α base y)) = theFun (α (surf i i₁) y)
+-- --   theFun (α (surf i i₁) (α (surf i₂ i₃) y)) = {!!}
+-- --   theFun (α base (δ y i)) = theFun (α base y) -- theFun (α base y)
+-- --   theFun (α (surf i₁ i₂) (δ € i)) = ∣ surf i₁ i₂ ∣
+-- --   theFun (α (surf i₁ i₂) (δ (α base y) i)) = theFun (α (surf i₁ i₂) y)
+-- --   theFun (α (surf i₁ i₂) (δ (α (surf i₃ i₄) y) i)) = {!!}
+-- --   theFun (α (surf i₁ i₂) (δ (δ y i₃) i)) = {!!}
+-- --   theFun (δ € i) = ∣ base ∣
+-- --   theFun (δ (α x x₁) i) = theFun (α x x₁)
+-- --   theFun (δ (δ € i₁) i) = ∣ base ∣
+-- --   theFun (δ (δ (α x x₁) i₁) i) = theFun (α x x₁)
+-- --   theFun (δ (δ (δ € i₂) i₁) i) = ∣ base ∣
+-- --   theFun (δ (δ (δ (α x x₁) i₂) i₁) i) = theFun (α x x₁)
+-- --   theFun (δ (δ (δ (δ x i₃) i₂) i₁) i) = {!!}
+-- -- Iso.inv J=S2 = trMap λ {base → α base € ; (surf i j) → α (surf i j) €} 
+-- -- Iso.rightInv J=S2 = trElim (λ _ → isOfHLevelPath 4 (isOfHLevelTrunc 4) _ _) help
+-- --   where
+-- --   help : (x : S²) → Iso.fun J=S2 (Iso.inv J=S2 ∣ x ∣) ≡ ∣ x ∣
+-- --   help base j = ∣ base ∣
+-- --   help (surf i i₁) k = ∣ surf i i₁ ∣
+-- -- Iso.leftInv J=S2 x = {!x!}
+-- --   where
+-- --   stupidAgda : (x : James (S² , base)) → Iso.inv J=S2 (Iso.fun J=S2 ∣ α base x ∣) ≡ ∣ α base x ∣
+-- --   stupidAgda € = {!!}
+-- --   stupidAgda (α base x₁) = {!λ i → ∣ δ (α base x₁) i ∣!} -- stupidAgda x₁ ∙ λ i → ∣ δ (α base x₁) i ∣
+-- --   stupidAgda (α (surf i i₁) €) = {!!}
+-- --   stupidAgda (α (surf i i₁) (α x x₁)) = {!!}
+-- --   stupidAgda (α (surf i i₁) (δ x₁ i₂)) = {!!}
+-- --   stupidAgda (δ x i) = {!!}
+  
+-- --   help : (x : James (S² , base)) → Iso.inv J=S2 (Iso.fun J=S2 ∣ x ∣) ≡ ∣ x ∣
+-- --   help € i = ∣ δ € (~ i) ∣
+-- --   help (α base €) = refl
+-- --   help (α base (α x x₁)) = help (α x x₁) ∙ λ i → ∣ δ (α x x₁) i ∣ --  λ i → ∣ δ (α x x₁) i ∣ -- λ i → ∣ δ (α base x₁) i ∣
+-- --   help (α base (δ € i)) j =
+-- --     hcomp (λ k → λ { (i = i0) → ∣ α base € ∣
+-- --                    ; (i = i1) → ((λ _ → ∣ α base € ∣) ∙ (λ i₁ → ∣ δ (α (pt (S² , base)) €) i₁ ∣)) (j ∨ ~ k)
+-- --                    ; (j = i0) → ((λ _ → ∣ α base € ∣) ∙ (λ i₁ → ∣ δ (α (pt (S² , base)) €) i₁ ∣)) (i ∧ ~ k)
+-- --                    ; (j = i1) → ∣ α base (δ € i) ∣})
+-- --             (testi j i) -- compPath-filler refl (λ i → ∣ α base (δ € i) ∣) i j
+-- --     where
+-- --     open import Cubical.Foundations.GroupoidLaws
+
+-- --     testi : Path (Path (hLevelTrunc 4 (James (S² , base))) _ _) (refl ∙ (λ i₁ → ∣ δ (α base €) i₁ ∣)) λ i → ∣ α base (δ € i) ∣
+-- --     testi = sym (lUnit _) ∙ λ i j → ∣ natδ € (~ i) j ∣
+
+-- --   help (α base (δ (α base x₁) i)) j = {!!} {-hcomp (λ k → λ { (i = i0) → (help (α base x₁) ∙ (λ i₁ → ∣ δ (α base x₁) i₁ ∣)) j
+-- --                                                       ; (j = i0) → Iso.inv J=S2 (theFun (δ (α base x₁) i))
+-- --                                                       ; (j = i1) → ∣ natδ € (i ∨ k) {!i ∧ k!} ∣})
+-- --                                              {!!} -}
+
+-- --   help (α base (δ (α (surf i₁ i₂) x₁) i)) j = {!∣ α base (δ (α base x₁) i) ∣!} -- not needed
+-- --   help (α base (δ (δ € i₁) i)) j = {!!}
+-- --   help (α base (δ (δ (α base x₁) i₁) i)) j = {!!}
+-- --   help (α base (δ (δ (α (surf i₂ i₃) x₁) i₁) i)) j = {!!} -- not needed
+-- --   help (α base (δ (δ (δ x₁ i₂) i₁) i)) j = {!!} -- not needed
+-- --   help (α (surf i i₁) €) = refl
+-- --   help (α (surf i i₁) (α base x₁)) = {!!}
+-- --   help (α (surf i i₁) (α (surf i₂ i₃) x₁)) = {!!} -- not needed
+-- --   help (α (surf i i₁) (δ x₁ i₂)) = {!!} -- not needed
+-- --   help (δ € i) j = ∣ δ € (~ j ∨ i) ∣
+-- --   help (δ (α base x₁) i) j = {!!}
+-- --   help (δ (α (surf i₁ i₂) x₁) i) = {!!} -- not needed
+-- --   help (δ (δ € i₁) i) j = {!!}
+-- --   help (δ (δ (α base x₁) i₁) i) j = {!!}
+-- --   help (δ (δ (α (surf i₂ i₃) x₁) i₁) i) = {!!} -- not needed
+-- --   help (δ (δ (δ x i₂) i₁) i) = {!!} -- not needed
+
+-- -- -- J=S2' : Iso (hLevelTrunc 4 (James (S₊ 2 , north))) (hLevelTrunc 4 (S₊ 2))
+-- -- -- Iso.fun J=S2' = trRec {!!} {!!}
+-- -- --   where
+-- -- --   theFun : (James (S₊ 2 , north)) → (hLevelTrunc 4 (S₊ 2))
+-- -- --   theFun € = ∣ north ∣
+-- -- --   theFun (α x €) = {!!}
+-- -- --   theFun (α x (α x₁ y)) = {!!}
+-- -- --   theFun (α x (δ y i)) = {!!}
+-- -- --   theFun (δ x i) = {!!}
+-- -- -- Iso.inv J=S2' = {!!}
+-- -- -- Iso.rightInv J=S2' = {!!}
+-- -- -- Iso.leftInv J=S2' = {!!}
