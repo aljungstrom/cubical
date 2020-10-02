@@ -263,22 +263,36 @@ mainlemma {ℓ} {A = A , a} con = {!!}
                            (subst isEquiv (funExt δ) (idIsEquiv (James _))) )
                    (Iso.fun (PathIdTruncIso 1)
                             (isOfHLevelSuc 0 con ∣ a ∣ ∣ x ∣))
+  
+  open import Cubical.HITs.Pushout
+  open import Cubical.HITs.Pushout.Flattening
 
-  Codes : Susp A → Type ℓ
-  Codes north = James (A , a)
-  Codes south = James (A , a)
-  Codes (merid x i) = ua ((α x) , IsoJam x) i
+  PushA : Type _
+  PushA = Pushout {A = A} (λ _ → tt) (λ _ → tt)
 
-  isContrTotal : isContr (Σ[ x ∈ Susp A ] Codes x)
-  isContrTotal = (north , €)
+  Codes : PushA → Type ℓ
+  Codes (inl x) = James (A , a)
+  Codes (inr x) = James (A , a)
+  Codes (push x i) = ua ((α x) , IsoJam x) i
+
+  isContrTotal : isContr (Σ[ x ∈ PushA ] Codes x)
+  isContrTotal = ((inl tt) , €)
                 , {!!}
 
+  open import Cubical.HITs.S2 
+
+  testS2 : Iso (hLevelTrunc 4 (James (S² , base))) (hLevelTrunc 4 S²)
+  Iso.fun testS2 = trRec (isOfHLevelTrunc 4) λ {€ → ∣ base ∣ ; (α s x) → ∣ s ∣ ; (δ € i) → ∣ base ∣ ; (δ (α base x) i) → ∣ base ∣ ; (δ (α (surf j k) x) i) → {!!} ; (δ (δ € j) i) → {!!} ; (δ (δ (α base x) j) i) → {!!} ; (δ (δ (α (surf j k) x) l) m) → {!!} ; (δ (δ (δ x i) j) k) → {!!}}
     where
-    tihi : (y : Σ (Susp A) (λ x → Codes x)) → (north , €) ≡ y
-    tihi (north , c) = {!!}
-    tihi (south , c) = {!!}
-    tihi (merid a i , c) = {!!}
-    open import Cubical.HITs.Pushout
+    testi : (x : James (hLevelTrunc 4 S² , ∣ base ∣)) → PathP {!!} {!!} {!!}
+    testi = {!!}
+  Iso.inv testS2 = trRec (isOfHLevelTrunc 4) λ {base → ∣ € ∣
+                                ; (surf i j) → hcomp (λ k → λ {(i = i0) → ∣ δ € (~ k) ∣ ; (i = i1) → ∣ δ € (~ k) ∣ ; (j = i0) → ∣ δ € (~ k) ∣ ; (j = i1) → ∣ δ € (~ k) ∣})
+                                                      ∣ (α (surf i j) €) ∣}
+  Iso.rightInv testS2 = {!!}
+  Iso.leftInv testS2 = {!!}
+
+    where
 
     αcurry : A × James (A , a) → James (A , a)
     αcurry (a , c) = α a c
@@ -288,39 +302,39 @@ mainlemma {ℓ} {A = A , a} con = {!!}
     T : Type ℓ
     T = Pushout {A = A × James (A , a)} snd αcurry
 
-    T=James : Iso (Σ (Susp A) Codes) T
-    Iso.fun T=James (north , b) = inl b -- α a b
-    Iso.fun T=James (south , b) = inr b
-    Iso.fun T=James (merid x i , b) = hcomp (λ k → λ {(i = i0) → ((λ i → inr (transportRefl (α x b) i)) ∙∙ sym (push (x , b)) ∙∙ refl) k ; (i = i1) → transportRefl (inr b) k}) (inr ((transport (λ j → ua ((α x) , IsoJam x) (i ∨ j)) b)))
-    Iso.inv T=James (inl x) = north , x
-    Iso.inv T=James (inr x) = south , x
-    Iso.inv T=James (push (x , jm) i) = merid x i , hcomp (λ k → λ {(i = i0) → transportRefl jm k ; (i = i1) → (transportRefl (α x jm)) k}) (transport (λ j → ua (α x , IsoJam x) (i ∧ j)) jm)
-    Iso.rightInv T=James (inl x) = refl
-    Iso.rightInv T=James (inr x) = refl
-    Iso.rightInv T=James (push (x , jm) i) j = help! j i
+    T=James : Iso _ _
+    T=James = (FlatteningLemma.FlattenIso.isom {A = A} (λ _ → tt) (λ _ → tt) (λ _ → James (A , a)) (λ _ → James (A , a)) (λ x → (α x) , IsoJam x))
+
+    T≡JamesREAL : Iso (Σ PushA Codes) T
+    T≡JamesREAL = compIso lIso (compIso T=James rIso)
       where
-      test : {!!}
-      test = {!!}
+      lIso : Iso _ _
+      Iso.fun lIso (inl x , b) = (inl x) , b
+      Iso.fun lIso (inr x , b) = (inr x) , b
+      Iso.fun lIso (push a i , b) = push a i , b
+      Iso.inv lIso (inl x , b) = inl x , b
+      Iso.inv lIso (inr x , b) = inr x , b
+      Iso.inv lIso (push a i , b) = push a i , b
+      Iso.rightInv lIso (inl x , b) = refl
+      Iso.rightInv lIso (inr x , b) = refl
+      Iso.rightInv lIso (push a i , b) = refl
+      Iso.leftInv lIso (inl x , b) = refl
+      Iso.leftInv lIso (inr x , b) = refl
+      Iso.leftInv lIso (push a i , b) = refl
 
-      help! : cong (Iso.fun T=James ∘ Iso.inv T=James) (push (x , jm)) ≡ push (x , jm)
-      help! = (λ j i → hcomp (λ k →  λ { (i = i0) → doubleCompPath-filler (λ i → inr (transportRefl (α x jm) i)) (sym (push (x , jm))) refl (~ j) k
-                                    ; (i = i1) → transportRefl (inr (α x jm)) (j ∨ k)
-                                    ; (j = i1) → push (x , jm) (i ∨ (~ k))})
-                             (hcomp (λ k → λ { (i = i0) → inr (α (transportRefl x j) (transportRefl jm j))
-                                             ; (j = i0) → inr
-                                                              (transport (λ j₂ → ua (α x , IsoJam x) (i ∨ j₂))
-                                                               (hcomp
-                                                                (λ r → λ { (i = i0) → transportRefl jm r
-                                                                       ; (i = i1) → transportRefl (α x jm) r
-                                                                   })
-                                                                (transport (λ j₂ → ua (α x , IsoJam x) (i ∧ j₂)) jm))) -- inr (transportRefl (α x (transportRefl jm {!!})) (~ k))
-                                             ; (i = i1) → transportRefl (inr (α x jm)) j -- transportRefl (inr (α x jm)) (j ∨ ~ k) -- transportRefl (inr (α x {!!})) (j ∨ (~ k))
-                                             ; (j = i1) → inr (α x jm) })-- inr (α x jm)  })
-                                    {!!}))
-
-    Iso.leftInv T=James (north , b) = refl
-    Iso.leftInv T=James (south , b) = refl
-    Iso.leftInv T=James (merid a i , b) = {!!}
+      rIso : Iso _ _
+      Iso.fun rIso (inl x) = inl (snd x)
+      Iso.fun rIso (inr x) = inr (snd x)
+      Iso.fun rIso (push (a , b) i) = push (a , b) i
+      Iso.inv rIso (inl x) = inl (tt , x)
+      Iso.inv rIso (inr x) = inr (tt , x)
+      Iso.inv rIso (push a i) = push a i
+      Iso.rightInv rIso (inl x) = refl
+      Iso.rightInv rIso (inr x) = refl
+      Iso.rightInv rIso (push a i) = refl
+      Iso.leftInv rIso (inl x) = refl
+      Iso.leftInv rIso (inr x) = refl
+      Iso.leftInv rIso (push a i) = refl
 
     TPathHelp : (x : James (A , a)) → Path T (inl x) (inl €)
     TPathHelp € = refl
@@ -332,7 +346,7 @@ mainlemma {ℓ} {A = A , a} con = {!!}
                                      ; (i = i1) → (push (a , α a x) ∙∙ (λ i → inr (δ (α a x) (~ i))) ∙∙ sym (push (a , x))) j
                                      ; (j = i0) → inl (δ x (i ∨ ~ k))
                                      ; (j = i1) → inl x})
-                                            {!!})
+                                            (help (~ i) j))
 
       where
       help : Path (Path T _ _)
