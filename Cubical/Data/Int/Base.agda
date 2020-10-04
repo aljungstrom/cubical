@@ -34,3 +34,4 @@ instance
 instance
   fromNegInt : HasFromNeg Int
   fromNegInt = record { Constraint = λ _ → Unit ; fromNeg = λ n → neg n }
+

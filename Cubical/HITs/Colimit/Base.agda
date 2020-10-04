@@ -404,19 +404,11 @@ J=S1 = {!trRec (isOfHLevelTrunc 3) theFun!}
   indPrincGroupoid hlev €c αc δ€ δα δδ€ δδα (δ (δ (α x x₁) i₁) i) = δδα x x₁ i i₁
   indPrincGroupoid {A = A} {B = B} hlev €c αc δ€ δα δδ€ δδα (δ (δ (δ x i₂) i₁) i) = {!isOfHLevel→isOfHLevelDep 3 {A = James A} {B = λ _ → B}  !}
 
+
   theFun : (James (S¹ , base)) → S¹
   theFun € = base
-  theFun (α base x₁) = theFun x₁
-  theFun (α (loop i) €) = loop (~ i)
-  theFun (α (loop i) (α base x₁)) = theFun (α (loop i) x₁)
-  theFun (α (loop i) (α (loop i₁) x₁)) = {!!}
-  theFun (α (loop i) (δ € i₁)) = {!!}
-  theFun (α (loop i) (δ (α base €) i₁)) = {!!}
-  theFun (α (loop i) (δ (α base (α x x₁)) i₁)) = {!!}
-  theFun (α (loop i) (δ (α base (δ x₁ i₂)) i₁)) = {!!}
-  theFun (α (loop i) (δ (α (loop i₂) x₁) i₁)) = {!!} -- not needed
-  theFun (α (loop i) (δ (δ x₁ i₂) i₁)) = {!!} -- not needed
-  theFun (δ x i) = theFun x
+  theFun (α x y) = {!!}
+  theFun (δ x i) = {!!} -- theFun x
 
 -- J=S2 : Iso (hLevelTrunc 4 (James (S² , base))) (hLevelTrunc 4 (S²))
 -- Iso.fun J=S2 = {!trRec (isOfHLevelTrunc 4) theFun!}
