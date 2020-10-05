@@ -122,6 +122,14 @@ rec {n = n} {B = B} hB g (hub f) = isOfHLevel→isSphereFilled (-1+ n) hB (λ x 
 rec {n = n} hB g (spoke f x i) =
   isOfHLevel→isSphereFilled (-1+ n) hB (λ x → rec hB g (f x)) .snd x i
 
+rec2 : {n : ℕ}
+       {B : Type ℓ'}
+       (hB : isOfHLevel (suc n) B)
+       (g : A → A → B)
+     → (∥ A ∥ (suc n) → ∥ A ∥ (suc n) → B)
+rec2 {n = n} hB g = rec (isOfHLevelΠ (suc n) (λ _ → hB))
+                        λ x → rec hB (g x)
+
 elim : {n : ℕ}
       {B : ∥ A ∥ (suc n) → Type ℓ'}
       (hB : (x : ∥ A ∥ (suc n)) → isOfHLevel (suc n) (B x))

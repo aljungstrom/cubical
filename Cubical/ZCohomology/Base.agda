@@ -5,6 +5,7 @@ open import Cubical.Data.Int.Base
 open import Cubical.Data.Nat.Base
 open import Cubical.Data.Sigma
 
+open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Pointed.Base
 
 open import Cubical.HITs.Nullification.Base
@@ -31,6 +32,13 @@ coHomK (suc n) = ∥ S₊ (suc n) ∥  (2 + suc n)
 coHom : (n : ℕ) → Type ℓ → Type ℓ
 coHom n A = ∥ (A → coHomK n) ∥₂
 
+loopSpaceK : (n : ℕ) → Type₀
+loopSpaceK zero = hLevelTrunc 2 ΩS¹
+loopSpaceK (suc n) = hLevelTrunc (3 + n) (Path (S₊ (2 + n)) north north)
+
+reflK : (n : ℕ) → loopSpaceK n
+reflK zero = ∣ refl ∣
+reflK (suc n) = ∣ refl ∣
 
 --- Reduced cohomology ---
 
