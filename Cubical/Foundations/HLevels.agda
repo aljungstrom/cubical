@@ -161,6 +161,40 @@ isGroupoid→isGroupoid' {A = A} Agpd a₀₋₋ a₁₋₋ a₋₀₋ a₋₁�
 isGroupoid'→isGroupoid : isGroupoid' A → isGroupoid A
 isGroupoid'→isGroupoid Agpd' x y p q r s = Agpd' r s refl refl refl refl
 
+is2Groupoid→is2Groupoid' : is2Groupoid A → is2Groupoid' A
+is2Groupoid→is2Groupoid' {A = A} A2gpd a₀₋₋₋ a₁₋₋₋ a₋₀₋₋ a₋₁₋₋ a₋₋₀₋ a₋₋₁₋ a₋₋₋₀ a₋₋₋₁ =
+  transport⁻ (PathP≡Path (λ i → Cube (a₋₀₋₋ i) (a₋₁₋₋ i) (a₋₋₀₋ i) (a₋₋₁₋ i) (a₋₋₋₀ i) (a₋₋₋₁ i)) a₀₋₋₋ a₁₋₋₋)
+             (is2Groupoid→isPropCube _ _ _ _ _ _ _ _)
+  where
+  is2Groupoid→isPropCube :
+       {a₀₀₀ a₀₀₁ : A} {a₀₀₋ : a₀₀₀ ≡ a₀₀₁}
+       {a₀₁₀ a₀₁₁ : A} {a₀₁₋ : a₀₁₀ ≡ a₀₁₁}
+       {a₀₋₀ : a₀₀₀ ≡ a₀₁₀} {a₀₋₁ : a₀₀₁ ≡ a₀₁₁}
+       (a₀₋₋ : Square a₀₀₋ a₀₁₋ a₀₋₀ a₀₋₁)
+       {a₁₀₀ a₁₀₁ : A} {a₁₀₋ : a₁₀₀ ≡ a₁₀₁}
+       {a₁₁₀ a₁₁₁ : A} {a₁₁₋ : a₁₁₀ ≡ a₁₁₁}
+       {a₁₋₀ : a₁₀₀ ≡ a₁₁₀} {a₁₋₁ : a₁₀₁ ≡ a₁₁₁}
+       (a₁₋₋ : Square a₁₀₋ a₁₁₋ a₁₋₀ a₁₋₁)
+       {a₋₀₀ : a₀₀₀ ≡ a₁₀₀} {a₋₀₁ : a₀₀₁ ≡ a₁₀₁}
+       (a₋₀₋ : Square a₀₀₋ a₁₀₋ a₋₀₀ a₋₀₁)
+       {a₋₁₀ : a₀₁₀ ≡ a₁₁₀} {a₋₁₁ : a₀₁₁ ≡ a₁₁₁}
+       (a₋₁₋ : Square a₀₁₋ a₁₁₋ a₋₁₀ a₋₁₁)
+       (a₋₋₀ : Square a₀₋₀ a₁₋₀ a₋₀₀ a₋₁₀)
+       (a₋₋₁ : Square a₀₋₁ a₁₋₁ a₋₀₁ a₋₁₁)
+    → isProp (Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁)
+  is2Groupoid→isPropCube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁ = 
+    transport⁻
+      (cong isProp (PathP≡Path (λ i → Square (a₋₀₋ i) (a₋₁₋ i) (a₋₋₀ i) (a₋₋₁ i)) a₀₋₋ a₁₋₋))
+      (helper _ _)
+      where
+      helper : isSet (Square _ _ _ _)
+      helper = transport⁻ (cong isSet (PathP≡Path _ _ _))
+               (A2gpd _ _ _ _)
+
+is2Groupoid'→is2Groupoid : is2Groupoid' A → is2Groupoid A
+is2Groupoid'→is2Groupoid A2gpd' x y p q r s t u =
+  A2gpd' t u refl refl refl refl refl refl
+
 -- hlevels are preserved by retracts (and consequently equivalences)
 
 isContrRetract
