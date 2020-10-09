@@ -80,19 +80,21 @@ amap2 (δJ x i) = {!!}
 -}
 
 amap2 : J (S² , base) → hLevelTrunc 4 S²
-amap2 εJ = ∣ base ∣
-amap2 (αJ base x₁) = amap2 x₁
-amap2 (αJ (surf i i₁) εJ) = ∣ surf i i₁ ∣
-amap2 (αJ (surf i i₁) (αJ base x₁)) = amap2 (αJ (surf i i₁) x₁)
-amap2 (αJ (surf i j) (αJ (surf k l) x)) = helper x i j k l 
+mutualInd : (x : S²) (y : J (S² , base)) → hLevelTrunc 4 S²
+mutualInd base y = amap2 y
+mutualInd (surf i i₁) εJ = ∣ surf i i₁ ∣
+mutualInd (surf i i₁) (αJ base y) = mutualInd (surf i i₁) y
+mutualInd (surf i i₁) (αJ (surf i₂ i₃) y) = helper i i₁ i₂ i₃
   where
-  helper : (x : (J (S² , base)))
-    → 4Cube (λ _ k l  → amap2 (αJ (surf k l) x)) (λ _ k l  → amap2 (αJ (surf k l) x))
-      (λ _ k l  → amap2 (αJ (surf k l) x)) (λ _ k l  → amap2 (αJ (surf k l) x))
-      (λ i j _  → amap2 (αJ (surf i j) x)) (λ i j _  → amap2 (αJ (surf i j) x))
-      (λ i j _  → amap2 (αJ (surf i j) x)) (λ i j _  → amap2 (αJ (surf i j) x))
-  helper x = is2Groupoid→is2Groupoid' (isOfHLevelTrunc 4) _ _ _ _ _ _ _ _
-amap2 (αJ (surf i i₁) (δJ x₁ i₂)) = amap2 (αJ (surf i i₁) x₁)
+  helper :  4Cube (λ _ k l  → mutualInd (surf k l) y) (λ _ k l  → mutualInd (surf k l) y)
+             (λ _ k l  → mutualInd (surf k l) y) (λ _ k l  → mutualInd (surf k l) y) 
+             (λ i j _  → mutualInd (surf i j) y) (λ i j _  → mutualInd (surf i j) y)
+             (λ i j _  → mutualInd (surf i j) y) (λ i j _  → mutualInd (surf i j) y)
+  helper = is2Groupoid→is2Groupoid' (isOfHLevelTrunc 4) _ _ _ _ _ _ _ _
+mutualInd (surf i i₁) (δJ y i₂) = mutualInd (surf i i₁) y
+
+amap2 εJ = ∣ base ∣
+amap2 (αJ x y) = mutualInd x y
 amap2 (δJ x i) = amap2 x
 
 amap2back : S² → hLevelTrunc 4 (J (S² , base))
@@ -110,9 +112,38 @@ Iso.leftInv theIso =
        {!!}
   where
   helper : (a : J (S² , base)) → Iso.inv theIso (Iso.fun theIso ∣ a ∣) ≡ ∣ a ∣
-  helper εJ i = ∣ δJ εJ (~ i) ∣
-  helper (αJ base a) = helper a ∙ λ i → ∣ δJ a i ∣
-  helper (αJ (surf i j) εJ) k =
+  mutualInd' : (x : S²) (y : J(S² , base)) → Iso.inv theIso (Iso.fun theIso ∣ (αJ x y) ∣) ≡ ∣ (αJ x y) ∣
+  mutualInd'' : (x1 x2 : S²) (y : J (S² , base)) → Iso.inv theIso (Iso.fun theIso ∣ (αJ x1 (αJ x2 y)) ∣) ≡ ∣ (αJ x1 (αJ x2 y)) ∣
+  mutualInd'' base x2 y = {!mutualInd' x2 y ∙ ?!}
+  mutualInd'' (surf i i₁) x2 y = {!!}
+
+{-
+  mutualInd'' base y i j k = {!!}
+  mutualInd'' (surf i j) y k l m = helper2 i j k l m
+    where
+    helper2 : PathP (λ i → 4Cube (λ k l m → mutualInd'' base y k l m)
+                                  (λ k l m → mutualInd'' base y k l m)
+                                  (λ j l m → Iso.inv theIso (Iso.fun theIso ∣ αJ (surf l m) (αJ (surf i j) y) ∣))
+                                  (λ j l m → ∣ αJ (surf l m) (αJ (surf i j) y) ∣)
+                                  (λ j k m → mutualInd' base (αJ (surf i j) y) k)
+                                  (λ j k m → mutualInd' base (αJ (surf i j) y) k)
+                                  (λ j k l → mutualInd' base (αJ (surf i j) y) k)
+                                  λ j k l → mutualInd' base (αJ (surf i j) y) k ) -- (λ j k l → ∣ αJ (surf i j) (αJ (surf k l) y) ∣))
+                    (λ _ k l m → mutualInd'' base y k l m)
+                    (λ _ k l m → mutualInd'' base y k l m)
+    helper2 = transport⁻ (PathP≡Path _ _ _)
+                (transport⁻ (cong isProp (PathP≡Path _ _ _))
+                  (transport⁻ (cong isSet (PathP≡Path _ _ _))
+                    (transport⁻  (cong isGroupoid (PathP≡Path _ _ _))
+                      (transport⁻  (cong is2Groupoid (PathP≡Path _ _ _))
+                        (isOfHLevelPath 4 (isOfHLevelTrunc 4) _ _)
+                          _ _) _ _) _ _) _ _) -}
+    
+  mutualInd' base εJ = refl
+  mutualInd' (surf i i₁) εJ = {!!}
+  mutualInd' x (αJ x₁ y) = mutualInd'' x x₁ y
+  mutualInd' x (δJ y i) = {!!}
+{-
     hcomp (λ m → λ { (i = i0) → lCancel (λ i → ∣ δJ εJ i ∣) (~ m) k
                     ; (i = i1) → lCancel (λ i → ∣ δJ εJ i ∣) (~ m) k
                     ; (j = i0) → lCancel (λ i → ∣ δJ εJ i ∣) (~ m) k
@@ -120,19 +151,10 @@ Iso.leftInv theIso =
                     ; (k = i0) → ∣ αJ (surf i j) εJ ∣
                     ; (k = i1) → ∣ αJ (surf i j) εJ ∣ })
            ∣ (αJ (surf i j) εJ) ∣
-  helper (αJ (surf i j) (αJ base a)) k = {!
-    hcomp (λ m → λ { (i = i0) → ((helper a ∙ (λ i → ∣ δJ x ? ∣) ∙ δnatJ x (~ m)) k
-                    ; (i = i1) → ((helper a ∙ δJ x) ∙ δnatJ x (~ m)) k
-                    ; (j = i0) → ((helper a ∙ δJ x) ∙ δnatJ x (~ m)) k
-                    ; (j = i1) → ((helper a ∙ δJ x) ∙ δnatJ x (~ m)) k
-                    ; (k = i0) → amap2back (amap2 (αJ (surf i j) x))
-                    ; (k = i1) → αJ (surf i j) (αJ base x)})
-           (hcomp (λ m → λ { (k = i0) → amap2back (amap2 (αJ (surf i j) x))
-                            ; (k = i1) → αJ (surf i j) (δJ x m)})
-                  (retrH2 (αJ (surf i j) x) k))!}
-  helper (αJ (surf i i₁) (αJ (surf i₂ i₃) a)) = {!!}
-  helper (αJ (surf i i₁) (δJ a i₂)) = {!!}
-  helper (δJ a i) j = compPath-filler (helper a) (λ i → ∣ δJ a i ∣) i j
+-}
+  helper εJ i = ∣ δJ εJ (~ i) ∣
+  helper (αJ x y) = mutualInd' x y
+  helper (δJ a i) j = {!!} -- compPath-filler (helper a) (λ i → ∣ δJ a i ∣) i j
 
 -- retrH2 : section amap2back amap2
 -- retrH2 εJ = sym (δJ εJ)
