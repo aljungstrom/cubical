@@ -211,3 +211,97 @@ SmashAssociate⁻ = rearrange ∘ comm ∘ Smash-map (idfun∙ _) (comm , refl)
 
 ⋀-associate⁻ : A ⋀ (B ⋀∙ C) → (A ⋀∙ B) ⋀ C
 ⋀-associate⁻ = (SmashPtProj→⋀∙ ⋀→ idfun∙ _) ∘ Smash→⋀ ∘ SmashAssociate⁻ ∘ ⋀→Smash ∘ (idfun∙ _ ⋀→ ⋀∙→SmashPtProj)
+
+data Smash' {ℓ ℓ'} (A : Pointed ℓ) (B : Pointed ℓ') : Type (ℓ-max ℓ ℓ') where
+  proj  : (x : typ A) → (y : typ B) → Smash' A B
+  glue : (a : typ A) (b : typ B) → proj a (pt B) ≡ proj (pt A) b
+
+open import Cubical.Data.Bool
+open import Cubical.HITs.S1
+open import Cubical.HITs.S2
+open import Cubical.HITs.S3
+open import Cubical.HITs.Susp
+
+anIso : (A B : Pointed ℓ) → Iso (Smash' A B) (Smash A B)
+Iso.fun (anIso (A , a) (B , b)) (proj x y) = proj x y
+Iso.fun (anIso (A , a) (B , b)) (glue x y i) = ((gluel x ∙ sym (gluel a)) ∙ ((gluer b)  ∙ sym (gluer y))) i
+Iso.inv (anIso (A , a) (B , b)) basel = proj a b
+Iso.inv (anIso (A , a) (B , b)) baser = proj a b
+Iso.inv (anIso (A , a) (B , b)) (proj x y) = proj x y
+Iso.inv (anIso (A , a) (B , b)) (gluel a₁ i) = glue a₁ b i
+Iso.inv (anIso (A , a) (B , b)) (gluer b₁ i) = glue a b₁ (~ i)
+Iso.rightInv (anIso (A , a) (B , b)) basel = gluel a
+Iso.rightInv (anIso (A , a) (B , b)) baser = gluer b
+Iso.rightInv (anIso (A , a) (B , b)) (proj x y) = refl
+Iso.rightInv (anIso (A , a) (B , b)) (gluel x i) j =
+  hcomp (λ k → λ { (i = i0) → proj x b
+                  ; (j = i0) → ((λ i → (gluel x ∙ sym (gluel a)) ∙ (rCancel (gluer b) i))
+                               ∙∙ sym (rUnit (gluel x ∙ sym (gluel a)))
+                               ∙∙ compPath≡compPath' (gluel x) (sym (gluel a))) (~ k) i
+                  ; (i = i1) → gluel a j
+                  ; (j = i1) → gluel x i})
+        (hcomp (λ k → λ { (i = i0) → gluel x (~ j ∧ ~ k)
+                         ; (i = i1) → gluel a j
+                         ; (j = i1) → gluel x i})
+               (invSides-filler (sym (gluel x)) (sym (gluel a)) i j))
+Iso.rightInv (anIso (A , a) (B , b)) (gluer y i) j =
+  hcomp (λ k → λ { (i = i0) → proj a y
+                  ; (j = i0) → ((λ i → sym ((rCancel (gluel a) i) ∙ (gluer b ∙ sym (gluer y))))
+                               ∙∙ (λ i → sym (lUnit (gluer b ∙ sym (gluer y)) (~ i)))
+                               ∙∙ (symDistr (gluer b) (sym (gluer y)))) (~ k) i
+                  ; (i = i1) → gluer b j
+                  ; (j = i1) → gluer y i})
+                  (hcomp (λ k → λ { (i = i0) → proj a y
+                                   ; (i = i1) → gluer b (j ∨ ~ k)
+                                   ; (j = i1) → gluer y i})
+                         (gluer y i))
+Iso.leftInv (anIso (A , a) (B , b)) (proj x y) = {!!}
+Iso.leftInv (anIso (A , a) (B , b)) (glue x y i) j = {!!} -- helper j i
+  where
+  helper : cong (Iso.inv (anIso (A , a) (B , b))) ((gluel x ∙ sym (gluel a)) ∙ ((gluer b)  ∙ sym (gluer y))) ≡ glue x y
+  helper = congFunct (Iso.inv (anIso (A , a) (B , b))) ((gluel x ∙ sym (gluel a))) ((gluer b)  ∙ sym (gluer y))
+        ∙∙ cong₂ _∙_ (congFunct (Iso.inv (anIso (A , a) (B , b))) (gluel x) (sym (gluel a)))
+                     (congFunct (Iso.inv (anIso (A , a) (B , b))) (gluer b) (sym (gluer y)))
+        ∙∙ ((λ i → (glue x b ∙ sym (glue a b))
+                  ∙ sym (glue a b) ∙ glue a y)
+        ∙∙ {!sym (gluel a) ∙ (gluer a)!}
+        ∙∙ {!glue x b , sym glue a b , glue a b , glue a y!})
+    where
+    helper2 : (glue x b ∙ sym (glue a b)) ≡ glue x y ∙ sym (glue a y) ∙ glue a b
+    helper2 = {!!}
+
+test2 : ∀ {ℓ} → (A : Pointed ℓ) → Iso (Smash' (Susp Bool , north) A) (Susp (typ A))
+Iso.fun (test2 (A , a)) (proj north y) = north
+Iso.fun (test2 (A , a)) (proj south y) = south
+Iso.fun (test2 (A , a)) (proj (merid false i) y) = merid a i
+Iso.fun (test2 (A , a)) (proj (merid true i) y) = merid y i
+Iso.fun (test2 (A , a)) (glue north b i) = north
+Iso.fun (test2 (A , a)) (glue south b i) = merid a (~ i)
+Iso.fun (test2 (A , a)) (glue (merid false i₁) b i) = invSides-filler refl (merid a) i₁ i
+Iso.fun (test2 (A , a)) (glue (merid true i₁) b i) = invSides-filler refl (merid a) i₁ i
+Iso.inv (test2 (A , a)) north = proj north a
+Iso.inv (test2 (A , a)) south = proj north a
+Iso.inv (test2 (A , a)) (merid b i) =
+  (glue north b ∙∙ (λ i → proj ((merid false ∙ (sym (merid true))) i) b) ∙∙ sym (glue north b)) i
+Iso.rightInv (test2 (A , a)) north = refl
+Iso.rightInv (test2 (A , a)) south = merid a
+Iso.rightInv (test2 (A , a)) (merid b i) = {!!}
+Iso.leftInv (test2 (A , a)) (proj north y) = glue north y
+Iso.leftInv (test2 (A , a)) (proj south y) = glue north y ∙ λ i → proj (merid true i) y
+Iso.leftInv (test2 (A , a)) (proj (merid false i) y) = {!!}
+Iso.leftInv (test2 (A , a)) (proj (merid true i) y) = {!!}
+Iso.leftInv (test2 (A , a)) (glue north b i) j = {!!}
+Iso.leftInv (test2 (A , a)) (glue south b i) = {!!}
+Iso.leftInv (test2 (A , a)) (glue (merid false i₁) b i) = {!!}
+Iso.leftInv (test2 (A , a)) (glue (merid true i₁) b i) k = {!!}
+
+test : ∀ {ℓ} → (A : Pointed ℓ) → Iso (Smash' (S¹ , base) A) (Susp (typ A))
+Iso.fun (test (A , a)) (proj base y) = north
+Iso.fun (test (A , a)) (proj (loop i) y) = (merid y ∙ sym (merid a)) i
+Iso.fun (test (A , a)) (glue base b i) = north
+Iso.fun (test (A , a)) (glue (loop j) b i) = {!hcom!}
+Iso.inv (test (A , a)) north = proj base a
+Iso.inv (test (A , a)) south = proj base a
+Iso.inv (test (A , a)) (merid b i) = {!!}
+Iso.rightInv (test (A , a)) = {!!}
+Iso.leftInv (test (A , a)) = {!!}

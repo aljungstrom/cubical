@@ -15,11 +15,16 @@ open import Cubical.Foundations.HLevels
 open import Cubical.HITs.Sn
 open import Cubical.Data.Nat.Base renaming (suc to sucℕ)
 open import Cubical.Data.Unit.Base
+open import Cubical.Data.Empty
+
+S' : ℕ₋₁ → Type₀
+S' neg1 = ⊥
+S' (ℕ→ℕ₋₁ n) = S₊ n
 
 data HubAndSpoke {ℓ} (A : Type ℓ) (n : ℕ₋₁) : Type ℓ where
   ∣_∣ : A  → HubAndSpoke A n
-  hub : (f : S (suc n) → HubAndSpoke A n) → HubAndSpoke A n
-  spoke : (f : S (suc n) → HubAndSpoke A n) (x : S (suc n)) → hub f ≡ f x
+  hub : (f : S' (suc n) → HubAndSpoke A n) → HubAndSpoke A n
+  spoke : (f : S' (suc n) → HubAndSpoke A n) (x : S' (suc n)) → hub f ≡ f x
 
 hLevelTrunc : ∀ {ℓ} (n : ℕ) (A : Type ℓ) → Type ℓ
 hLevelTrunc zero A = Unit*

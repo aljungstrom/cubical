@@ -7,7 +7,6 @@ Freudenthal suspension theorem
 module Cubical.Homotopy.Freudenthal where
 
 open import Cubical.Foundations.Everything
--- open import Cubical.Data.HomotopyGroup
 open import Cubical.Data.Nat
 open import Cubical.Data.Sigma
 open import Cubical.HITs.Nullification
@@ -24,8 +23,74 @@ open import Cubical.HITs.S2
 open import Cubical.HITs.S3
 open import Cubical.Foundations.Equiv.HalfAdjoint
 
-module _ {ℓ} (n : HLevel) {A : Pointed ℓ} (connA : isConnected (suc (suc n)) (typ A)) where
+open import Cubical.HITs.Pushout
+open import Cubical.HITs.Pushout.Flattening
 
+{-
+myProof : ∀ {ℓ} {A : Type ℓ} (n : ℕ) → Iso (hLevelTrunc (2 + n) A) (S₊ (suc n) → hLevelTrunc (2 + n) A) 
+Iso.fun (myProof zero) x = λ _ → x
+Iso.inv (myProof zero) x = x base
+Iso.rightInv (myProof zero) f = funExt λ x → sym (spoke f base) ∙ spoke f x
+Iso.leftInv (myProof zero) x = refl
+myProof (suc n) = {!!}
+
+test2 : ∀ {ℓ} {A : Type ℓ} (n : ℕ) → Iso (hLevelTrunc (4 + n) (S₊ (2 + n))) (S₊ (3 + n) → hLevelTrunc (4 + n) (Path (S₊ (3 + n)) north south))
+Iso.fun (test2 n) = trElim {!!} λ a x → ∣ merid a ∣
+Iso.inv (test2 n) f = {!f north!}
+Iso.rightInv (test2 n) = {!!}
+Iso.leftInv (test2 n) = {!!}
+  where
+  test3 : Iso (S₊ (3 + n) → hLevelTrunc (4 + n) (Path (S₊ (3 + n)) north north))
+              ((x : S₊ (3 + n)) → hLevelTrunc (4 + n) (Path (S₊ (3 + n)) north x))
+  Iso.fun test3 f north = f north
+  Iso.fun test3 f south = subst (λ x → hLevelTrunc (4 + n) (Path (S₊ (3 + n)) north x)) (merid north) (f south)
+  Iso.fun test3 f (merid a i) = {!!}
+  Iso.inv test3 = {!!}
+  Iso.rightInv test3 = {!!}
+  Iso.leftInv test3 = {!!}
+    where
+    helperIso : Iso ((x : S₊ (3 + n)) → hLevelTrunc (4 + n) (Path (S₊ (3 + n)) north x))
+                    (Σ[ p ∈ hLevelTrunc (4 + n) (Path (S₊ (3 + n)) north north) ]
+                     Σ[ q ∈ hLevelTrunc (4 + n) (Path (S₊ (3 + n)) north south) ]
+                     ((a : S₊ (2 + n)) → PathP (λ i → hLevelTrunc (4 + n) (north ≡ (merid a i))) p q))
+    Iso.fun helperIso f = (f north) , ((f south) , (λ a i → f (merid a i)))
+    Iso.inv helperIso (fn , fs , fm) north = fn
+    Iso.inv helperIso (fn , fs , fm) south = fs
+    Iso.inv helperIso (fn , fs , fm) (merid a i) = fm a i
+    Iso.rightInv helperIso (fn , fs , fm) = ΣPathP (refl , (ΣPathP (refl , refl)))
+    Iso.leftInv helperIso f = funExt λ {north → refl ; south → refl ; (merid a i) → refl}
+-}
+{-
+Code' : (n : ℕ) → S₊ (3 + n) → Type₀
+Code' n north = S₊ (2 + n)
+Code' n south = S₊ (2 + n)
+Code' n (merid a i) = ua (isoToEquiv help) i
+  where
+  tihi : S₊ (2 + n) → S₊ (2 + n)
+  tihi north = north
+  tihi south = south -- south
+  tihi (merid a i) = {!!} -- (merid a ∙ (sym (merid (pt (S₊∙ (suc n)))))) i
+  tihiId : (x : S₊ (2 + n)) → tihi (tihi x) ≡ x
+  tihiId north = refl -- refl
+  tihiId south = {!!} -- merid (pt (S₊∙ (suc n))) -- refl
+  tihiId (merid a i) j = {!compPath-filler ? ? j i!} -- refl
+  help : Iso (Code' n north) (Code' n south)
+  Iso.fun help = tihi
+  Iso.inv help = tihi
+  Iso.rightInv help = tihiId
+  Iso.leftInv help = tihiId
+
+  tihi2 : {!!}
+  tihi2 = {!!}
+
+
+i = i0 ⊢ north
+i = i1 ⊢ merid north j
+j = i0 ⊢ north
+j = i1 ⊢ merid a i
+-}
+
+module _ {ℓ} (n : HLevel) {A : Pointed ℓ} (connA : isConnected (suc (suc n)) (typ A)) where
   σ : typ A → typ (Ω (∙Susp (typ A)))
   σ a = merid a ∙ merid (pt A) ⁻¹
 
@@ -69,8 +134,7 @@ module _ {ℓ} (n : HLevel) {A : Pointed ℓ} (connA : isConnected (suc (suc n))
               (subst isEquiv
                 (funExt (Trunc.mapId) ⁻¹)
                 (idIsEquiv _)
-                .equiv-proof ∣ fib ∣)
-             ))
+                .equiv-proof ∣ fib ∣)))
         .fst .fst a
 
     interpolate : (a : typ A)

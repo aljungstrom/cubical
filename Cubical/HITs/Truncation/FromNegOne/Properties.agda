@@ -15,7 +15,7 @@ open isPathSplitEquiv
 open import Cubical.Modalities.Modality
 open Modality
 
-open import Cubical.Data.Empty as ⊥ using (⊥)
+open import Cubical.Data.Empty.Base as ⊥ renaming (rec to ⊥rec ; elim to ⊥elim)
 open import Cubical.Data.Nat hiding (elim)
 open import Cubical.Data.NatMinusOne as ℕ₋₁
 open import Cubical.Data.Sigma
@@ -35,30 +35,51 @@ private
     ℓ ℓ' : Level
     A : Type ℓ
     B : Type ℓ'
+open import Cubical.Data.Bool
+open import Cubical.HITs.S1
 
-open import Cubical.HITs.Truncation.Properties using (sphereFill; isSphereFilled)
+sphereFill : (n : ℕ₋₁) (f : S' n → A) → Type _
+sphereFill {A = A} n f = Σ[ top ∈ A ] ((x : S' n) → top ≡ f x)
+
+isSphereFilled : ℕ₋₁ → Type ℓ → Type ℓ
+isSphereFilled n A = (f : S' n → A) → sphereFill n f
 
 isSphereFilled∥∥ : {n : ℕ₋₁} → isSphereFilled (suc₋₁ n) (HubAndSpoke A n)
 isSphereFilled∥∥ f = (hub f) , (spoke f)
 
 isSphereFilled→isOfHLevel : (n : ℕ₋₁) → isSphereFilled (suc₋₁ n) A → isOfHLevel (1 + 1+ n) A
-isSphereFilled→isOfHLevel {A = A} neg1 h x y = sym (snd (h f) north) ∙ snd (h f) south
+isSphereFilled→isOfHLevel {A = A} neg1 h x y = sym (snd (h f) true) ∙ snd (h f) false
   where
-    f : Susp ⊥ → A
-    f north = x
-    f south = y
-    f (merid () i)
-isSphereFilled→isOfHLevel {A = A} (ℕ→ℕ₋₁ n) h x y = isSphereFilled→isOfHLevel (-1+ n) (helper h x y)
+    f : Bool → A
+    f true = x
+    f false = y
+isSphereFilled→isOfHLevel {A = A} (ℕ→ℕ₋₁ zero) h x y =
+  J (λ y q → (p : x ≡ y) → q ≡ p) (helper x)
   where
-    helper : {n : ℕ₋₁} → isSphereFilled (suc₋₁ n) A → (x y : A) → isSphereFilled n (x ≡ y)
+  helper : (x : A) (p : x ≡ x) → refl ≡ p
+  helper x p i j =
+    hcomp (λ k → λ { (i = i0) → h S¹→A .snd base k
+                    ; (i = i1) → p j
+                    ; (j = i0) → h S¹→A .snd base (i ∨ k)
+                    ; (j = i1) → h S¹→A .snd base (i ∨ k)})
+          (h S¹→A .snd (loop j) i)
+    where
+    S¹→A : S¹ → A
+    S¹→A base = x
+    S¹→A (loop i) = p i
+isSphereFilled→isOfHLevel {A = A} (ℕ→ℕ₋₁ (suc n)) h x y =
+  isSphereFilled→isOfHLevel (ℕ→ℕ₋₁ n) (helper h x y)
+  where
+    helper : {n : ℕ} → isSphereFilled (suc₋₁ (ℕ→ℕ₋₁ (suc n))) A → (x y : A) → isSphereFilled (suc₋₁ (ℕ→ℕ₋₁ n)) (x ≡ y)
     helper {n = n} h x y f = l , r
+    
       where
-        f' : Susp (S n) → A
+        f' : Susp (S₊ (suc n)) → A
         f' north = x
         f' south = y
         f' (merid u i) = f u i
 
-        u : sphereFill (suc₋₁ n) f'
+        u : sphereFill _ f'
         u = h f'
 
         z : A
@@ -73,7 +94,7 @@ isSphereFilled→isOfHLevel {A = A} (ℕ→ℕ₋₁ n) h x y = isSphereFilled�
         l : x ≡ y
         l = sym p ∙ q
 
-        r : (s : S n) → l ≡ f s
+        r : (s : S₊ (suc n)) → l ≡ f s
         r s i j = hcomp
                     (λ k →
                        λ { (i = i0) → compPath-filler (sym p) q k j
@@ -84,22 +105,25 @@ isSphereFilled→isOfHLevel {A = A} (ℕ→ℕ₋₁ n) h x y = isSphereFilled�
                   (p ((~ i) ∧ (~ j)))
 
 isOfHLevel→isSphereFilled : (n : ℕ₋₁) → isOfHLevel (1 + 1+ n) A → isSphereFilled (suc₋₁ n) A
-isOfHLevel→isSphereFilled neg1 h f = (f north) , (λ _ → h _ _)
-isOfHLevel→isSphereFilled {A = A} (ℕ→ℕ₋₁ n) h = helper λ x y → isOfHLevel→isSphereFilled (-1+ n) (h x y)
+isOfHLevel→isSphereFilled neg1 h f = (f true) , (λ _ → h _ _)
+isOfHLevel→isSphereFilled {A = A} (ℕ→ℕ₋₁ zero) h f = (f base) , toPropElim (λ _ → h _ _) refl
+isOfHLevel→isSphereFilled {A = A} (ℕ→ℕ₋₁ (suc n)) h =
+  helper λ x y → isOfHLevel→isSphereFilled (ℕ→ℕ₋₁ n) (h x y)
   where
-    helper : {n : ℕ₋₁} → ((x y : A) → isSphereFilled n (x ≡ y)) → isSphereFilled (suc₋₁ n) A
+    helper : {n : ℕ} → ((x y : A) → isSphereFilled (ℕ→ℕ₋₁ (suc n)) (x ≡ y))
+                     → isSphereFilled (ℕ→ℕ₋₁ (suc (suc n))) A
     helper {n = n} h f = l , r
       where
       l : A
       l = f north
 
-      f' : S n → f north ≡ f south
+      f' : S₊ (suc n) → f north ≡ f south
       f' x i = f (merid x i)
 
-      h' : sphereFill n f'
+      h' : sphereFill (ℕ→ℕ₋₁ (suc n)) f'
       h' = h (f north) (f south) f'
 
-      r : (x : S (suc₋₁ n)) → l ≡ f x
+      r : (x : S₊ (suc (suc n))) → l ≡ f x
       r north = refl
       r south = h' .fst
       r (merid x i) j = hcomp (λ k → λ { (i = i0) → f north
@@ -437,3 +461,17 @@ Iso.leftInv (truncOfTruncIso (suc n) (suc m)) = elim (λ x → isOfHLevelPath (s
 
 truncOfTruncEq : (n m : ℕ) → (hLevelTrunc n A) ≃ (hLevelTrunc n (hLevelTrunc (m + n) A))
 truncOfTruncEq n m = isoToEquiv (truncOfTruncIso n m)
+
+truncOfΣIso : ∀ {ℓ ℓ'} (n : HLevel) {A : Type ℓ} {B : A → Type ℓ'}
+       → Iso (hLevelTrunc n (Σ A B)) (hLevelTrunc n (Σ A λ x → hLevelTrunc n (B x)))
+truncOfΣIso zero = idIso
+Iso.fun (truncOfΣIso (suc n)) = map λ {(a , b) → a , ∣ b ∣}
+Iso.inv (truncOfΣIso (suc n)) =
+  rec (isOfHLevelTrunc (suc n))
+        (uncurry λ a → rec (isOfHLevelTrunc (suc n)) λ b → ∣ a , b ∣)
+Iso.rightInv (truncOfΣIso (suc n)) =
+  elim (λ _ → isOfHLevelPath (suc n) (isOfHLevelTrunc (suc n)) _ _)
+         (uncurry λ a → elim (λ _ → isOfHLevelPath (suc n) (isOfHLevelTrunc (suc n)) _ _)
+         λ b → refl)
+Iso.leftInv (truncOfΣIso (suc n)) =
+  elim (λ _ → isOfHLevelPath (suc n) (isOfHLevelTrunc (suc n)) _ _) λ {(a , b) → refl}

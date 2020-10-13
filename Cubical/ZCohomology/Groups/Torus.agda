@@ -236,3 +236,7 @@ test3 : to₂ (from₂ 0) ≡ 0
 test3 = refl
 
 -}
+
+
+test3 : to₂ (0ₕ 2) ≡ 0
+test3 = {!refl!}

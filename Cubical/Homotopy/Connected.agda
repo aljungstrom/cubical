@@ -25,6 +25,11 @@ open import Cubical.HITs.S1
 open import Cubical.Data.Bool
 open import Cubical.Data.Unit
 
+open import Cubical.HITs.PropositionalTruncation
+  renaming (rec to pRec ; elim to pElim ; elim2 to pElim2 ; map to pMap)
+
+open import Cubical.Functions.Surjection
+
 -- Note that relative to most sources, this notation is off by +2
 isConnected : ∀ {ℓ} (n : HLevel) (A : Type ℓ) → Type ℓ
 isConnected n A = isContr (hLevelTrunc n A)
@@ -43,8 +48,10 @@ isConnectedSubtr {A = A} n m iscon =
   where
   helper : (n : ℕ) → isConnected (m + n) A → isContr (hLevelTrunc n (hLevelTrunc (m + n) A))
   helper zero iscon = isContrUnit*
-  helper (suc n) iscon = ∣ iscon .fst ∣ , (Trunc.elim (λ _ → isOfHLevelPath (suc n) (isOfHLevelTrunc (suc n)) _ _) λ a → cong ∣_∣ (iscon .snd a))
-
+  helper (suc n) iscon =
+      ∣ iscon .fst ∣
+    , (Trunc.elim (λ _ → isOfHLevelPath (suc n) (isOfHLevelTrunc (suc n)) _ _)
+                  λ a → cong ∣_∣ (iscon .snd a))
 
 isConnectedFunSubtr : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} (n m : HLevel) (f : A → B)
                 → isConnectedFun (m + n) f
@@ -60,8 +67,6 @@ private
 
   typeToFiber : ∀ {ℓ} (A : Type ℓ) → A ≡ fiber (λ (x : A) → tt) tt
   typeToFiber A = isoToPath (typeToFiberIso A)
-
-
 
 module elim {ℓ ℓ' : Level} {A : Type ℓ} {B : Type ℓ'} (f : A → B) where
   private
@@ -130,7 +135,8 @@ module elim {ℓ ℓ' : Level} {A : Type ℓ} {B : Type ℓ'} (f : A → B) wher
                                                (snd a)
         where
         c* : ((a : A) → ∣ (a , refl {x = f a}) ∣ ≡ c n P→sect (f a))
-        c* a = sym (cong (λ x → x a) (P→sect (λ b → hLevelTrunc (suc n) (fiber f b) , isOfHLevelTrunc _) .snd λ a → ∣ a , refl ∣))
+        c* a = sym (cong (λ x → x a) (P→sect (λ b → hLevelTrunc (suc n) (fiber f b) , isOfHLevelTrunc _) .snd
+                   λ a → ∣ a , refl ∣))
 
 isOfHLevelPrecomposeConnected : ∀ {ℓ ℓ' ℓ''} (k : HLevel) (n : HLevel)
   {A : Type ℓ} {B : Type ℓ'} (P : B → TypeOfHLevel ℓ'' (k + n)) (f : A → B)
@@ -272,6 +278,9 @@ connectedTruncEquiv : ∀ {ℓ} {A B : Type ℓ} (n : HLevel) (f : A → B)
                    → hLevelTrunc n A ≃ hLevelTrunc n B
 connectedTruncEquiv {A = A} {B = B} n f con = isoToEquiv (connectedTruncIso n f con)
 
+sphereConnected : (n : HLevel) → isConnected (suc n) (S₊ n)
+sphereConnected n =  ∣ ptSn n ∣ , (Trunc.elim (λ _ → isOfHLevelPath (suc n) (isOfHLevelTrunc (suc n)) _ _)
+                                λ x → sym (spoke ∣_∣ (ptSn n)) ∙ spoke ∣_∣ x)
 
 -- TODO : Reorganise the following proofs.
 
@@ -301,46 +310,3 @@ inrConnected {A = A} {B = B} {C = C} n f g iscon =
                     (~ i)
                     (equiv-proof (elim.isEquivPrecompose f n Q iscon)
                                  fun .fst .snd i a))
-
-open import Cubical.HITs.S3
-sphereConnected : (n : HLevel) → isConnected (suc n) (S₊ n)
-sphereConnected zero = ∣ true ∣ , isOfHLevelTrunc 1 _
-sphereConnected (suc zero) = ∣ base ∣ , Trunc.elim (λ _ _ _ → isOfHLevelPath 1 (isOfHLevelTrunc 2 _ _) _ _)
-                                                  (toPropElim (λ s → isOfHLevelTrunc 2 _ _) refl)
-sphereConnected (suc (suc zero)) = ∣ north ∣ , Trunc.elim (λ _ _ _ → isOfHLevelPath 2 (isOfHLevelTrunc 3 _ _) _ _)
-                                                         λ a → Trunc.rec (isOfHLevelTrunc 3 _ _)
-                                                                (λ p i → ∣ p i ∣)
-                                                                (is2GroupoidS2 a)
-  where
-  is2GroupoidS2 : (x : S₊ 2) → hLevelTrunc 2 (north ≡ x)
-  is2GroupoidS2 north = ∣ refl ∣
-  is2GroupoidS2 south = ∣ merid base ∣
-  is2GroupoidS2 (merid base i) = ∣ (λ k → merid base (i ∧ k)) ∣
-  is2GroupoidS2 (merid (loop j) i) =
-    isOfHLevel→isOfHLevelDep 2
-      {B = λ x → hLevelTrunc 2 (north ≡ x)}
-      (λ x → isOfHLevelTrunc 2)
-      ∣ refl ∣ ∣ merid base ∣
-      (λ i → ∣ (λ k → merid base (i ∧ k)) ∣) ((λ i → ∣ (λ k → merid base (i ∧ k)) ∣))
-      (cong merid loop) j i
-sphereConnected (suc (suc (suc zero))) = isConnectedRetractFromIso 4 (invIso IsoS³S3) conS³
-    where
-    conS³ : isConnected 4 S³
-    conS³ = ∣ base ∣ , (Trunc.elim
-                       (λ _ → isOfHLevelPath 4 (isOfHLevelTrunc 4) _ _)
-                       (λ {base → refl
-                        ; (surf i j k)
-                       → isOfHLevel→isOfHLevelDep 3
-                            {A = S³} {B = λ x → Path (hLevelTrunc 4 S³) ∣ base ∣  ∣ x ∣}
-                            (λ _ → isOfHLevelTrunc 4 _ _)
-                            refl refl refl refl refl refl
-                            surf i j k}))
-sphereConnected (suc (suc (suc (suc n)))) =
-  isOfHLevelRetractFromIso 0 (mapCompIso (invIso PushoutSuspIsoSusp))
-    (isConnectedPoint2 (4 + n) {A = Pushout {A = S₊ (3 + n)} (λ _ → tt) λ _ → tt}
-       (inr tt)
-       (inrConnected (4 + n) (λ _ → tt) (λ _ → tt)
-          (λ _ → isContrRetract (map fst) (map (λ a → a , refl))
-                     (Trunc.elim (λ x → isOfHLevelPath (4 + n) (isOfHLevelTrunc (4 + n)) _ _)
-                                 (λ a i → ∣ fst a , isSetUnit _ _ (snd a) refl i ∣))
-                     (sphereConnected (suc (suc (suc n)))))))
