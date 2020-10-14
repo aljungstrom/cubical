@@ -125,11 +125,18 @@ H¹-S⁰≅0 n = IsoContrGroupTrivialGroup (isContrHⁿ-S0 n)
 ------------------------- H²(S¹) ≅ 0 -------------------------------
 
 H²-S¹≅0 : GroupIso (coHomGr 2 (S₊ 1)) trivialGroup
-H²-S¹≅0 = coHomGr 2 (S₊ 1)                                        ≅⟨ coHomPushout≅coHomSn 0 2 ⟩≅
-           coHomGr 2 (Pushout {A = S₊ 0} (λ _ → tt) (λ _ → tt))    ≅⟨ invGroupIso (vSES→GroupIso _ _ vSES-helper) ⟩≅
-          (coHomGr 1 (S₊ 0)                                        ≅⟨ H¹-S⁰≅0 0 ⟩
-           trivialGroup □)
-
+H²-S¹≅0 =
+  compGroupIso
+    (coHomGr 2 (S₊ 1))
+    (coHomGr 2 (Pushout {A = S₊ 0} (λ _ → tt) (λ _ → tt)))
+    trivialGroup
+    (coHomPushout≅coHomSn 0 2)
+    (compGroupIso
+      (coHomGr 2 (Pushout {A = S₊ 0} (λ _ → tt) (λ _ → tt)))
+      (coHomGr 1 (S₊ 0))
+      trivialGroup
+      (invGroupIso (vSES→GroupIso _ _ vSES-helper))
+      (H¹-S⁰≅0 0))
   where
   module I = MV Unit Unit (S₊ 0) (λ _ → tt) (λ _ → tt)
   vSES-helper : vSES (coHomGr 1 (S₊ 0)) (coHomGr 2 (Pushout (λ _ → tt) (λ _ → tt)))
@@ -249,10 +256,17 @@ coHom1S1≃ℤ = theIso
 Hⁿ-Sⁿ≅ℤ : (n : ℕ) → GroupIso intGroup (coHomGr (suc n) (S₊ (suc n)))
 Hⁿ-Sⁿ≅ℤ zero = invGroupIso coHom1S1≃ℤ
 Hⁿ-Sⁿ≅ℤ (suc n) =
-   intGroup                                                                  ≅⟨ Hⁿ-Sⁿ≅ℤ n ⟩≅
-   coHomGr (suc n) (S₊ (suc n))                                              ≅⟨ vSES→GroupIso _ _ theIso ⟩≅
-  (coHomGr (suc (suc n)) (Pushout {A = S₊ (suc n)} (λ _ → tt) (λ _ → tt))  ≅⟨ invGroupIso (coHomPushout≅coHomSn _ _) ⟩
-   coHomGr (2 + n) (S₊ (2 + n)) □)
+  compGroupIso
+    intGroup
+    (coHomGr (suc n) (S₊ (suc n)))
+    (coHomGr (2 + n) (S₊ (2 + n)))
+    (Hⁿ-Sⁿ≅ℤ n)
+    (compGroupIso
+      (coHomGr (suc n) (S₊ (suc n)))
+      (coHomGr (2 + n) (Pushout {A = S₊ (suc n)} (λ _ → tt) (λ _ → tt)))
+      (coHomGr (2 + n) (S₊ (2 + n)))
+      (vSES→GroupIso _ _ theIso)
+      (invGroupIso (coHomPushout≅coHomSn _ _)))
   where
   module K = MV Unit Unit (S₊ (suc n)) (λ _ → tt) (λ _ → tt)
   theIso : vSES (coHomGr (suc n) (S₊ (suc n))) (coHomGr (suc (suc n))
@@ -272,6 +286,7 @@ Hⁿ-Sⁿ≅ℤ (suc n) =
 
 {-
 -- Less direct proof of H¹(S¹) ≅ ℤ from Mayer-Vietoris.
+
 {-
 In order to apply Mayer-Vietoris, we need the following lemma.
 Given the following diagram

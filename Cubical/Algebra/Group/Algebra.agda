@@ -108,11 +108,11 @@ inv (Iso+Hom→GrIso e hom) = Iso.inv e
 rightInv (Iso+Hom→GrIso e hom) = Iso.rightInv e
 leftInv (Iso+Hom→GrIso e hom) = Iso.leftInv e
 
-compGroupIso : {G : Group {ℓ}} {H : Group {ℓ₁}} {A : Group {ℓ₂}} → GroupIso G H → GroupIso H A → GroupIso G A
-map (compGroupIso iso1 iso2) = compGroupHom (map iso1) (map iso2)
-inv (compGroupIso iso1 iso2) = inv iso1 ∘ inv iso2
-rightInv (compGroupIso iso1 iso2) a = cong (fun (map iso2)) (rightInv iso1 _) ∙ rightInv iso2 a
-leftInv (compGroupIso iso1 iso2) a = cong (inv iso1) (leftInv iso2 _) ∙ leftInv iso1 a
+compGroupIso : (G : Group {ℓ}) (H : Group {ℓ₁}) (A : Group {ℓ₂}) → GroupIso G H → GroupIso H A → GroupIso G A
+map (compGroupIso G H A iso1 iso2) = compGroupHom (map iso1) (map iso2)
+inv (compGroupIso G H A iso1 iso2) = inv iso1 ∘ inv iso2
+rightInv (compGroupIso G H A iso1 iso2) a = cong (fun (map iso2)) (rightInv iso1 _) ∙ rightInv iso2 a
+leftInv (compGroupIso G H A iso1 iso2) a = cong (inv iso1) (leftInv iso2 _) ∙ leftInv iso1 a
 
 doubleCompGroupIso : {G : Group {ℓ}} {H : Group {ℓ₁}} {A : Group {ℓ₂}} {B : Group {ℓ₂}} → GroupIso G H → GroupIso H A → GroupIso A B → GroupIso G B
 fun (map (doubleCompGroupIso iso1 iso2 iso3)) = fun (map iso3) ∘ fun (map iso2) ∘ fun (map iso1)
@@ -124,6 +124,7 @@ leftInv (doubleCompGroupIso iso1 iso2 iso3) a =
   cong (inv iso1 ∘ inv iso2) (leftInv iso3 _) ∙∙ cong (inv iso1) (leftInv iso2 _) ∙∙ leftInv iso1 _
 
 -- equational reasoning --
+{-
 infixr 4 ≅⟨⟩-syntax
 syntax ≅⟨⟩-syntax G is1 is2 = G ≅⟨ is1 ⟩ is2
 infixr 4.5 ≅⟨⟩⟨⟩-syntax
@@ -143,7 +144,7 @@ isHom (map (G □)) _ _ = refl
 inv (G □) x = x
 rightInv (G □) _ = refl
 leftInv (G □) _ = refl
-
+-}
 ---------------------------
 
 isGroupHomInv' : {G : Group {ℓ}} {H : Group {ℓ₁}} (f : GroupIso G H) → isGroupHom H G (inv f)
