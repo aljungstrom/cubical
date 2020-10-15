@@ -24,7 +24,12 @@ module _ {ℓ ℓ'} (A : Pointed ℓ) (B : Pointed ℓ') where
   module I = MV (typ A) (typ B) Unit (λ _ → pt A) (λ _ → pt B)
 
   Hⁿ-⋁ : (n : ℕ) → GroupIso (coHomGr (suc n) (A ⋁ B)) (×coHomGr (suc n) (typ A) (typ B))
-  Hⁿ-⋁ zero = BijectionIsoToGroupIso bijIso
+  Hⁿ-⋁ zero =
+    BijectionIsoToGroupIso
+      (I.i 1)
+      (sElim (λ _ → isSetΠ λ _ → isProp→isSet (setTruncIsSet _ _))
+              λ f inker → helper ∣ f ∣₂ (I.Ker-i⊂Im-d 0 ∣ f ∣₂ inker))
+      (λ p → I.Ker-Δ⊂Im-i 1 p (isContr→isProp (isContrHⁿ-Unit 0) _ _))
     where
     surj-helper : (x : coHom 0 Unit) → isInIm _ _ (I.Δ 0) x
     surj-helper =
@@ -38,14 +43,8 @@ module _ {ℓ ℓ'} (A : Pointed ℓ) (B : Pointed ℓ') where
                        MV.Im-Δ⊂Ker-d _ _ Unit (λ _ → pt A) (λ _ → pt B) 0 (fst p) (surj-helper (fst p)))
              inim
 
-    bijIso : BijectionIso (coHomGr 1 (A ⋁ B)) (×coHomGr 1 (typ A) (typ B))
-    BijectionIso.map' bijIso = I.i 1
-    BijectionIso.inj bijIso =
-      sElim (λ _ → isSetΠ λ _ → isProp→isSet (setTruncIsSet _ _))
-            λ f inker → helper ∣ f ∣₂ (I.Ker-i⊂Im-d 0 ∣ f ∣₂ inker)
-    BijectionIso.surj bijIso p = I.Ker-Δ⊂Im-i 1 p (isContr→isProp (isContrHⁿ-Unit 0) _ _)
-
-  Hⁿ-⋁ (suc n) = vSES→GroupIso {A = coHomGr (2 + n) (A ⋁ B)} {B = ×coHomGr (2 + n) (typ A) (typ B)} _ _ helper
+  Hⁿ-⋁ (suc n) = vSES→GroupIso {!!} {!!} {!!} {!!} {!!} {!!} {!!} (sElim {!!} (λ f inker → I.Ker-i⊂Im-d (1 + n) ∣ f ∣₂ inker)) (I.Ker-Δ⊂Im-i (2 + n)) -- vSES→GroupIso ?{A = coHomGr (2 + n) (A ⋁ B)} {B = ×coHomGr (2 + n) (typ A) (typ B)} _ _ helper
+  {-
     where
     helper : vSES _ _ _ _
     vSES.isTrivialLeft helper = isOfHLevelSuc 0 (isContrHⁿ-Unit n)
@@ -55,9 +54,10 @@ module _ {ℓ ℓ'} (A : Pointed ℓ) (B : Pointed ℓ') where
     vSES.ϕ helper = I.i (2 + n)
     vSES.Ker-ϕ⊂Im-left helper = I.Ker-i⊂Im-d (1 + n)
     vSES.Ker-right⊂Im-ϕ helper = I.Ker-Δ⊂Im-i (2 + n)
+-}
 
-  wedgeConnected : ((x : typ A) → ∥ pt A ≡ x ∥) → ((x : typ B) → ∥ pt B ≡ x ∥) → (x : A ⋁ B) → ∥ inl (pt A) ≡ x ∥
-  wedgeConnected conA conB =
-    PushoutToProp (λ _ → propTruncIsProp)
-                  (λ a → pRec propTruncIsProp (λ p → ∣ cong inl p ∣₁) (conA a))
-                   λ b → pRec propTruncIsProp (λ p → ∣ push tt ∙ cong inr p ∣₁) (conB b)
+  -- wedgeConnected : ((x : typ A) → ∥ pt A ≡ x ∥) → ((x : typ B) → ∥ pt B ≡ x ∥) → (x : A ⋁ B) → ∥ inl (pt A) ≡ x ∥
+  -- wedgeConnected conA conB =
+  --   PushoutToProp (λ _ → propTruncIsProp)
+  --                 (λ a → pRec propTruncIsProp (λ p → ∣ cong inl p ∣₁) (conA a))
+  --                  λ b → pRec propTruncIsProp (λ p → ∣ push tt ∙ cong inr p ∣₁) (conB b)

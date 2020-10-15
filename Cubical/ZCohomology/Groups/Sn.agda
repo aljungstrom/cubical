@@ -39,10 +39,8 @@ _□_ : _
 _□_ = compGroupIso
 
 open GroupEquiv
-open vSES
 open GroupIso
 open GroupHom
-open BijectionIso
 
 Sn-connected : (n : ℕ) (x : typ (S₊∙ (suc n))) → ∥ pt (S₊∙ (suc n)) ≡ x ∥₁
 Sn-connected zero = toPropElim (λ _ → propTruncIsProp) ∣ refl ∣₁
@@ -135,22 +133,19 @@ H²-S¹≅0 =
       (coHomGr 2 (Pushout {A = S₊ 0} (λ _ → tt) (λ _ → tt)))
       (coHomGr 1 (S₊ 0))
       trivialGroup
-      (invGroupIso (vSES→GroupIso _ _ vSES-helper))
+      (invGroupIso (vSES→GroupIso _
+                                   _
+                                   (isOfHLevelSuc 0 (isOfHLevelΣ 0 (isContrHⁿ-Unit 0) (λ _ → isContrHⁿ-Unit 0)))
+                                   (isOfHLevelSuc 0 (isOfHLevelΣ 0 (isContrHⁿ-Unit 1) (λ _ → isContrHⁿ-Unit 1)))
+                                   (I.Δ 1)
+                                   (I.i 2)
+                                   (I.d 1)
+                                   (I.Ker-d⊂Im-Δ 1)
+                                   (sElim (λ _ → isOfHLevelΠ 2 λ _ → isOfHLevelSuc 1 propTruncIsProp)
+                                           λ a → I.Ker-i⊂Im-d 1 ∣ a ∣₂)))
       (H¹-S⁰≅0 0))
   where
   module I = MV Unit Unit (S₊ 0) (λ _ → tt) (λ _ → tt)
-  vSES-helper : vSES (coHomGr 1 (S₊ 0)) (coHomGr 2 (Pushout (λ _ → tt) (λ _ → tt)))
-                     (×coHomGr 1 Unit Unit)
-                     (dirProd (coHomGr 2 Unit) (coHomGr 2 Unit))
-  isTrivialLeft vSES-helper = isOfHLevelSuc 0 (isOfHLevelΣ 0 (isContrHⁿ-Unit 0) (λ _ → isContrHⁿ-Unit 0))
-  isTrivialRight vSES-helper = isOfHLevelSuc 0 (isOfHLevelΣ 0 (isContrHⁿ-Unit 1) (λ _ → isContrHⁿ-Unit 1))
-  left vSES-helper = I.Δ 1
-  right vSES-helper = I.i 2
-  vSES.ϕ vSES-helper = I.d 1
-  Ker-ϕ⊂Im-left vSES-helper = I.Ker-d⊂Im-Δ 1
-  Ker-right⊂Im-ϕ vSES-helper =
-    sElim (λ _ → isOfHLevelΠ 2 λ _ → isOfHLevelSuc 1 propTruncIsProp) -- doesn't terminate without elimination
-           λ a → I.Ker-i⊂Im-d 1 ∣ a ∣₂
 
 ------------------ H¹(Sⁿ), n ≥ 1 --------------------------------------------
 
@@ -265,22 +260,20 @@ Hⁿ-Sⁿ≅ℤ (suc n) =
       (coHomGr (suc n) (S₊ (suc n)))
       (coHomGr (2 + n) (Pushout {A = S₊ (suc n)} (λ _ → tt) (λ _ → tt)))
       (coHomGr (2 + n) (S₊ (2 + n)))
-      (vSES→GroupIso _ _ theIso)
+      (vSES→GroupIso _
+                      _
+                      (λ p q → ΣPathP (isOfHLevelSuc 0 (isContrHⁿ-Unit n) (fst p) (fst q)
+                                    , isOfHLevelSuc 0 (isContrHⁿ-Unit n) (snd p) (snd q)))
+                      (λ p q → ΣPathP (isOfHLevelSuc 0 (isContrHⁿ-Unit (suc n)) (fst p) (fst q)
+                                         , isOfHLevelSuc 0 (isContrHⁿ-Unit (suc n)) (snd p) (snd q)))
+                      (K.Δ (suc n))
+                      (K.i (2 + n))
+                      (K.d (suc n))
+                      (K.Ker-d⊂Im-Δ  (suc n))
+                      (K.Ker-i⊂Im-d (suc n)))
       (invGroupIso (coHomPushout≅coHomSn _ _)))
   where
   module K = MV Unit Unit (S₊ (suc n)) (λ _ → tt) (λ _ → tt)
-  theIso : vSES (coHomGr (suc n) (S₊ (suc n))) (coHomGr (suc (suc n))
-                (Pushout {A = S₊ (suc n)} (λ _ → tt) (λ _ → tt))) _ _
-  isTrivialLeft theIso p q = ΣPathP (isOfHLevelSuc 0 (isContrHⁿ-Unit n) (fst p) (fst q)
-                                        , isOfHLevelSuc 0 (isContrHⁿ-Unit n) (snd p) (snd q))
-  isTrivialRight theIso p q = ΣPathP (isOfHLevelSuc 0 (isContrHⁿ-Unit (suc n)) (fst p) (fst q)
-                                         , isOfHLevelSuc 0 (isContrHⁿ-Unit (suc n)) (snd p) (snd q))
-  left theIso = K.Δ (suc n)
-  right theIso = K.i (2 + n)
-  vSES.ϕ theIso = K.d (suc n)
-  Ker-ϕ⊂Im-left theIso = K.Ker-d⊂Im-Δ  (suc n)
-  Ker-right⊂Im-ϕ theIso = K.Ker-i⊂Im-d (suc n)
-
 
 
 

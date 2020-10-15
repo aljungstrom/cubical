@@ -70,13 +70,14 @@ record GroupIso {ℓ ℓ'} (G : Group {ℓ}) (H : Group {ℓ'}) : Type (ℓ-max 
     rightInv : section (GroupHom.fun map) inv
     leftInv : retract (GroupHom.fun map) inv
 
+{-
 record BijectionIso {ℓ ℓ'} (A : Group {ℓ}) (B : Group {ℓ'}) : Type (ℓ-max ℓ ℓ') where
   constructor bij-iso
   field
     map' : GroupHom A B
     inj : isInjective A B map'
     surj : isSurjective A B map'
-
+-}
 -- "Very" short exact sequences
 -- i.e. an exact sequence A → B → C → D where A and D are trivial
 record vSES {ℓ ℓ' ℓ'' ℓ'''} (A : Group {ℓ}) (B : Group {ℓ'}) (leftGr : Group {ℓ''}) (rightGr : Group {ℓ'''})
@@ -97,9 +98,9 @@ record vSES {ℓ ℓ' ℓ'' ℓ'''} (A : Group {ℓ}) (B : Group {ℓ'}) (leftGr
                    → isInKer B rightGr right x
                    → isInIm A B ϕ x
 
-open BijectionIso
+-- open BijectionIso
 open GroupIso
-open vSES
+-- open vSES
 
 Iso+Hom→GrIso : {G : Group {ℓ}} {H : Group {ℓ₁}} → (e : Iso ⟨ G ⟩ ⟨ H ⟩) → isGroupHom G H (Iso.fun e) → GroupIso G H
 fun (map (Iso+Hom→GrIso e hom)) = Iso.fun e
@@ -188,12 +189,13 @@ GroupEquiv.eq (GrIsoToGrEquiv {G = G} {H = H} i) = isoToEquiv theIso
 GroupEquiv.isHom (GrIsoToGrEquiv i) = isHom (map i)
 
 --- Proofs that BijectionIso and vSES both induce isomorphisms ---
-BijectionIsoToGroupIso : {A : Group {ℓ}} {B : Group {ℓ'}} → BijectionIso A B → GroupIso A B
-BijectionIsoToGroupIso {A = A} {B = B} i = grIso
+BijectionIsoToGroupIso : {A : Group {ℓ}} {B : Group {ℓ'}}
+   (map' : GroupHom A B) (inj : isInjective A B map') (surj : isSurjective A B map') → GroupIso A B
+BijectionIsoToGroupIso {A = A} {B = B} map' inj surj = grIso
   where
   module A = GroupStr (snd A)
   module B = GroupStr (snd B)
-  f = fun (map' i)
+  f = fun map'
 
   helper : (b : _) → isProp (Σ[ a ∈ ⟨ A ⟩ ] f a ≡ b)
   helper _ a b =
@@ -207,39 +209,64 @@ BijectionIsoToGroupIso {A = A} {B = B} i = grIso
     where
     idHelper : fst a A.- fst b ≡ A.0g
     idHelper =
-      inj i _
-           (isHom (map' i) (fst a) (A.- (fst b))
-         ∙ (cong (f (fst a) B.+_) (morphMinus A B (map' i) (fst b))
-         ∙∙ cong (B._+ (B.- f (fst b))) (snd a ∙ sym (snd b))
-         ∙∙ B.invr (f (fst b))))
+      inj _
+          (isHom map' (fst a) (A.- (fst b))
+        ∙ (cong (f (fst a) B.+_) (morphMinus A B map' (fst b))
+        ∙∙ cong (B._+ (B.- f (fst b))) (snd a ∙ sym (snd b))
+        ∙∙ B.invr (f (fst b))))
 
   grIso : GroupIso A B
-  map grIso = map' i
-  inv grIso b = (rec (helper b) (λ a → a) (surj i b)) .fst
-  rightInv grIso b = (rec (helper b) (λ a → a) (surj i b)) .snd
-  leftInv grIso b j = rec (helper (f b)) (λ a → a) (propTruncIsProp (surj i (f b)) ∣ b , refl ∣ j) .fst
+  map grIso = map'
+  inv grIso b = (rec (helper b) (λ a → a) (surj b)) .fst
+  rightInv grIso b = (rec (helper b) (λ a → a) (surj b)) .snd
+  leftInv grIso b j = rec (helper (f b)) (λ a → a) (propTruncIsProp (surj (f b)) ∣ b , refl ∣ j) .fst
 
-BijectionIsoToGroupEquiv : {A : Group {ℓ}} {B : Group {ℓ₂}} → BijectionIso A B → GroupEquiv A B
-BijectionIsoToGroupEquiv i = GrIsoToGrEquiv (BijectionIsoToGroupIso i)
+BijectionIsoToGroupEquiv : {A : Group {ℓ}} {B : Group {ℓ₂}}
+     (map' : GroupHom A B) (inj : isInjective A B map') (surj : isSurjective A B map')
+  → GroupEquiv A B
+BijectionIsoToGroupEquiv map' inj surj = GrIsoToGrEquiv (BijectionIsoToGroupIso map' inj surj)
 
-vSES→GroupIso : ∀ {ℓ ℓ' ℓ'' ℓ'''} {A : Group {ℓ}} {B : Group {ℓ'}} (leftGr : Group {ℓ''}) (rightGr : Group {ℓ'''})
-                → vSES A B leftGr rightGr
-                → GroupIso A B
-vSES→GroupIso {A = A} lGr rGr vses = BijectionIsoToGroupIso theIso
+vSES→GroupIso : {A : Group {ℓ}} {B : Group {ℓ₁}}
+    (leftGr : Group {ℓ₂}) (rightGr : Group {ℓ₃})
+    (isTrivialLeft : isProp ⟨ leftGr ⟩)
+    (isTrivialRight : isProp ⟨ rightGr ⟩)
+    (left : GroupHom leftGr A)
+    (right : GroupHom B rightGr)
+    (ϕ : GroupHom A B)
+    (Ker-ϕ⊂Im-left : (x : ⟨ A ⟩)
+                  → isInKer A B ϕ x
+                  → isInIm leftGr A left x)
+    (Ker-right⊂Im-ϕ : (x : ⟨ B ⟩)
+                   → isInKer B rightGr right x
+                   → isInIm A B ϕ x)
+    → GroupIso A B
+vSES→GroupIso {A = A} {B = B} lGr rGr isTrivialLeft isTrivialRight left right ϕ Ker-ϕ⊂Im-left Ker-right⊂Im-ϕ  =
+  BijectionIsoToGroupIso ϕ inj surj
   where
-  theIso : BijectionIso _ _
-  map' theIso = vSES.ϕ vses
-  inj theIso a inker = rec (isSetCarrier A _ _)
+  inj : isInjective A B ϕ
+  inj  a inker = rec (isSetCarrier A _ _)
                             (λ (a , p) → sym p
-                                        ∙∙ cong (fun (left vses)) (isTrivialLeft vses a _)
-                                        ∙∙ morph0→0 lGr A (left vses))
-                            (Ker-ϕ⊂Im-left vses a inker)
-  surj theIso a = Ker-right⊂Im-ϕ vses a (isTrivialRight vses _ _)
+                                        ∙∙ cong (fun left) (isTrivialLeft a _)
+                                        ∙∙ morph0→0 lGr A left)
+                            (Ker-ϕ⊂Im-left a inker)
+  surj : isSurjective A B ϕ
+  surj a = Ker-right⊂Im-ϕ a (isTrivialRight _ _)
 
 vSES→GroupEquiv : {A : Group {ℓ}} {B : Group {ℓ₁}} (leftGr : Group {ℓ₂}) (rightGr : Group {ℓ₃})
-        → vSES A B leftGr rightGr
-        → GroupEquiv A B
-vSES→GroupEquiv {A = A} lGr rGr vses = GrIsoToGrEquiv (vSES→GroupIso lGr rGr vses)
+    (isTrivialLeft : isProp ⟨ leftGr ⟩)
+    (isTrivialRight : isProp ⟨ rightGr ⟩)
+    (left : GroupHom leftGr A)
+    (right : GroupHom B rightGr)
+    (ϕ : GroupHom A B)
+    (Ker-ϕ⊂Im-left : (x : ⟨ A ⟩)
+                  → isInKer A B ϕ x
+                  → isInIm leftGr A left x)
+    (Ker-right⊂Im-ϕ : (x : ⟨ B ⟩)
+                   → isInKer B rightGr right x
+                   → isInIm A B ϕ x)
+  → GroupEquiv A B
+vSES→GroupEquiv lGr rGr isTrivialLeft isTrivialRight left right ϕ Ker-ϕ⊂Im-left Ker-right⊂Im-ϕ =
+  GrIsoToGrEquiv (vSES→GroupIso lGr rGr isTrivialLeft isTrivialRight left right ϕ Ker-ϕ⊂Im-left Ker-right⊂Im-ϕ)
 
 -- The trivial group is a unit.
 lUnitGroupIso : ∀ {ℓ} {G : Group {ℓ}} → GroupIso (dirProd trivialGroup G) G
