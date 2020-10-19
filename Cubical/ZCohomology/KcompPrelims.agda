@@ -45,13 +45,6 @@ private
 ϕ pt a = (merid a) ∙ sym (merid pt)
 
 private
-  Kn→ΩKn+1 : (n : ℕ) → coHomK n → typ (Ω (coHomK-ptd (suc n)))
-  Kn→ΩKn+1 zero x i = ∣ intLoop x i ∣
-  Kn→ΩKn+1 (suc zero) = trRec (isOfHLevelTrunc 4 ∣ north ∣ ∣ north ∣)
-                               λ a i → ∣ ϕ base a i ∣
-  Kn→ΩKn+1 (suc (suc n)) = trRec (isOfHLevelTrunc (2 + (3 + n)) ∣ north ∣ ∣ north ∣)
-                                  λ a i → ∣ ϕ north a i ∣
-
   d-map : typ (Ω ((Susp S¹) , north)) → S¹
   d-map p = subst HopfSuspS¹ p base
 
@@ -89,12 +82,38 @@ d-mapId2 = funExt (trElim (λ _ → isOfHLevelPath 3 (isOfHLevelTrunc 3) _ _) λ
 Iso∥ϕ₁∥ : Iso (coHomK 1) (∥ Path (S₊ 2) north north ∥ 3)
 Iso∥ϕ₁∥ = composesToId→Iso d-Iso (trMap (ϕ base)) d-mapId2
 
-Iso-Kn-ΩKn+1 : (n : HLevel) → Iso (coHomK n) (typ (Ω (coHomK-ptd (suc n))))
-Iso-Kn-ΩKn+1 zero = invIso (compIso (congIso (truncIdempotentIso _ isGroupoidS1)) ΩS¹IsoInt)
-Iso-Kn-ΩKn+1 (suc zero) = compIso Iso∥ϕ₁∥ (invIso (PathIdTruncIso 3))
-Iso-Kn-ΩKn+1 (suc (suc n)) = compIso (connectedTruncIso2 (4 + n) _ (ϕ north) (n , helper)
-                                                                             (isConnectedσ (suc n) (sphereConnected _)))
-                                     (invIso (PathIdTruncIso (4 + n)))
- where
-  helper : n + (4 + n) ≡ 2 + (n + (2 + n))
-  helper = +-suc n (3 + n) ∙ (λ i → suc (+-suc n (2 + n) i))
+--- the maps
+private
+  helper : (n : ℕ) → n + (4 + n) ≡ 2 + (n + (2 + n))
+  helper n = +-suc n (3 + n) ∙ (λ i → suc (+-suc n (2 + n) i))
+
+  anIso : (n : ℕ) → Iso (coHomK (2 + n)) (loopSpaceK (2 + n))
+  anIso n = (connectedTruncIso2 (4 + n) _ (ϕ north) (n , helper n)
+            (isConnectedσ (suc n) (sphereConnected _)))
+
+private
+  Kn→ΩKn+1 : (n : ℕ) → coHomK n → loopSpaceK n
+  Kn→ΩKn+1 zero a = intLoop a
+  Kn→ΩKn+1 (suc zero) =  trMap (ϕ base)
+  Kn→ΩKn+1 (suc (suc n)) = trMap (ϕ north)
+
+  ΩKn+1→Kn : (n : ℕ) → loopSpaceK n → coHomK n
+  ΩKn+1→Kn zero = winding
+  ΩKn+1→Kn (suc zero) = Iso.inv Iso∥ϕ₁∥
+  ΩKn+1→Kn (suc (suc n)) = Iso.inv (anIso n)
+
+  ΩKn+1→Kn→ΩKn+1 : (n : ℕ) → (x : loopSpaceK n) → Kn→ΩKn+1 n (ΩKn+1→Kn n x) ≡ x
+  ΩKn+1→Kn→ΩKn+1 zero = decodeEncode base
+  ΩKn+1→Kn→ΩKn+1 (suc zero) = Iso.rightInv Iso∥ϕ₁∥
+  ΩKn+1→Kn→ΩKn+1 (suc (suc n)) = Iso.rightInv (anIso n)
+
+  Kn→ΩKn+1→Kn : (n : ℕ) → (x : coHomK n) → ΩKn+1→Kn n (Kn→ΩKn+1 n x) ≡ x
+  Kn→ΩKn+1→Kn zero = windingIntLoop
+  Kn→ΩKn+1→Kn (suc zero) = Iso.leftInv Iso∥ϕ₁∥
+  Kn→ΩKn+1→Kn (suc (suc n)) = Iso.leftInv (anIso n)
+
+Iso-Kn-ΩKn+1 : (n : HLevel) → Iso (coHomK n) (loopSpaceK n)
+Iso.fun (Iso-Kn-ΩKn+1 n) = Kn→ΩKn+1 n
+Iso.inv (Iso-Kn-ΩKn+1 n) = ΩKn+1→Kn n
+Iso.rightInv (Iso-Kn-ΩKn+1 n) = ΩKn+1→Kn→ΩKn+1 n
+Iso.leftInv (Iso-Kn-ΩKn+1 n) = Kn→ΩKn+1→Kn n

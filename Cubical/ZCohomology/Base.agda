@@ -1,10 +1,12 @@
 {-# OPTIONS --cubical --no-import-sorts --safe #-}
 module Cubical.ZCohomology.Base where
 
+
 open import Cubical.Data.Int.Base
 open import Cubical.Data.Nat.Base
 open import Cubical.Data.Sigma
 
+open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Pointed.Base
 
 open import Cubical.HITs.Nullification.Base
@@ -24,7 +26,7 @@ private
 {- EM-spaces Kₙ from Brunerie 2016 -}
 coHomK : (n : ℕ) → Type₀
 coHomK zero = Int
-coHomK (suc n) = ∥ S₊ (suc n) ∥ (2 + suc n)
+coHomK (suc n) =  ∥ S₊ (suc n) ∥ (3 + n)
 
 {- Cohomology -}
 coHom : (n : ℕ) → Type ℓ → Type ℓ
@@ -47,3 +49,13 @@ coHom-pt : (n : ℕ) → coHomK n
 coHom-pt 0 = 0
 coHom-pt 1 = ∣ base ∣
 coHom-pt (suc (suc n)) = ∣ north ∣
+
+
+{- Loopspaces -}
+loopSpaceK : (n : ℕ) → Type₀
+loopSpaceK zero = ΩS¹
+loopSpaceK (suc n) = hLevelTrunc (3 + n) (Path (S₊ (2 + n)) north north)
+
+reflK : (n : ℕ) → loopSpaceK n
+reflK zero = refl
+reflK (suc n) = ∣ refl ∣
