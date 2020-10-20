@@ -475,6 +475,15 @@ Iso.leftInv (truncOfΣIso (suc n)) =
 
 open import Cubical.Foundations.GroupoidLaws
 
+private
+  supercomper : ∀ {ℓ} {A : Type ℓ} {x y z : A} (p : x ≡ y) (q : z ≡ y) → PathP (λ i → (p ∙ sym q) i ≡ y) p q
+  supercomper {y = y} p q i j =
+    hcomp (λ k → λ { (i = i0) → p j
+                    ; (i = i1) → q (~ k ∨ j)
+                    ; (j = i1) → y})
+          (p (j ∨ i))
+
+
 hLevelS : ∀ {ℓ} (n : ℕ) {A : (S₊ (suc n)) → Type ℓ} → ((x : S₊ (suc n)) → isOfHLevel (suc n) (A x))
           → A (ptSn (suc n))
           → (x : S₊ (suc n)) → A x
@@ -489,6 +498,7 @@ hLevelS (suc n) {A = A} hlev pt (merid a i) = helper i
                      (λ i → transp (λ j → A (merid (ptSn (suc n)) (i ∧ j))) (~ i) pt)
                      a
 
+
 hLevelS2'' : ∀ {ℓ} (n m : ℕ) {A : (S₊ (suc n)) → (S₊ (suc m)) → Type ℓ}
           → ((x : S₊ (suc n)) (y : S₊ (suc m)) → isOfHLevel ((suc n) + (suc m)) (A x y))
           → (f : (x : _) → A (ptSn (suc n)) x)
@@ -499,8 +509,8 @@ hLevelS2'' : ∀ {ℓ} (n m : ℕ) {A : (S₊ (suc n)) → (S₊ (suc m)) → Ty
 hLevelS2'' zero zero {A = A} hlev f g hom = F , (λ _ → refl) , right
   where
   helper : SquareP (λ i j → A (loop i) (loop j)) (cong f loop) (cong f loop)
-                        (λ i → hcomp (λ k → λ {(i = i0) → hom k
-                                               ; (i = i1) → hom k})
+                        (λ i → hcomp (λ k → λ { (i = i0) → hom k
+                                                ; (i = i1) → hom k})
                                       (g (loop i)))
                          λ i → hcomp (λ k → λ { (i = i0) → hom k
                                                 ; (i = i1) → hom k})
@@ -562,466 +572,121 @@ hLevelS2'' zero (suc m) {A = A} hlev f g hom = F , left , (λ _ → refl)
                     ; (i = i1) → helper2 (ptSn (suc m)) j
                     ; (j = i0) → theHelper .snd .fst a (~ k) i
                     ; (j = i1) → f (merid a i)})
-          (hcomp (λ k →  λ { (i = i0) → {!!}
-                            ; (i = i1) → {!!}
-                            ; (j = i1) → {!compPath-filler (helper2 a) (sym (helper2 (ptSn (suc m)))) i0!}})
-                 {!helper2 a j!})
+          (hcomp (λ k →  λ { (i = i0) → hom j
+                            ; (i = i1) → supercomper (helper2 a) (helper2 (ptSn (suc m))) k j
+                            ; (j = i1) → f (merid a i)})
+                 (hcomp (λ k → λ { (i = i0) → hom j
+                                  ; (j = i0) → transp (λ i₂ → A base (merid a (i₂ ∧ i))) (~ i) (g base)
+                                  ; (j = i1) → transp (λ j → A base (merid a (i ∧ (j ∨ k)))) (k ∨ ~ i) (f (merid a (i ∧ k)))})
+                        (transp (λ i₂ → A base (merid a (i₂ ∧ i))) (~ i) (hom j))))
 
-  willNeed : (a : _) → {!!}
-  willNeed = {!!}
 
-hLevelS2'' (suc n) m {A = A} hlev f g hom = {!i = i0 ⊢ hom j
-i = i1 ⊢ helper2 (ptSn (suc m)) j
-j = i0 ⊢ theHelper .fst base a i
-j = i1 ⊢ f (merid a i)
+hLevelS2'' (suc n) m {A = A} hlev f g hom = F , ((λ _ → refl) , right)
+  where
+  helper2 : (x : S₊ (suc n)) → transport (λ i₁ → A (merid x i₁) (ptSn (suc m))) (f (ptSn (suc m))) ≡ g south
+  helper2 x = cong (transport (λ i₁ → A (merid x i₁) (ptSn (suc m)))) (sym hom)
+            ∙ (λ i → transp (λ j → A (merid x (i ∨ j)) (ptSn (suc m))) i (g (merid x i)))
 
-Gonna get: Should add up! WOWWOWOW
-i = i0 ⊢ hom j
-i = i1 ⊢ (transport (λ i₁ → A base (merid a i₁)) (hom j)) ∙ (λ i₁ → transp (λ j₁ → A base (merid a (i₁ ∨ j₁))) i₁ (f (merid a i₁))) j)
-j = i0 ⊢ (transp (λ i₂ → A base (merid a (i₂ ∧ i₁))) (~ i₁) (g base))
-j = i1 ⊢ f (merid a i)
+  merid-a : (x : S₊ (suc n)) → PathP (λ i₁ → A (merid x i₁) (ptSn (suc m))) (f (ptSn (suc m)))
+                                      (transport (λ i₁ → A (merid (ptSn (suc n)) i₁) (ptSn (suc m))) (f (ptSn (suc m))))
+  merid-a x i = hcomp (λ k → λ { (i = i0) → f (ptSn (suc m))
+                                ; (i = i1) → (helper2 x ∙ sym (helper2 (ptSn (suc n)))) k})
+                      (transp (λ i₁ → A (merid x (i₁ ∧ i)) (ptSn (suc m))) (~ i) (f (ptSn (suc m))))
 
-!}
+  merid-aId : merid-a (ptSn (suc n)) ≡ λ i → transp (λ i₁ → A (merid (ptSn (suc n)) (i₁ ∧ i)) (ptSn (suc m))) (~ i) (f (ptSn (suc m)))
+  merid-aId =
+        (λ j i → hcomp (λ k → λ {(i = i0) → f (ptSn (suc m))
+                                ; (i = i1) → rCancel (helper2 (ptSn (suc n))) j k})
+                       (transp (λ i₁ → A (merid (ptSn (suc n)) (i₁ ∧ i)) (ptSn (suc m))) (~ i) (f (ptSn (suc m)))))
+      ∙ λ j i → hfill (λ k → λ { (i = i0) → f (ptSn (suc m))
+                                 ; (i = i1) → transport (λ i₁ → A (merid (ptSn (suc n)) i₁) (ptSn (suc m))) (f (ptSn (suc m)))})
+                       (inS (transp (λ i₁ → A (merid (ptSn (suc n)) (i₁ ∧ i)) (ptSn (suc m))) (~ i) (f (ptSn (suc m))))) (~ j)
 
-hLevelS2' : ∀ {ℓ} (n m : ℕ) {A : (S₊ (suc n)) → (S₊ (suc m)) → Type ℓ}
-          → ((x : S₊ (suc n)) (y : S₊ (suc m)) → isOfHLevel ((suc n) + (suc m)) (A x y))
+  theHelper : Σ[ F ∈ ((a : _) (y : _) → PathP (λ i → A (merid a i) y) (f y) (subst (λ x → A x y) (merid (ptSn (suc n))) (f y))) ] _
+  theHelper = hLevelS2'' n m {A = λ a y → PathP (λ i → A (merid a i) y) (f y) (subst (λ x → A x y) (merid (ptSn (suc n))) (f y))}
+                                (λ _ _ → isOfHLevelPathP' (suc (n + suc m)) (hlev _ _) _ _)
+                                (λ a i → transp (λ i₁ → A (merid (ptSn (suc n)) (i₁ ∧ i)) a) (~ i) (f a))
+                                merid-a
+                                merid-aId
+
+  F : (x : Susp (S₊ (suc n))) (y : S₊ (suc m))  → A x y
+  right : (x : Susp (S₊ (suc n))) → F x (ptSn (suc m)) ≡ g x
+  F north y = f y
+  F south y = subst (λ x → A x y) (merid (ptSn (suc n))) (f y)
+  F (merid a i) y = theHelper .fst a y i
+  right north = sym hom
+  right south = cong (subst (λ x → A x (ptSn (suc m))) (merid (ptSn (suc n)))) (sym hom)
+              ∙ λ i → transp (λ j → A (merid (ptSn (suc n)) (i ∨ j)) (ptSn (suc m))) i (g (merid (ptSn (suc n)) i))
+  right (merid a i) j =
+    hcomp (λ k → λ { (i = i0) → hom (~ j)
+                    ; (i = i1) → helper2 (ptSn (suc n)) j
+                    ; (j = i0) → theHelper .snd .snd a (~ k) i
+                    ; (j = i1) → g (merid a i)})
+          (hcomp (λ k →  λ { (i = i0) → hom (~ j)
+                            ; (i = i1) → supercomper (helper2 a) (helper2 (ptSn (suc n))) k j
+                            ; (j = i1) → g (merid a i)})
+                 (hcomp (λ k → λ { (i = i0) → hom (~ j)
+                                  ; (j = i0) → transp (λ i₂ → A (merid a (i₂ ∧ i)) (ptSn (suc m))) (~ i) (f (ptSn (suc m)))
+                                  ; (j = i1) → transp (λ j → A (merid a (i ∧ (j ∨ k))) (ptSn (suc m))) (k ∨ ~ i) (g (merid a (i ∧ k))) })
+                        (transp (λ i₂ → A (merid a (i₂ ∧ i)) (ptSn (suc m))) (~ i) (hom (~ j)))))
+
+
+hLevelS2Freud : ∀ {ℓ} (n m : ℕ) {A : (S₊ (suc n)) → (S₊ (suc m)) → Type ℓ}
+          → ((x : S₊ (suc n)) (y : S₊ (suc m)) → isOfHLevel (suc (suc n)) (A x y))
           → (f : (x : _) → A (ptSn (suc n)) x)
           → (g : (x : _) → A x (ptSn (suc m)))
           → (g (ptSn (suc n)) ≡ f (ptSn (suc m)))
-          → (x : S₊ (suc n)) (y : S₊ (suc m)) → A x y
-hLevelS2' zero zero hlev f g hom base y = f y
-hLevelS2' zero zero hlev f g hom (loop i) base = hcomp (λ k → λ {(i = i0) → hom k
-                                                               ; (i = i1) → hom k})
-                                                       (g (loop i))
-hLevelS2' zero zero {A = A} hlev f g hom (loop i) (loop j) = helper i j
+          → Σ[ F ∈ ((x : S₊ (suc n)) (y : S₊ (suc m)) → A x y) ]
+               ((x : S₊ (suc m)) → F (ptSn (suc n)) x ≡ f x) × ((x : S₊ (suc n)) → F x (ptSn (suc m)) ≡ g x)
+hLevelS2Freud zero zero = hLevelS2'' zero zero 
+hLevelS2Freud zero (suc m) {A = A} hlev f g hom = F , (λ _ → refl) , right
   where
-  helper : SquareP (λ i j → A (loop i) (loop j)) (cong f loop) (cong f loop)
-                        (λ i → hcomp (λ k → λ {(i = i0) → hom k
-                                               ; (i = i1) → hom k})
-                                      (g (loop i)))
-                         λ i → hcomp (λ k → λ { (i = i0) → hom k
-                                                ; (i = i1) → hom k})
-                                       (g (loop i))
-  helper = transport (sym (PathP≡Path _ _ _))
-                     (isOfHLevelPathP' 1 (hlev base base) _ _ _ _)
-hLevelS2' (suc n) zero {A = A} hlev f g hom north y = f y
-hLevelS2' (suc n) zero {A = A} hlev f g hom south y = subst (λ x → A x y) (merid (ptSn (suc n))) (f y)
-hLevelS2' (suc n) zero {A = A} hlev f g hom (merid a i) y = helper i
+  thePathP : (y : Susp (S₊ (suc m))) → PathP (λ i → A (loop i) y) (f y) (f y)
+  thePathP =
+    suspToPropElim (ptSn (suc m))
+                   (λ _ → isOfHLevelPathP' 1 (hlev _ _) _ _)
+                   λ i → hcomp (λ k → λ {(i = i0) → hom k
+                                         ; (i = i1) → hom k})
+                                (g (loop i))
+
+  F : (x : S¹) (y : Susp (S₊ (suc m))) → A x y
+  F base y = f y
+  F (loop i) y = thePathP y i
+
+  right : (x : S¹) → F x north ≡ g x
+  right = toPropElim (λ _ → hlev  _ _ _ _)
+                     (sym hom)
+
+hLevelS2Freud (suc n) zero {A = A} hlev f g hom = {!!}
+hLevelS2Freud (suc n) (suc m) {A = A} hlev f g hom = F , (λ _ → refl) , right
   where
-  helper : PathP (λ i → A (merid a i) y) (f y) (transport (λ i → A (merid (ptSn (suc n)) i) y) (f y))
-  helper = hLevelS2' n zero {A = λ a y → PathP (λ i → A (merid a i) y) (f y)
-                                                (transport (λ i → A (merid (ptSn (suc n)) i) y) (f y))}
-                            (λ a y → isOfHLevelPathP' _ (hlev south y) _ _)
-                            (λ a i → transp (λ i₁ → A (merid (ptSn (suc n)) (i₁ ∧ i)) a) (~ i) (f a))
-                            merid-a
-                            merid-aId
-                            a y
-    where
-    helper2 : (x : S₊ (suc n)) → transport (λ i₁ → A (merid x i₁) base) (f base) ≡ g south
-    helper2 x = cong (transport (λ i₁ → A (merid x i₁) base)) (sym hom)
-              ∙ (λ i → transp (λ j → A (merid x (i ∨ j)) base) i (g (merid x i)))
-    merid-a : (x : S₊ (suc n)) → PathP (λ i₁ → A (merid x i₁) base) (f base)
-                                        (transport (λ i₁ → A (merid (ptSn (suc n)) i₁) base) (f base))
-    merid-a x i = hcomp (λ k → λ { (i = i0) → f base
-                                  ; (i = i1) → (helper2 x ∙ sym (helper2 (ptSn (suc n)))) k})
-                        (transp (λ i₁ → A (merid x (i₁ ∧ i)) base) (~ i) (f base))
+  helper2 : (x : S₊ (suc n)) → g south ≡ subst (λ x → A x north) (merid x) (f north)
+  helper2 x = (λ i → transp (λ j → A (merid x (~ i ∨ j)) north) (~ i) (g (merid x (~ i))))
+            ∙ cong (subst (λ x → A x north) (merid x)) hom
 
-    merid-aId : merid-a (ptSn (suc n)) ≡ λ i → transp (λ i₁ → A (merid (ptSn (suc n)) (i₁ ∧ i)) base) (~ i) (f base)
-    merid-aId =
-        (λ j i → hcomp (λ k → λ {(i = i0) → f base
-                                ; (i = i1) → rCancel (helper2 (ptSn (suc n))) j k})
-                       (transp (λ i₁ → A (merid (ptSn (suc n)) (i₁ ∧ i)) base) (~ i) (f base)))
-      ∙ λ j i → hfill (λ k → λ { (i = i0) → f base
-                                 ; (i = i1) → transport (λ i₁ → A (merid (ptSn (suc n)) i₁) base) (f base)})
-                       (inS (transp (λ i₁ → A (merid (ptSn (suc n)) (i₁ ∧ i)) base) (~ i) (f base))) (~ j)
+  thePathP : (a : (S₊ (suc n))) (y : S₊ (2 + m))
+          → PathP (λ i → A (merid a i) y) (f y) (subst (λ x → A x y) (merid (ptSn (suc n))) (f y))
+  thePathP a north i =
+    hcomp (λ k → λ { (i = i0) → hom k
+                    ; (i = i1) → helper2 (ptSn (suc n)) k})
+          (g (merid a i))
+  thePathP a south i = 
+    hcomp (λ k → λ { (i = i0) → (cong (subst (λ x → A north x) (merid (ptSn (suc m)))) hom
+                                ∙ λ i → transp (λ j → A north (merid (ptSn (suc m)) (i ∨ j))) i (f (merid (ptSn (suc m)) i))) k
+                    ; (i = i1) → ((λ i → {!!})
+                                ∙∙ {!!}
+                                ∙∙ {!!}) k})
+          (subst (λ x → A (merid a i) x) (merid (ptSn (suc m))) (g (merid a i)))
+  thePathP a (merid b i) = {!i = i0 ⊢ f south
+i = i1 ⊢ subst (λ x → A x south) (merid (ptSn (suc n))) (f south)!}
 
-hLevelS2' n (suc m) hlev f g hom x north = g x
-hLevelS2' n (suc m) {A = A} hlev f g hom x south =
-  transport (λ i → A x (merid (ptSn (suc m)) i)) (g x)
-hLevelS2' n (suc m) {A = A} hlev f g hom x (merid a i) = helper i
-  where
-  helper : PathP (λ i → A x (merid a i)) (g x) (transport (λ i → A x (merid (ptSn (suc m)) i)) (g x))
-  helper = hLevelS2' n m
-                    {A = λ x a → PathP (λ i → A x (merid a i)) (g x)
-                                        (transport (λ i → A x (merid (ptSn (suc m)) i)) (g x))}
-                    (λ _ _ → isOfHLevelPathP' (1 + (n + (suc m))) (hlevHelper _) _ _)
-                    merid-a
-                    (λ x i → transp (λ i₁ → A x (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g x))
-                    (sym (merid-aId))
-                    x a
-    where
-    hlevHelper : (x : _) → isOfHLevel (2 + (n + suc m)) (A x south)
-    hlevHelper x = subst (λ n → isOfHLevel n (A x south)) (cong suc (+-suc n (suc m))) (hlev x south)
+  F : (x : (S₊ (2 + n))) (y : S₊ (2 + m)) → A x y
+  F north y = f y
+  F south y = subst (λ x → A x y) (merid (ptSn (suc n))) (f y)
+  F (merid a i) y = thePathP a y i
 
-    helper2 : (x : S₊ (suc m)) → transport (λ i₁ → A (ptSn (suc n)) (merid x i₁)) (g (ptSn (suc n))) ≡ f south
-    helper2 x = cong (transport (λ i₁ → A (ptSn (suc n)) (merid x i₁))) hom
-              ∙ (λ i → transp (λ j → A (ptSn (suc n)) (merid x (i ∨ j))) i (f (merid x i)))
-    merid-a : (a : S₊ (suc m)) → PathP (λ i₁ → A (ptSn (suc n)) (merid a i₁)) (g (ptSn (suc n)))
-                                        (transport (λ i₁ → A (ptSn (suc n)) (merid (ptSn (suc m)) i₁))
-                                        (g (ptSn (suc n))))
-    merid-a a i = hcomp (λ k → λ { (i = i0) → g (ptSn (suc n))
-                                  ; (i = i1) → (helper2 a ∙ sym (helper2 (ptSn (suc m)))) k})
-                        (transp (λ i₁ → A (ptSn (suc n)) (merid a (i₁ ∧ i))) (~ i) (g (ptSn (suc n))))
-
-    merid-aId : merid-a (ptSn (suc m)) ≡ λ i → transp (λ i₁ → A (ptSn (suc n)) (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g (ptSn (suc n)))
-    merid-aId =
-       (λ j i → hcomp (λ k → λ {(i = i0) → g (ptSn (suc n))
-                                ; (i = i1) → rCancel (helper2 (ptSn (suc m))) j k})
-                       (transp (λ i₁ → A (ptSn (suc n)) (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g (ptSn (suc n)))))
-     ∙ λ j i → hfill (λ k → λ { (i = i0) → g (ptSn (suc n))
-                                ; (i = i1) → transport (λ i₁ → A (ptSn (suc n)) (merid (ptSn (suc m)) i₁)) (g (ptSn (suc n)))})
-                       (inS (transp (λ i₁ → A (ptSn (suc n)) (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g (ptSn (suc n))))) (~ j)
-
-hLevelS2-2Id : ∀ {ℓ } {A : (S₊ 2) → (S₊ 2) → Type ℓ}
-          → (hLev : ((x y : S₊ 2) → isOfHLevel 4 (A x y)))
-          → (f : (x : _) → A north x)
-          → (g : (x : _) → A x north)
-          → (hom : (g north) ≡ f north)
-          → (x : S₊ 2) → (hLevelS2' 1 1 hLev f g hom x north ≡ g x) × (hLevelS2' 1 1 hLev f g hom north x ≡ f x)
-hLevelS2-2Id hLev f g hom north = refl , hom
-hLevelS2-2Id hLev f g hom south = refl , {!!}
-hLevelS2-2Id hLev f g hom (merid base i) = refl , {!hLevelS2' 1 1 hLev f g hom north (merid base i)!}
-hLevelS2-2Id hLev f g hom (merid (loop i₁) i) = refl , {!!}
-
-
--- hLevelS2 : ∀ {ℓ} (n m : ℕ) {A : (S₊ (suc n)) → (S₊ (suc m)) → Type ℓ}
---           → ((x : S₊ (suc n)) (y : S₊ (suc m)) → isOfHLevel ((suc n) + (suc m)) (A x y))
---           → (f : (x : _) → A (ptSn (suc n)) x)
---           → (g : (x : _) → A x (ptSn (suc m)))
---           → (g (ptSn (suc n)) ≡ f (ptSn (suc m)))
---           → (x : S₊ (suc n)) (y : S₊ (suc m)) → A x y
--- hLevelS2 zero zero hlev f g hom base y = f y
--- hLevelS2 zero zero hlev f g hom (loop i) base = hcomp (λ k → λ {(i = i0) → hom k
---                                                                ; (i = i1) → hom k})
---                                                       (g (loop i))
--- hLevelS2 zero zero {A = A} hlev f g hom (loop i) (loop j) = helper i j
---   where
---   helper : SquareP (λ i j → A (loop i) (loop j)) (cong f loop) (cong f loop)
---                         (λ i → hcomp (λ k → λ {(i = i0) → hom k
---                                                ; (i = i1) → hom k})
---                                       (g (loop i)))
---                          λ i → hcomp (λ k → λ { (i = i0) → hom k
---                                                 ; (i = i1) → hom k})
---                                        (g (loop i))
---   helper = transport (sym (PathP≡Path _ _ _))
---                      (isOfHLevelPathP' 1 (hlev base base) _ _ _ _)
--- hLevelS2 zero (suc m) hlev f g hom x north = g x
--- hLevelS2 zero (suc m) {A = A} hlev f g hom x south =
---   transport (λ i → A x (merid (ptSn (suc m)) i)) (g x)
--- hLevelS2 zero (suc m) {A = A} hlev f g hom x (merid a i) = helper i
---   where
---   helper : PathP (λ i → A x (merid a i)) (g x) (transport (λ i → A x (merid (ptSn (suc m)) i)) (g x))
---   helper = hLevelS2 zero m
---                     {A = λ x a → PathP (λ i → A x (merid a i)) (g x)
---                                         (transport (λ i → A x (merid (ptSn (suc m)) i)) (g x))}
---                     (λ _ _ → isOfHLevelPathP' (2 + m) (hlev _ _) _ _)
---                     merid-a
---                     (λ x i → transp (λ i₁ → A x (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g x))
---                     (sym (merid-aId))
---                     x a
---     where
---     helper2 : (x : S₊ (suc m)) → transport (λ i₁ → A base (merid x i₁)) (g base) ≡ f south
---     helper2 x = cong (transport (λ i₁ → A base (merid x i₁))) hom
---               ∙ (λ i → transp (λ j → A base (merid x (i ∨ j))) i (f (merid x i)))
---     merid-a : (a : S₊ (suc m)) → PathP (λ i₁ → A base (merid a i₁)) (g base)
---                                         (transport (λ i₁ → A base (merid (ptSn (suc m)) i₁))
---                                         (g base))
---     merid-a a i = hcomp (λ k → λ { (i = i0) → g base
---                                   ; (i = i1) → (helper2 a ∙ sym (helper2 (ptSn (suc m)))) k})
---                         (transp (λ i₁ → A base (merid a (i₁ ∧ i))) (~ i) (g base))
-
---     merid-aId : merid-a (ptSn (suc m)) ≡ λ i → transp (λ i₁ → A base (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g base)
---     merid-aId =
---        (λ j i → hcomp (λ k → λ {(i = i0) → g base
---                                 ; (i = i1) → rCancel (helper2 (ptSn (suc m))) j k})
---                        (transp (λ i₁ → A base (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g base)))
---      ∙ λ j i → hfill (λ k → λ { (i = i0) → g base
---                                 ; (i = i1) → transport (λ i₁ → A base (merid (ptSn (suc m)) i₁)) (g base)})
---                        (inS (transp (λ i₁ → A base (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g base))) (~ j)
-
--- hLevelS2 (suc n) zero {A = A} hlev f g hom x y = {!y!}
--- hLevelS2 (suc n) (suc m) hlev f g hom x north = g x
--- hLevelS2 (suc n) (suc m) {A = A} hlev f g hom x south = transport (λ i → A x (merid (ptSn (suc m)) i)) (g x)
--- hLevelS2 (suc n) (suc m) {A = A} hlev f g hom x (merid a i) = hLevelS2HLP i
---   where
---   hLevelS2HLP : PathP (λ i → A x (merid a i))
---                       (g x)
---                       (transport (λ i → A x (merid (ptSn (suc m)) i)) (g x))
---   hLevelS2HLP = hLevelS2 (suc n) m {A = λ x a → PathP (λ i → A x (merid a i))
---                                                        (g x)
---                                                        (transport (λ i → A x (merid (ptSn (suc m)) i))
---                                                                   (g x))}
---                          (λ _ _ → isOfHLevelPathP' (2 + (n + (suc m))) (hlevHelper _) _ _)
---                          merid-a
---                          (λ x i → transp (λ i₁ → A x (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g x))
---                          (sym (merid-aId)) x a
---     where
---     hlevHelper : (x : _) → isOfHLevel (3 + (n + suc m)) (A x south)
---     hlevHelper x = subst (λ n → isOfHLevel n (A x south))
---                          (cong (λ x → suc (suc x)) (+-suc n (suc m)))
---                          (hlev x south)
-
---     helper2 : (a : S₊ (suc m)) → transport (λ i₁ → A north (merid a i₁)) (g north) ≡ f south
---     helper2 a = cong (transport (λ i₁ → A north (merid a i₁))) hom
---               ∙ (λ i → transp (λ j → A north (merid a (i ∨ j))) i (f (merid a i)))
-
---     merid-a : (a : S₊ (suc m)) → PathP (λ i₁ → A north (merid a i₁)) (g north)
---                                         (transport (λ i₁ → A north (merid (ptSn (suc m)) i₁))
---                                         (g north))
---     merid-a a i = hcomp (λ k → λ { (i = i0) → g north
---                                   ; (i = i1) → (helper2 a ∙ sym (helper2 (ptSn (suc m)))) k})
---                         (transp (λ i₁ → A north (merid a (i₁ ∧ i))) (~ i) (g north))
-
---     merid-aId : merid-a (ptSn (suc m)) ≡ λ i → transp (λ i₁ → A north (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g north)
---     merid-aId =
---        (λ j i → hcomp (λ k → λ {(i = i0) → g north
---                                 ; (i = i1) → rCancel (helper2 (ptSn (suc m))) j k})
---                        (transp (λ i₁ → A north (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g north)))
---      ∙ λ j i → hfill (λ k → λ { (i = i0) → g north
---                                 ; (i = i1) → transport (λ i₁ → A north (merid (ptSn (suc m)) i₁)) (g north)})
---                        (inS (transp (λ i₁ → A north (merid (ptSn (suc m)) (i₁ ∧ i))) (~ i) (g north))) (~ j)
-
-
--- -- hLevelS2 : ∀ {ℓ} (n : ℕ) {A : (S₊ (suc n)) → (S₊ (suc n)) → Type ℓ} → ((x y : S₊ (suc n)) → isOfHLevel ((suc n) + (suc n)) (A x y))
--- --           → (f : (x : _) → A (ptSn (suc n)) x)
--- --           → (g : (x : _) → A x (ptSn (suc n)))
--- --           → (g (ptSn (suc n)) ≡ f (ptSn (suc n)))
--- --           → (x y : S₊ (suc n)) → A x y
--- -- hLevelS2 zero hlev f g hom base y = f y
--- -- hLevelS2 zero hlev f g hom (loop i) base = hcomp (λ k → λ {(i = i0) → hom k ; (i = i1) → hom k}) (g (loop i))
--- -- hLevelS2 zero {A = A} hlev f g hom (loop i) (loop j) = helper i j
--- --   where
--- --   helper : SquareP (λ i j → A (loop i) (loop j)) (cong f loop) (cong f loop)
--- --                         (λ i → hcomp (λ k → λ {(i = i0) → hom k
--- --                                                ; (i = i1) → hom k})
--- --                                       (g (loop i)))
--- --                          λ i → hcomp (λ k → λ { (i = i0) → hom k
--- --                                                 ; (i = i1) → hom k})
--- --                                        (g (loop i))
--- --   helper = transport (sym (PathP≡Path _ _ _))
--- --                      (isOfHLevelPathP' 1 (hlev base base) _ _ _ _)
--- -- hLevelS2 (suc n) hlev f g hom north y = f y
--- -- hLevelS2 (suc n) hlev f g hom south north = g south
--- -- hLevelS2 (suc n) {A = A} hlev f g hom south south =
--- --   transport (λ j → A south (merid (ptSn (suc n)) j)) (g south)
--- -- hLevelS2 (suc n) hlev f g hom south (merid a i) =
--- --   {!!}
--- -- hLevelS2 (suc n) hlev f g hom (merid a i) north = {!!}
--- -- hLevelS2 (suc n) hlev f g hom (merid a i) south = {!!}
--- -- hLevelS2 (suc n) hlev f g hom (merid a i) (merid a₁ i₁) = {!!}
-
-
-
--- -- -- ----
--- -- -- open import Cubical.HITs.S2
--- -- -- open import Cubical.Foundations.GroupoidLaws
--- -- -- helper : S² → S² → HubAndSpoke S² 3
--- -- -- helper base y = ∣ y ∣
--- -- -- helper (surf i j) base = ∣ surf i j ∣
--- -- -- helper (surf i j) (surf k l) = {!!}
-
--- -- -- helperId : (a : S²) → isEquiv {A = HubAndSpoke S² 3} {B = HubAndSpoke S² 3} (rec (isOfHLevelTrunc 4) (helper a))
--- -- -- helperId =
--- -- --   S²ToSetRec (λ _ → isOfHLevelSuc 1 (isPropIsEquiv _))
--- -- --              (subst isEquiv (funExt (elim (λ _ → isOfHLevelPath 4 (isOfHLevelTrunc 4) _ _)
--- -- --              (λ _ → refl)))
--- -- --              (idIsEquiv (HubAndSpoke S² 3)))
-
--- -- -- test : (a : S²) → hLevelTrunc 4 S² ≃ hLevelTrunc 4 S²
--- -- -- test a = rec (isOfHLevelTrunc 4) (helper a) , helperId a
-
--- -- -- test3 : (Susp S²) → Type₀
--- -- -- test3 north = hLevelTrunc 4 S²
--- -- -- test3 south = hLevelTrunc 4 S²
--- -- -- test3 (merid a i) = ua (test a) i
-
--- -- -- encoder : (x : Susp S²) → test3 x → Path (hLevelTrunc 5 (Susp S²)) ∣ north ∣ ∣ x ∣
--- -- -- encoder north = rec (isOfHLevelTrunc 5 _ _) λ a → (λ j → ∣ merid base j ∣) ∙ λ j → ∣ merid a (~ j) ∣
--- -- -- encoder south = rec (isOfHLevelTrunc 5 _ _) λ a → (λ j → ∣ merid a j ∣)
--- -- -- encoder (merid a i) = {!!}
--- -- --   where
--- -- --   helper2 : (a s : S²) → transport (λ i → ua (test a) i → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid a i ∣)
--- -- --                                      (encoder north) ∣ s ∣
--- -- --                          ≡ encoder south ∣ s ∣
--- -- --   helper2 base s = (λ i → transport (λ k → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid base k ∣)
--- -- --                                      {!!})
--- -- --                 ∙∙ {!!}
--- -- --                 ∙∙ {!!}
--- -- --   helper2 (surf i i₁) base = {!!}
--- -- --   helper2 (surf i i₁) (surf i₂ i₃) = {!!}
-
--- -- -- -- encoder : (x : Susp S²) → test3 x → Path (hLevelTrunc 5 (Susp S²)) ∣ north ∣ ∣ x ∣
--- -- -- -- encoder north = rec (isOfHLevelTrunc 5 _ _) λ a → ((λ i → ∣ merid a i ∣) ∙ (λ i → ∣ merid base (~ i) ∣)) -- ∣ refl ∣
--- -- -- -- encoder south = rec (isOfHLevelTrunc 5 _ _) λ a j → ∣ merid a j ∣ -- ∣ merid base i ∣ -- ∣ merid base ∣
--- -- -- -- encoder (merid a i) =
--- -- -- --   hcomp (λ k → λ { (i = i0) → encoder north
--- -- -- --                   ; (i = i1) → helper2 a k})
--- -- -- --         (transp (λ j → ua (test a) (i ∧ j) → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid a (i ∧ j) ∣)
--- -- -- --                 (~ i)
--- -- -- --                 (encoder north))
--- -- -- --   where
--- -- -- --   helper3 : (a s : S²) → transport (λ i → ua (test a) i → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid a i ∣)
--- -- -- --                                   (encoder north) ∣ s ∣
--- -- -- --                        ≡ encoder south ∣ s ∣
--- -- -- --   helper3 base s =  (λ j → transp
--- -- -- --       (λ i₁ → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid base (i₁ ∨ j) ∣) j
--- -- -- --       ((λ i₁ → ∣ merid s i₁ ∣) ∙ (λ i₁ → ∣ merid base (~ i₁ ∨ j) ∣))) ∙ {!!} -- sym (rUnit _)
--- -- -- --   helper3 (surf i j) base = {!(λ k → transp
--- -- -- --       (λ i₁ → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid (surf i j) (i₁ ∨ k) ∣) k
--- -- -- --       ((λ i₁ → ∣ merid (surf i j) i₁ ∣) ∙ (λ i₁ → ∣ merid (surf i j) (~ i₁ ∨ k) ∣))) ∙ ?!}
--- -- -- --     where
--- -- -- --     more! : Path (cong (cong (λ a → transport (λ i → ua (test a) i → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid a i ∣)
--- -- -- --                                   (encoder north) ∣ base ∣)) surf i0 ≡ cong (cong (λ a → transport (λ i → ua (test a) i → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid a i ∣)
--- -- -- --                                   (encoder north) ∣ base ∣)) surf i0) (λ i j → transport (λ k → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid (surf i j) k ∣) ((λ k → ∣ merid (surf i j) k ∣) ∙ (λ k → ∣ merid base (~ k) ∣))) λ i j → transport (λ k → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid (surf i j) k ∣) ((λ k → ∣ merid base k ∣) ∙ (λ k → ∣ merid (surf i j) (~ k) ∣))
--- -- -- --     more! = (λ z i j → transport (λ k → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid (surf i j) k ∣) ((λ k → ∣ merid (surf {!!} (j ∨ z)) k ∣) ∙ (λ k → ∣ merid {!!} (~ k) ∣))) ∙ {!!} -- refl -- ((λ k → ∣ merid base k ∣) ∙ (λ k → ∣ merid base (~ k) ∣)
--- -- -- --   helper3 (surf i j) (surf i₁ i₂) = {!transport
--- -- -- --       (λ i₁ →
--- -- -- --          ua (test (surf i₃ j)) i₁ →
--- -- -- --          Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid (surf i₃ j) i₁ ∣)
-      
--- -- -- --        (λ a₁ → (λ i₁ → ∣ merid a₁ i₁ ∣) ∙ (λ i₁ → ∣ merid base (~ i₁) ∣))
--- -- -- --       ∣ base ∣!}
-
--- -- -- --   helper2 : (a : S²) → transport (λ i → ua (test a) i → Path (HubAndSpoke (Susp S²) 4) ∣ north ∣ ∣ merid a i ∣)
--- -- -- --                                   (encoder north)
--- -- -- --                      ≡ encoder south
--- -- -- --   helper2 a = funExt (elim {!!} (helper3 a))
-
-
--- -- -- -- -- Test2 : S₊ 3 → Type₀
--- -- -- -- -- Test2 north = hLevelTrunc 4 (S₊ 2)
--- -- -- -- -- Test2 south = hLevelTrunc 4 (S₊ 2)
--- -- -- -- -- Test2 (merid a i) = ua (test a) i
--- -- -- -- --   where
--- -- -- -- --   test : (a : Susp S¹) → hLevelTrunc 4 (S₊ 2) ≃ hLevelTrunc 4 (S₊ 2)
--- -- -- -- --   test a =
--- -- -- -- --     isoToEquiv
--- -- -- -- --       (iso (rec {!!} (helper2 a))
--- -- -- -- --            {!!}
--- -- -- -- --            {!!}
--- -- -- -- --            {!!})
--- -- -- -- --     where
--- -- -- -- --     helper2 : (a b : Susp S¹) → hLevelTrunc 4 (Susp S¹)
--- -- -- -- --     helper2 north b = {!b!}
--- -- -- -- --     helper2 south b = {!!}
--- -- -- -- --     helper2 (merid a i) b = {!!}
-
-
--- -- -- -- -- -- Test3 : hLevelTrunc 5 (S₊ 3) → TypeOfHLevel ℓ-zero 4
--- -- -- -- -- -- Test3 = rec (isOfHLevelTypeOfHLevel 4)
--- -- -- -- -- --             λ { north → hLevelTrunc 4 (S₊ 2) , isOfHLevelTrunc 4
--- -- -- -- -- --               ; south → hLevelTrunc 4 (S₊ 2) , isOfHLevelTrunc 4
--- -- -- -- -- --               ; (merid a i) → Σ≡Prop (λ _ → isPropIsOfHLevel 4)
--- -- -- -- -- --                                       {u = hLevelTrunc 4 (S₊ 2) , isOfHLevelTrunc 4}
--- -- -- -- -- --                                       {v = hLevelTrunc 4 (S₊ 2) , isOfHLevelTrunc 4}
--- -- -- -- -- --                                       (ua (helper a)) i}
--- -- -- -- -- --   where
--- -- -- -- -- --   helper5 : (i : I) → (a : S¹) → Iso (hLevelTrunc 4 (S₊ 2)) (hLevelTrunc 4 (S₊ 2))
--- -- -- -- -- --   Iso.fun (helper5 i a) = map λ {north → merid a i
--- -- -- -- -- --                                ; south → merid a (~ i)
--- -- -- -- -- --                                ; (merid x z) → ((λ j → merid a (i ∧ ~ j)) ∙∙ merid x ∙∙ λ j → merid a (~ i ∨ ~ j)) z}
--- -- -- -- -- --   Iso.inv (helper5 i a) = idfun _
--- -- -- -- -- --   Iso.rightInv (helper5 i a) = elim (λ _ → isOfHLevelPath 4 (isOfHLevelTrunc 4) _ _)
--- -- -- -- -- --                                          λ {north j → ∣ merid a (i ∧ ~ j) ∣
--- -- -- -- -- --                                           ; south j → ∣ merid a (~ i ∨ j) ∣
--- -- -- -- -- --                                           ; (merid x z) j → ∣ hcomp (λ k → λ { (z = i0) → merid a (i ∧ (~ j ∧ k))
--- -- -- -- -- --                                                                               ; (z = i1) → merid a (~ i ∨ j ∨ ~ k)
--- -- -- -- -- --                                                                               ; (j = i1) → merid x z})
--- -- -- -- -- --                                                                     (merid x z) ∣}
--- -- -- -- -- --   Iso.leftInv (helper5 i a) =
--- -- -- -- -- --     elim (λ _ → isOfHLevelPath 4 (isOfHLevelTrunc 4) _ _)
--- -- -- -- -- --          λ { north j → ∣ merid a (i ∧ ~ j) ∣
--- -- -- -- -- --            ; south j → ∣ merid a (~ i ∨ j) ∣
--- -- -- -- -- --            ; (merid x z) j → ∣ hcomp (λ k → λ { (z = i0) → merid a (i ∧ (~ j ∧ k))
--- -- -- -- -- --                                                ; (z = i1) → merid a (~ i ∨ j ∨ ~ k)
--- -- -- -- -- --                                                ; (j = i1) → merid x z})
--- -- -- -- -- --                                      (merid x z) ∣}
-
-
--- -- -- -- -- --   helper : (a : S₊ 2) → (hLevelTrunc 4 (S₊ 2)) ≃ (hLevelTrunc 4 (S₊ 2))
--- -- -- -- -- --   helper north = isoToEquiv (helper5 i0 base)
--- -- -- -- -- --   helper south = isoToEquiv (helper5 i1 base)
--- -- -- -- -- --   helper (merid a i) = hcomp (λ k → λ { (i = i0) → i0case k
--- -- -- -- -- --                                        ; (i = i1) → {!!}})
--- -- -- -- -- --                              (isoToEquiv (helper5 i a))
--- -- -- -- -- --     where
--- -- -- -- -- --     i0case : isoToEquiv (helper5 i0 a) ≡ isoToEquiv (helper5 i0 base)
--- -- -- -- -- --     i0case = Σ≡Prop isPropIsEquiv (funExt (elim {!!} λ {north → refl ; south → refl ; (merid x i) → refl }))
--- -- -- -- -- --     i1case : isoToEquiv (helper5 i1 a) ≡ isoToEquiv (helper5 i1 base)
--- -- -- -- -- --     i1case = Σ≡Prop isPropIsEquiv (funExt (elim {!!} λ {north → {!((λ j → merid a (~ j)) ∙∙ merid x ∙∙ (λ j → merid a (~ j)))!} ; south → {!!} ; (merid base i) → {!!} ; (merid (loop j) i) k → {!!}}))
--- -- -- -- -- --     helper2 : (a : S¹) → Iso (hLevelTrunc 4 (S₊ 2)) (hLevelTrunc 4 (S₊ 2))
--- -- -- -- -- --     Iso.fun (helper2 a) = map λ {north → north ; south → north ; (merid x i) → ((merid x) ∙ (sym (merid a))) i}
--- -- -- -- -- --     Iso.inv (helper2 a) = idfun (hLevelTrunc 4 (S₊ 2))
--- -- -- -- -- --     Iso.rightInv (helper2 a) =
--- -- -- -- -- --       elim {!!}
--- -- -- -- -- --            λ {north → refl ; south j → ∣ merid a j ∣
--- -- -- -- -- --            ; (merid x i) j → ∣ hcomp (λ k → λ { (i = i0) → north
--- -- -- -- -- --                                                ; (i = i1) → merid a (~ k ∨ j)
--- -- -- -- -- --                                                ; (j = i1) → merid x i})
--- -- -- -- -- --                                                  (merid x i) ∣}
--- -- -- -- -- --     Iso.leftInv (helper2 a) =
--- -- -- -- -- --       elim {!!} λ { north → refl
--- -- -- -- -- --                   ; south j → ∣ merid a j ∣
--- -- -- -- -- --                   ; (merid x i) j → helper3 x j i}
--- -- -- -- -- --       where
--- -- -- -- -- --       helper3 : (x : S¹) → PathP (λ j → Path (hLevelTrunc 4 (S₊ 2)) ∣ north ∣ ∣ merid a j ∣) (cong (λ x → Iso.inv (helper2 a) (Iso.fun (helper2 a) x)) (λ i → ∣ merid x i ∣)) (λ i → ∣ merid x i ∣)
--- -- -- -- -- --       helper3 x = compPathR→PathP (helper4 ∙ lUnit ((λ j → ∣ merid x j ∣) ∙ (λ j → ∣ merid a (~ j) ∣)))
--- -- -- -- -- --         where
--- -- -- -- -- --         open import Cubical.Foundations.GroupoidLaws
--- -- -- -- -- --         helper4 : cong (λ x → Iso.inv (helper2 a) (Iso.fun (helper2 a) x)) (λ i → ∣ merid x i ∣) ≡ (λ j → ∣ merid x j ∣) ∙ λ j → ∣ merid a (~ j) ∣
--- -- -- -- -- --         helper4 = congFunct (λ x → ∣ x ∣) (merid x) (sym (merid a))
-
--- -- -- -- -- -- -- Test2 : (n : ℕ) → hLevelTrunc (5 + n) (S₊ (3 + n)) → TypeOfHLevel ℓ-zero (4 + n)
--- -- -- -- -- -- -- helpi : (n : ℕ) → (a : S₊ (3 + n)) → hLevelTrunc (5 + n) (S₊ (3 + n)) ≃ hLevelTrunc (5 + n) (S₊ (3 + n))
--- -- -- -- -- -- -- helpi2 : (n : ℕ) → {!!}
--- -- -- -- -- -- -- helpi2 = {!!}
--- -- -- -- -- -- -- helpi zero a = {!!}
--- -- -- -- -- -- -- helpi (suc n) north = {!!}
--- -- -- -- -- -- -- helpi (suc n) south = {!!}
--- -- -- -- -- -- -- helpi (suc n) (merid a i) = {!isoToEquiv (test a)!}
--- -- -- -- -- -- --   where
--- -- -- -- -- -- --   test : (a : S₊ (3 + n)) → Iso {!!} {!!}
--- -- -- -- -- -- --   test = {!!}
--- -- -- -- -- -- -- Test2 zero = rec (isOfHLevelTypeOfHLevel 4)
--- -- -- -- -- -- --            λ {north → hLevelTrunc 4 (S₊ 2) , isOfHLevelTrunc 4
--- -- -- -- -- -- --             ; south → hLevelTrunc 4 (S₊ 2) , isOfHLevelTrunc 4
--- -- -- -- -- -- --             ; (merid a i) → Σ≡Prop (λ _ → isPropIsOfHLevel 4)
--- -- -- -- -- -- --                                     {u = hLevelTrunc 4 (S₊ 2) , isOfHLevelTrunc 4}
--- -- -- -- -- -- --                                     {v = hLevelTrunc 4 (S₊ 2) , isOfHLevelTrunc 4}
--- -- -- -- -- -- --                                     (ua {!Test2 n!}) i}
--- -- -- -- -- -- -- Test2 (suc n) = rec (isOfHLevelTypeOfHLevel (5 + n))
--- -- -- -- -- -- --            λ {north → hLevelTrunc (5 + n) (S₊ (3 + n)) , isOfHLevelTrunc (5 + n)
--- -- -- -- -- -- --             ; south → hLevelTrunc (5 + n) (S₊ (3 + n)) , isOfHLevelTrunc (5 + n)
--- -- -- -- -- -- --             ; (merid a i) → Σ≡Prop (λ _ → isPropIsOfHLevel (5 + n))
--- -- -- -- -- -- --                                     {u = hLevelTrunc (5 + n) (S₊ (3 + n)) , isOfHLevelTrunc (5 + n)}
--- -- -- -- -- -- --                                     {v = hLevelTrunc (5 + n) (S₊ (3 + n)) , isOfHLevelTrunc (5 + n)}
--- -- -- -- -- -- --                                     (ua (helpi n a)) i}
--- -- -- -- -- -- --   where
-
-
--- -- -- -- -- -- -- Test : (n : ℕ) → hLevelTrunc (5 + n) (S₊ (3 + n)) → TypeOfHLevel ℓ-zero (4 + n)
--- -- -- -- -- -- -- Test n = rec (isOfHLevelTypeOfHLevel (4 + n))
--- -- -- -- -- -- --            λ {north → hLevelTrunc (4 + n) (S₊ (2 + n)) , isOfHLevelTrunc (4 + n)
--- -- -- -- -- -- --             ; south → hLevelTrunc (4 + n) (S₊ (2 + n)) , isOfHLevelTrunc (4 + n)
--- -- -- -- -- -- --             ; (merid a i) → Σ≡Prop (λ _ → isPropIsOfHLevel (4 + n))
--- -- -- -- -- -- --                                     {u = hLevelTrunc (4 + n) (S₊ (2 + n)) , isOfHLevelTrunc (4 + n)}
--- -- -- -- -- -- --                                     {v = hLevelTrunc (4 + n) (S₊ (2 + n)) , isOfHLevelTrunc (4 + n)}
--- -- -- -- -- -- --                                     (ua (helper a)) i}
--- -- -- -- -- -- --   where
--- -- -- -- -- -- --   helper2 : Iso (hLevelTrunc (4 + n) (S₊ (2 + n))) (hLevelTrunc (4 + n) (S₊ (2 + n)))
--- -- -- -- -- -- --   Iso.fun helper2 = map λ {north → north ; south → north ; (merid a i) → ((merid a) ∙ sym (merid (ptSn (suc n)))) i}
--- -- -- -- -- -- --   Iso.inv helper2 = map λ {north → north ; south → north ; (merid a i) → ((merid a) ∙ sym (merid (ptSn (suc n)))) i}
--- -- -- -- -- -- --   Iso.rightInv helper2 = {!!}
--- -- -- -- -- -- --   Iso.leftInv helper2 = {!!}
-
--- -- -- -- -- -- --   helper : (a : S₊ (2 + n) ) → (hLevelTrunc (4 + n) (S₊ (2 + n))) ≃ (hLevelTrunc (4 + n) (S₊ (2 + n)))
--- -- -- -- -- -- --   helper north = idEquiv (hLevelTrunc (4 + n) (S₊ (2 + n)))
--- -- -- -- -- -- --   helper south = idEquiv (hLevelTrunc (4 + n) (S₊ (2 + n)))
--- -- -- -- -- -- --     where
-
--- -- -- -- -- -- --   helper (merid a i) = Σ≡Prop (isPropIsEquiv) {u = idEquiv (hLevelTrunc (4 + n) (S₊ (2 + n)))}
--- -- -- -- -- -- --                                               {v = {!!} } -- idEquiv (hLevelTrunc (4 + n) (S₊ (2 + n)))
--- -- -- -- -- -- --                               (funExt
--- -- -- -- -- -- --                                 (elim {!!} (λ {north → {!!}
--- -- -- -- -- -- --                                              ; south j → {!!} -- ∣ ? -- (sym (merid (ptSn (suc n))) ∙ (merid a)) j ∣
--- -- -- -- -- -- --                                              ; (merid x i) j → {!!}}))) i
+  right : (x : S₊ (2 + n)) → F x (ptSn (2 + m)) ≡ g x
+  right north = sym hom
+  right south = {!i = i0 ⊢ f north
+i = i1 ⊢ subst (λ x → A x north) (merid (ptSn (suc n))) (f north)!}
+  right (merid a i) = {!!}
