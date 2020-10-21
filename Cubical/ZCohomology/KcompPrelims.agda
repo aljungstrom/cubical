@@ -100,17 +100,17 @@ private
   ΩKn+1→Kn : (n : ℕ) → loopSpaceK n → coHomK n
   ΩKn+1→Kn zero = winding
   ΩKn+1→Kn (suc zero) = Iso.inv Iso∥ϕ₁∥
-  ΩKn+1→Kn (suc (suc n)) = Iso.inv (anIso n)
+  ΩKn+1→Kn (suc (suc n)) = Iso.inv (stabSpheres-n≥2 n)
 
   ΩKn+1→Kn→ΩKn+1 : (n : ℕ) → (x : loopSpaceK n) → Kn→ΩKn+1 n (ΩKn+1→Kn n x) ≡ x
   ΩKn+1→Kn→ΩKn+1 zero = decodeEncode base
   ΩKn+1→Kn→ΩKn+1 (suc zero) = Iso.rightInv Iso∥ϕ₁∥
-  ΩKn+1→Kn→ΩKn+1 (suc (suc n)) = Iso.rightInv (anIso n)
+  ΩKn+1→Kn→ΩKn+1 (suc (suc n)) = Iso.rightInv (stabSpheres-n≥2 n)
 
   Kn→ΩKn+1→Kn : (n : ℕ) → (x : coHomK n) → ΩKn+1→Kn n (Kn→ΩKn+1 n x) ≡ x
   Kn→ΩKn+1→Kn zero = windingIntLoop
   Kn→ΩKn+1→Kn (suc zero) = Iso.leftInv Iso∥ϕ₁∥
-  Kn→ΩKn+1→Kn (suc (suc n)) = Iso.leftInv (anIso n)
+  Kn→ΩKn+1→Kn (suc (suc n)) = Iso.leftInv (stabSpheres-n≥2 n)
 
 Iso-Kn-ΩKn+1 : (n : HLevel) → Iso (coHomK n) (loopSpaceK n)
 Iso.fun (Iso-Kn-ΩKn+1 n) = Kn→ΩKn+1 n

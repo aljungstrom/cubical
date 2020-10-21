@@ -163,8 +163,7 @@ module MV {ℓ ℓ' ℓ''} (A : Type ℓ) (B : Type ℓ') (C : Type ℓ'') (f : 
       helper3 : (x y : hLevelTrunc 3 S¹)
               → trRec (isOfHLevelTrunc 4 _ _) (cong ∣_∣) (Kn→ΩKn+1 1 (x +[ 1 ]ₖ y))
               ≡ cong₂ (+ₖ-syntax 2) (trRec (isOfHLevelTrunc 4 _ _) (cong ∣_∣) (Kn→ΩKn+1 1 x)) (trRec (isOfHLevelTrunc 4 _ _) (cong ∣_∣) (Kn→ΩKn+1 1 y))
-      helper3 = elim2 {!!} λ a b → {!? ∙∙ ? ∙∙ ?!}
-
+      helper3 = {!!}
 {-
          {!helper 0 (λ x → +ₖ-syntax 1 (f x) (g x)) c!}
       ∙∙ {!!}

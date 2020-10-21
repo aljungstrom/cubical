@@ -20,7 +20,7 @@ open import Cubical.HITs.SmashProduct
 open import Cubical.HITs.Truncation as Trunc renaming (rec to trRec)
 open import Cubical.Homotopy.Loopspace
 open import Cubical.HITs.Pushout
-open import Cubical.HITs.Sn
+open import Cubical.HITs.Sn.Base
 open import Cubical.HITs.S1
 open import Cubical.Data.Bool
 open import Cubical.Data.Unit
