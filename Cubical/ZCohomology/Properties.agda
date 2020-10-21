@@ -249,6 +249,13 @@ commₖ (suc (suc (suc (suc n)))) x y i =
                                 {B = coHomK (5 + n)}
                                 (invIso (Iso-Kn-ΩKn+1 (5 + n))) (Eckmann-Hilton 0) (Kn→ΩKn+1 (4 + n) x) (Kn→ΩKn+1 (4 + n) y) i)
 
+commₖ' : (n : ℕ) (x y : coHomK n) → (x +[ n ]ₖ y) ≡ (y +[ n ]ₖ x)
+commₖ' zero = {!!}
+commₖ' (suc zero) = {!!}
+commₖ' (suc (suc n)) = elim2 {!!} (wedgeConSn (suc n) (suc n) {!!} {!!} {!!} {!!} .fst)
+  where
+  helper : (x : S₊ (2 + n)) → (0ₖ (2 + n) +[ (2 + n) ]ₖ ∣ x ∣) ≡ (∣ x ∣ +[ (2 + n) ]ₖ 0ₖ (2 + n))
+  helper = {!!}
 
 rUnitₖ' : (n : ℕ) (x : coHomK n) → x +[ n ]ₖ (0ₖ n) ≡ x
 rUnitₖ' n x = commₖ n x (0ₖ n) ∙ lUnitₖ n x
