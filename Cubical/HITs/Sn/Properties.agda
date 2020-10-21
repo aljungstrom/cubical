@@ -33,7 +33,6 @@ private
     B : Type ℓ'
 
 --- Some silly lemmas on S1 ---
-
 isGroupoidS1 : isGroupoid (S₊ 1)
 isGroupoidS1 = isGroupoidS¹
 
