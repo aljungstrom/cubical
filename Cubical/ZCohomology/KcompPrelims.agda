@@ -94,8 +94,7 @@ private
 private
   Kn→ΩKn+1 : (n : ℕ) → coHomK n → loopSpaceK n
   Kn→ΩKn+1 zero a = intLoop a
-  Kn→ΩKn+1 (suc zero) =  trMap (ϕ base)
-  Kn→ΩKn+1 (suc (suc n)) = trMap (ϕ north)
+  Kn→ΩKn+1 (suc n) =  trMap (ϕ (ptSn (suc n)))
 
   ΩKn+1→Kn : (n : ℕ) → loopSpaceK n → coHomK n
   ΩKn+1→Kn zero = winding

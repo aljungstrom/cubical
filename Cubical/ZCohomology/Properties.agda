@@ -47,9 +47,9 @@ infixr 34 _+ₖ_
 infixr 34 _+ₕ_
 
 open Iso renaming (inv to inv')
-{-
+
 rUnitlUnitGen2 : ∀ {ℓ ℓ'} {A : Type ℓ} (n : ℕ) {B : Type ℓ'} {b : B} (e : Iso (hLevelTrunc (suc n) (Susp A)) (hLevelTrunc (suc n) (Path (Susp (Susp A)) north north)))
-              → (q : inv' e ∣ (ϕ north north) ∣ ≡ ∣ north ∣)
+              → (q : inv' e ∣ ϕ north north ∣ ≡ ∣ north ∣)
               → Path _
                      ((λ i → inv' e ∣ ϕ north north ∙ rCancel (merid north) i ∣)
                     ∙∙ (λ i → inv' e ∣ rUnit (ϕ north north) (~ i) ∣)
@@ -58,7 +58,6 @@ rUnitlUnitGen2 : ∀ {ℓ ℓ'} {A : Type ℓ} (n : ℕ) {B : Type ℓ'} {b : B}
                     ∙∙ (λ i → inv' e ∣ lUnit (ϕ north north) (~ i) ∣)
                     ∙∙ q) -- (cong (inv' e) (cong (fun e 0A ∙_) 0fun) ∙∙ cong (inv' e) (sym (rUnit (fun e 0A))) ∙∙ Iso.leftInv e 0A)
 rUnitlUnitGen2 = {!cong (inv' e) (sym (trMap lUnit (fun e 0A)))!}
--}
 
 {-
 ((λ i →
@@ -470,12 +469,14 @@ cancelₕ n = sElim (λ _ → isOfHLevelPath 1 (§ _ _))
   ∙∙ Iso.leftInv (Iso-Kn-ΩKn+1 n) x
 
 -- Proof that rUnitₖ and lUnitₖ agree on 0ₖ. Needed for Mayer-Vietoris.
-{-
+
 rUnitlUnit0 : (n : ℕ) → rUnitₖ n (0ₖ n) ≡ lUnitₖ n (0ₖ n)
 rUnitlUnit0 0 = refl
 rUnitlUnit0 (suc zero) = refl
-rUnitlUnit0 (suc (suc n)) = {!rUnitlUnitGen2 (3 + n) (Iso-Kn-ΩKn+1 (suc (suc n))) (Iso.leftInv (Iso-Kn-ΩKn+1 (suc (suc n))) ∣ north ∣)!}
--}
+rUnitlUnit0 (suc (suc n)) = {!!}
+  where
+  helper1 : ∀ {ℓ} {A : Type ℓ} {x y y' w z : A} (p : x ≡ y) (q : y ≡ w) (p2 : x ≡ y') (q2 : y' ≡ w) → (r :  w ≡ z) → (p ∙ q) ≡ p2 ∙ q2  → p ∙∙ q ∙∙ r ≡ (p2 ∙∙ q2 ∙∙ r)
+  helper1 = {!!}
 
 -cancelLₕ : (n : ℕ) (x y : coHom n A) → (x +[ n ]ₕ y) -[ n ]ₕ x ≡ y
 -cancelLₕ n = sElim2 (λ _ _ → isOfHLevelPath 1 (§ _ _))

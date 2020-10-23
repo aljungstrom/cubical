@@ -294,12 +294,16 @@ module miniFreudenthal (n : HLevel) where
       (uncurry λ a →
         J (λ p r → encodeS south p ≡ ∣ a , r ∣) (encodeMerid a))
 
+  contractCodeNorth : (p : north ≡ north) (c : Code north p) → encodeS north p ≡ c
+  contractCodeNorth = transport (λ i → (p : north ≡ merid north (~ i)) (c : Code (merid north (~ i)) p) → encodeS (merid north (~ i)) p ≡ c)
+                                contractCodeSouth
+
   isConnectedMerid : isConnectedFun 4n+2 (merid {A = S2+n})
   isConnectedMerid p = encodeS south p , contractCodeSouth p
 
   isConnectedσ : isConnectedFun 4n+2 σ
-  isConnectedσ =
-    transport (λ i → isConnectedFun 4n+2 (interpolate north (~ i))) isConnectedMerid
+  fst (isConnectedσ p) = encodeS north p
+  snd (isConnectedσ p) = contractCodeNorth p
 
 isConnectedσ-Sn : (n : ℕ) → isConnectedFun (4 + n) (miniFreudenthal.σ n)
 isConnectedσ-Sn n = isConnectedFunSubtr _ n _ (subst (λ x → isConnectedFun x (miniFreudenthal.σ n)) helper (miniFreudenthal.isConnectedσ n))

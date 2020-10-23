@@ -45,21 +45,22 @@ Susp≃joinBool = isoToEquiv Susp-iso-joinBool
 Susp≡joinBool : ∀ {ℓ} {A : Type ℓ} → Susp A ≡ join A Bool
 Susp≡joinBool = isoToPath Susp-iso-joinBool
 
+congSuspIso : ∀ {ℓ} {A B : Type ℓ} → Iso A B → Iso (Susp A) (Susp B)
+fun (congSuspIso e) north = north
+fun (congSuspIso e) south = south
+fun (congSuspIso e) (merid a i) = merid (Iso.fun e a) i
+inv (congSuspIso e) north = north
+inv (congSuspIso e) south = south
+inv (congSuspIso e) (merid a i) = merid (Iso.inv e a) i
+rightInv (congSuspIso e) north = refl
+rightInv (congSuspIso e) south = refl
+rightInv (congSuspIso e) (merid a i) j = merid (Iso.rightInv e a j) i
+leftInv (congSuspIso e) north = refl
+leftInv (congSuspIso e) south = refl
+leftInv (congSuspIso e) (merid a i) j = merid (Iso.leftInv e a j) i
+
 congSuspEquiv : ∀ {ℓ} {A B : Type ℓ} → A ≃ B → Susp A ≃ Susp B
-congSuspEquiv {ℓ} {A} {B} h = isoToEquiv isom
-  where isom : Iso (Susp A) (Susp B)
-        Iso.fun isom north = north
-        Iso.fun isom south = south
-        Iso.fun isom (merid a i) = merid (fst h a) i
-        Iso.inv isom north = north
-        Iso.inv isom south = south
-        Iso.inv isom (merid a i) = merid (invEq h a) i
-        Iso.rightInv isom north = refl
-        Iso.rightInv isom south = refl
-        Iso.rightInv isom (merid a i) j = merid (retEq h a j) i
-        Iso.leftInv isom north = refl
-        Iso.leftInv isom south = refl
-        Iso.leftInv isom (merid a i) j = merid (secEq h a j) i
+congSuspEquiv {ℓ} {A} {B} h = isoToEquiv (congSuspIso (equivToIso h))
 
 suspToPropElim : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Susp A → Type ℓ'} (a : A)
                  → ((x : Susp A) → isProp (B x))

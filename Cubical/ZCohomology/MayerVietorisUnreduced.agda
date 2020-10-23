@@ -25,6 +25,33 @@ open import Cubical.HITs.Truncation renaming (elim to trElim ; map to trMap ; re
 
 open GroupHom
 
+helper' : ∀ {ℓ} {A : Type ℓ} {a0 x y z w : A} {p : a0 ≡ a0} {q : a0 ≡ a0}
+       → (f : A → A → A)
+       → (pl : (x : A) → f x a0 ≡ x)
+       → PathP (λ i → pl a0 i ≡ pl a0 i)
+                (cong₂ f p q)
+                (p ∙ q)
+helper' {a0 = a0} {p = p} {q = q} f pl =
+  toPathP (cong (transport (λ i → pl a0 i ≡ pl a0 i)) ((cong₂Funct f _ _) ∙ (cong (_∙ (cong (λ x → f a0 x) q)) (sym helper2)))
+       ∙ λ i → transp (λ j → pl a0 (j ∨ i) ≡ pl a0 (j ∨ i)) i ((λ j → pl (pl (p j) (~ j ∨ i)) (i ∨ j)) ∙ λ j → pl {!q j!} i))
+  where
+  helper2 : (λ i → pl (pl (p i) (~ i)) i) ≡ (cong (λ x → f x a0) p)
+  helper2 i j = {!cong pl q!}
+{-
+    hcomp (λ k → λ { (i = i0) → {!!}
+                    ; (i = i1) → {!!}
+                    ; (j = i0) → {!!}
+                    ; (j = i1) → {!!} })
+          {!!}
+-}
+{-
+i = i0 ⊢ pl (pr (p j) (~ j)) j
+i = i1 ⊢ cong (λ x₁ → f x₁ a0) p j
+j = i0 ⊢ f a0 a0
+j = i1 ⊢ f a0 a0
+-}
+
+
 module MV {ℓ ℓ' ℓ''} (A : Type ℓ) (B : Type ℓ') (C : Type ℓ'') (f : C → A) (g : C → B) where
   -- Proof from Brunerie 2016.
   -- We first define the three morphisms involved: i, Δ and d.
@@ -82,9 +109,10 @@ module MV {ℓ ℓ' ℓ''} (A : Type ℓ) (B : Type ℓ') (C : Type ℓ'') (f : 
     helper2 : (x : coHomK (2 + n)) (a b : S₊ (2 + n)) → ΩKn+1→Kn (2 + n) (∣ ϕ north a ∙ ϕ north b ∣) ≡ x → helper (suc n) (+ₖ-syntax (suc (suc n)) ∣ a ∣ ∣ b ∣) ≡ helper (suc n) ∣ a ∣ ∙ helper (suc n) ∣ b ∣
     helper2 = trElim {!!} (helper3 n)
       where
-      helper3 : (n : ℕ) → (c a b : S₊ (2 + n)) → ΩKn+1→Kn (2 + n) (∣ ϕ north a ∙ ϕ north b ∣) ≡ ∣ c ∣ → helper (suc n) (+ₖ-syntax (suc (suc n)) ∣ a ∣ ∣ b ∣) ≡ helper (suc n) ∣ a ∣ ∙ helper (suc n) ∣ b ∣
+      helper3 : (n : ℕ) → (c a b : S₊ (2 + n)) → ΩKn+1→Kn (2 + n) (∣ ϕ north a ∙ ϕ north b ∣) ≡ ∣ c ∣
+             → helper (suc n) (+ₖ-syntax (suc (suc n)) ∣ a ∣ ∣ b ∣) ≡ helper (suc n) ∣ a ∣ ∙ helper (suc n) ∣ b ∣
       helper3 n c a b p =
-           {!cong (helper (suc n)) p!}
+           {!!}
         ∙∙ {!!}
         ∙∙ {!!}
 
@@ -145,6 +173,57 @@ module MV {ℓ ℓ' ℓ''} (A : Type ℓ) (B : Type ℓ') (C : Type ℓ'') (f : 
   dHomHelper zero h l (push a i) j = dHomHelperPath zero h l a i j
   dHomHelper (suc n) h l (push a i) j = dHomHelperPath (suc n) h l a i j
 -}
+  dIsHom' : (n : ℕ) → isGroupHom (coHomGr n C) (coHomGr (suc n) (Pushout f g)) (sRec setTruncIsSet λ a → ∣ d-pre n a ∣₂)
+  dIsHom' zero = {!!}
+  dIsHom' (suc n) =
+    sElim2 {!!}
+           λ f g → cong ∣_∣₂ (funExt λ { (inl x) → sym (rUnitₖ (2 + n) (0ₖ (2 + n)))
+                                       ; (inr x) → sym (lUnitₖ (2 + n) (0ₖ (2 + n)))
+                                       ; (push a i) j → {! helper2 a f g j i !}})
+    where
+    * = ptSn (suc n)
+
+    helper2 : (c : C) → (f g : C → coHomK (suc n))
+      → PathP (λ i → (rUnitₖ (2 + n) (0ₖ (2 + n))) (~ i) ≡ (lUnitₖ (2 + n) (0ₖ (2 + n))) (~ i))
+                    (helper n (+ₖ-syntax (suc n) (f c) (g c)))
+                    (λ i → +ₖ-syntax (2 + n) (helper n (f c) i) (helper n (g c) i))
+    helper2 = {!!}
+      where
+      helper3 : (x y : coHomK (suc n))
+              → PathP (λ i → (rUnitₖ (2 + n) (0ₖ (2 + n))) (~ i) ≡ (lUnitₖ (2 + n) (0ₖ (2 + n))) (~ i))
+                       (trRec (isOfHLevelTrunc (4 + n) _ _) (cong ∣_∣) (Kn→ΩKn+1 (suc n) (x +[ (suc n) ]ₖ y)))
+                       (cong₂ (+ₖ-syntax (2 + n)) (trRec (isOfHLevelTrunc (4 + n) _ _) (cong ∣_∣) (Kn→ΩKn+1 (suc n) x))
+                                                  (trRec (isOfHLevelTrunc (4 + n) _ _) (cong ∣_∣) (Kn→ΩKn+1 (suc n) y)))
+      helper3 x y i j =
+        hcomp (λ k → λ { (i = i0) → trRec (isOfHLevelTrunc (4 + n) _ _) (cong ∣_∣) (Iso.rightInv (Iso-Kn-ΩKn+1 (suc n)) (∙K (suc n) (Kn→ΩKn+1 (suc n) x) (Kn→ΩKn+1 (suc n) y)) (~ k)) j
+                        ; (i = i1) → (cong₂Funct (+ₖ-syntax (2 + n)) (trRec (isOfHLevelTrunc (4 + n) _ _) (cong ∣_∣) (Kn→ΩKn+1 (suc n) x))
+                                                                 (trRec (isOfHLevelTrunc (4 + n) _ _) (cong ∣_∣) (Kn→ΩKn+1 (suc n) y))) (~ k) j
+                        ; (j = i0) → (rUnitₖ (2 + n) (0ₖ (2 + n))) (~ i) 
+                        ; (j = i1) → (lUnitₖ (2 + n) (0ₖ (2 + n))) (~ i)})
+              (helper4 x y i j)
+       where
+       helper4 : (x y : coHomK (suc n)) → PathP (λ i → (rUnitₖ (2 + n) (0ₖ (2 + n))) (~ i) ≡ (lUnitₖ (2 + n) (0ₖ (2 + n))) (~ i))
+                                                 (trRec (isOfHLevelTrunc (4 + n) _ _) (cong ∣_∣) (∙K (suc n) (Kn→ΩKn+1 (suc n) x) (Kn→ΩKn+1 (suc n) y)))
+                                                 (cong (λ x → x +[ (2 + n) ]ₖ (0ₖ (2 + n))) ((trRec (isOfHLevelTrunc (4 + n) _ _) (cong ∣_∣) (Kn→ΩKn+1 (suc n) x)))
+                                                   ∙ cong (λ x → (0ₖ (2 + n)) +[ (2 + n) ]ₖ x) ((trRec (isOfHLevelTrunc (4 + n) _ _) (cong ∣_∣) (Kn→ΩKn+1 (suc n) y))))
+       helper4 =
+         elim2 (λ _ _ → isOfHLevelPathP (3 + n) (isOfHLevelTrunc (4 + n) _ _) _ _)
+                λ a b i j → {!!}
+         where
+         helper5 : (a b : S₊ (suc n)) → PathP (λ i → (rUnitₖ (2 + n) (0ₖ (2 + n))) (~ i) ≡ (lUnitₖ (2 + n) (0ₖ (2 + n))) (~ i))
+                                               (cong ∣_∣ (ϕ * a ∙ ϕ * b))
+                                               (cong (λ x → x +[ (2 + n) ]ₖ (0ₖ (2 + n))) (cong ∣_∣ (ϕ * a))
+                                                 ∙ cong (λ x → (0ₖ (2 + n)) +[ (2 + n) ]ₖ x) (cong ∣_∣ (ϕ * b)))
+         helper5 = sphereElim2 n (λ _ _ → isOfHLevelPathP' (suc n) {!isOfHLevelTrunc (4 + n) _ _ _ _!} _ _) {!!}
+{-
+           hcomp (λ k → λ { (i = i0) → rUnitₖ (2 + n) (0ₖ (2 + n)) (~ j)
+                           ; (i = i1) → lUnitₖ (2 + n) {!∣ ? ∣!} (~ j) -- lUnitₖ (2 + n) ∣ ϕ * b k ∣  {!~ j!}
+                           ; (j = i0) → ∣ compPath-filler (ϕ * a) (ϕ * b) k i ∣ -- ∣ compPath-filler (ϕ * a) (ϕ * b) k i ∣
+                           ; (j = i1) → compPath-filler (cong (λ x → x +[ (2 + n) ]ₖ (0ₖ (2 + n))) (cong ∣_∣ (ϕ * a))) (cong (λ x → (0ₖ (2 + n)) +[ (2 + n) ]ₖ x) (cong ∣_∣ (ϕ * b)))
+                                                          k i})
+                 {!!}
+-}
+
   dIsHom : (n : ℕ) → isGroupHom (coHomGr n C) (coHomGr (suc n) (Pushout f g)) (sRec setTruncIsSet λ a → ∣ d-pre n a ∣₂)
   dIsHom zero = sElim2 {!!} λ f g → {!!}
   dIsHom (suc zero) = sElim2 (λ _ _ → isOfHLevelPath 2 setTruncIsSet _ _ )
@@ -163,12 +242,22 @@ module MV {ℓ ℓ' ℓ''} (A : Type ℓ) (B : Type ℓ') (C : Type ℓ'') (f : 
       helper3 : (x y : hLevelTrunc 3 S¹)
               → trRec (isOfHLevelTrunc 4 _ _) (cong ∣_∣) (Kn→ΩKn+1 1 (x +[ 1 ]ₖ y))
               ≡ cong₂ (+ₖ-syntax 2) (trRec (isOfHLevelTrunc 4 _ _) (cong ∣_∣) (Kn→ΩKn+1 1 x)) (trRec (isOfHLevelTrunc 4 _ _) (cong ∣_∣) (Kn→ΩKn+1 1 y))
-      helper3 = {!!}
-{-
-         {!helper 0 (λ x → +ₖ-syntax 1 (f x) (g x)) c!}
-      ∙∙ {!!}
-      ∙∙ sym (cong₂Funct (+ₖ-syntax 2) (helper 0 f c) (helper 0 g c))
--}
+      helper3 x y = cong (trRec (isOfHLevelTrunc 4 _ _) (cong ∣_∣)) (Iso.rightInv (Iso-Kn-ΩKn+1 1) (∙K 1 (Kn→ΩKn+1 1 x) (Kn→ΩKn+1 1 y)))
+                  ∙ helper4 x y
+        where
+        helper4 : (x y : hLevelTrunc 3 S¹) → trRec (isOfHLevelTrunc 4 _ _) (cong ∣_∣) (∙K 1 (Kn→ΩKn+1 1 x) (Kn→ΩKn+1 1 y))
+                ≡ cong₂ (+ₖ-syntax 2) (trRec (isOfHLevelTrunc 4 _ _) (cong ∣_∣) (Kn→ΩKn+1 1 x)) (trRec (isOfHLevelTrunc 4 _ _) (cong ∣_∣) (Kn→ΩKn+1 1 y))
+        helper4 = elim2 {!!} helper5
+          where
+          helper5 : (a b : S¹) → cong ∣_∣ (ϕ base a ∙ ϕ base b) ≡ cong₂ (+ₖ-syntax 2) (cong ∣_∣ (ϕ base a)) (cong ∣_∣ (ϕ base b))
+          helper5 = wedgeConSn 0 0 (λ _ _ → isOfHLevelTrunc 4 _ _ _ _)
+                                   helper6
+                                   {!!}
+                                   {!!} .fst
+            where
+            helper6 : (x : S¹) → cong ∣_∣ (ϕ base base ∙ ϕ base x) ≡
+                                 cong₂ (+ₖ-syntax 2) (cong ∣_∣ (ϕ base base)) (cong ∣_∣ (ϕ base x))
+            helper6 x = (λ i → cong ∣_∣ (rCancel (merid base) i ∙ ϕ base x)) ∙∙ {!!} ∙∙ {!!}
   dIsHom (suc (suc n)) = 
     sElim2 (λ _ _ → isOfHLevelPath 2 setTruncIsSet _ _ )
       λ f g →
