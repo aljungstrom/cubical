@@ -293,3 +293,16 @@ Hⁿ-Sᵐ≅0 zero (suc m) pf = H¹-Sⁿ≅0 m
 Hⁿ-Sᵐ≅0 (suc n) zero pf = Hⁿ-S¹≅0 n
 Hⁿ-Sᵐ≅0 (suc n) (suc m) pf = suspensionAx-Sn n m
                            □ Hⁿ-Sᵐ≅0 n m λ p → pf (cong suc p)
+
+
+g : coHom 2 (S₊ 2) → Int
+g = GroupHom.fun (GroupIso.map (Hⁿ-Sⁿ≅ℤ 1))
+
+g⁻ : Int → coHom 2 (S₊ 2)
+g⁻ = GroupIso.inv (Hⁿ-Sⁿ≅ℤ 1)
+
+test2 : (coHom 2 (S₊ 2))
+test2 = ∣ ∣_∣ ∣₂
+
+test : g (g⁻ 2 +ₕ g⁻ 2) ≡ {!_+ₖ_ {n = 2} ∣ (merid base ?) ∣ ∣ (merid (loop ?) ?) ∣!}
+test = {!g⁻ 0!}

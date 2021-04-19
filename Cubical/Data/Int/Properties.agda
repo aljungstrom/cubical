@@ -457,10 +457,6 @@ pos+pos zero (suc m) i = sucInt (+-comm (pos zero) (pos m) i)
 pos+pos (suc n) (suc m) = cong sucInt (pos+pos (suc n) m)
                         ∙ cong (λ x → pos (suc x)) (sym (+-suc n m))
 
--pos : (n : ℕ) → (negsuc zero + (- pos n)) ≡ negsuc n
--pos zero = refl
--pos (suc n) = sym (negsuc0+ (- pos (suc n)))
-
 -distr : (x y : Int) → ((- x) + (- y)) ≡ (- (x + y))
 -distr (pos n) (pos m) = p n m
   where
