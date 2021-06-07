@@ -20,8 +20,10 @@ open import Cubical.HITs.Join
 open import Cubical.HITs.Interval
   renaming ( zero to I0 ; one to I1 )
 
+open import Cubical.HITs.Sn.Properties
+
 Border : (x : S¹) → (j : I) → Partial (j ∨ ~ j) (Σ Type₀ (λ T → T ≃ S¹))
-Border x j (j = i0) = S¹ , (x ·_) , rotIsEquiv x
+Border x j (j = i0) = S¹ , (x ·_) , isEquiv-rot x
 Border x j (j = i1) = S¹ , idEquiv S¹
 
 -- Hopf fibration using SuspS¹

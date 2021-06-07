@@ -398,8 +398,11 @@ _·_ : S¹ → S¹ → S¹
 base     · x = x
 (loop i) · x = rotLoop x i
 
-infixl 30 _·_
+rot⁻ : S¹ → S¹
+rot⁻ base = base
+rot⁻ (loop i) = loop (~ i)
 
+infixl 30 _·_
 
 -- rot i j = filler-rot i j i1
 filler-rot : I → I → I → S¹
@@ -413,12 +416,6 @@ isPropFamS¹ : ∀ {ℓ} (P : S¹ → Type ℓ) (pP : (x : S¹) → isProp (P x)
 isPropFamS¹ P pP b0 i = pP (loop i) (transp (λ j → P (loop (i ∧ j))) (~ i) b0)
                                     (transp (λ j → P (loop (i ∨ ~ j))) i b0) i
 
-rotIsEquiv : (a : S¹) → isEquiv (a ·_)
-rotIsEquiv base = idIsEquiv S¹
-rotIsEquiv (loop i) = isPropFamS¹ (λ x → isEquiv (x ·_))
-                                  (λ x → isPropIsEquiv (x ·_))
-                                  (idIsEquiv _) i
-
 -- more direct definition of the rot (loop i) equivalence
 
 rotLoopInv : (a : S¹) → PathP (λ i → rotLoop (rotLoop a (~ i)) i ≡ a) refl refl
@@ -431,6 +428,12 @@ rotLoopEquiv i =
          (λ a → rotLoop a (~ i))
          (λ a → rotLoopInv a i)
          (λ a → rotLoopInv a (~ i)))
+
+rotIsEquiv : (a : S¹) → isEquiv (a ·_)
+rotIsEquiv base = idIsEquiv _
+rotIsEquiv (loop i) = isPropFamS¹ (λ x → isEquiv (x ·_))
+                                  (λ x → isPropIsEquiv (x ·_))
+                                  (idIsEquiv _) i
 
 -- some cancellation laws, used in the Hopf fibration
 private

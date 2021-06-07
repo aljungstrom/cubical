@@ -12,7 +12,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Univalence
 open import Cubical.HITs.S1
-open import Cubical.Data.Nat hiding (elim)
+open import Cubical.Data.Nat hiding (elim ; _·_)
 open import Cubical.Data.Sigma
 open import Cubical.HITs.Sn.Base
 open import Cubical.HITs.Susp
@@ -308,3 +308,72 @@ isConnectedPathSⁿ n x y =
    (pathIdTruncSⁿretract n x y)
      ((isContr→isProp (sphereConnected (suc n)) ∣ x ∣ ∣ y ∣)
       , isProp→isSet (isContr→isProp (sphereConnected (suc n))) _ _ _)
+
+
+rot-comm : (a b : S¹) → a · b ≡ b · a
+rot-comm =
+  wedgeconFun 0 0
+    (λ _ _ → isGroupoidS¹ _ _)
+    (λ { base → refl ; (loop i) → refl})
+    (λ { base → refl ; (loop i) → refl})
+    refl
+
+rot-assoc : (a b c : S¹) → a · (b · c) ≡ (a · b) · c
+rot-assoc =
+  wedgeconFun 0 0 (λ _ _ → isSetΠ (λ _ → isGroupoidS¹ _ _))
+    (λ _ _ → refl)
+    (wedgeconFun 0 0
+      (λ _ _ → isGroupoidS¹ _ _)
+      (λ _ → refl)
+      (λ x → sym (rot-comm (x · base) base))
+      refl)
+    refl
+
+rot-rUnit : (x : S¹) → x · base ≡ x
+rot-rUnit x = rot-comm x base
+
+rot-rCancel : (x : S¹) → x · rot⁻ x ≡ base
+rot-rCancel base = refl
+rot-rCancel (loop i) j = help j i
+  where
+  help : cong₂ _·_ loop (sym loop) ≡ refl
+  help = cong₂Funct _·_ loop (sym loop)
+       ∙∙ (λ i → cong (λ x → rot-rUnit x i) loop ∙ sym loop)
+       ∙∙ rCancel loop
+
+rot-lCancel : (x : S¹) → rot⁻ x · x ≡ base
+rot-lCancel base = refl
+rot-lCancel (loop i) = rot-rCancel (loop (~ i))
+
+rotIso : (a : S¹) → Iso S¹ S¹
+Iso.fun (rotIso a) = a ·_
+Iso.inv (rotIso a) b = rot⁻ a · b
+Iso.rightInv (rotIso a) b = rot-assoc a (rot⁻ a) b ∙ cong (_· b) (rot-rCancel a)
+Iso.leftInv (rotIso a) b = rot-assoc (rot⁻ a) a b ∙ cong (_· b) (rot-lCancel a)
+
+rot⁻≡sym : (p : ΩS¹) → cong rot⁻ p ≡ sym p
+rot⁻≡sym p = rotToSym base p
+  where
+  rot-ext : (x : S¹) → (p : base ≡ x) → x ≡ base
+  rot-ext base p = (cong rot⁻ p)
+  rot-ext (loop i) p = help i p
+    where
+    help : PathP (λ i → base ≡ loop i → loop i ≡ base)
+                 (λ p → (cong rot⁻ p))
+                 (λ p → (cong rot⁻ p))
+    help =
+      toPathP (funExt (λ p → (λ i → transport (λ j → loop j ≡ base)
+                      ((cong rot⁻ (transp (λ j → base ≡ loop (~ j ∧ ~ i)) i
+                        (compPath-filler p (sym loop) i)))))
+        ∙∙ cong (transport (λ j → loop j ≡ base))
+                  (cong-∙ rot⁻ p (sym loop)
+                ∙ comm-ΩS¹ (cong rot⁻ p) loop)
+        ∙∙ (λ i → transp (λ j → loop (i ∨ j) ≡ base) i
+                   ((λ j → loop (i ∨ j)) ∙ cong rot⁻ p))
+         ∙ sym (lUnit (cong rot⁻ p))))
+
+  rotToSym : (x : S¹) (p : base ≡ x) → rot-ext x p ≡ sym p
+  rotToSym x = J (λ x p → rot-ext x p ≡ sym p) refl
+
+isEquiv-rot : (a : S¹) → isEquiv (a ·_)
+isEquiv-rot a = isoToIsEquiv (rotIso a)
