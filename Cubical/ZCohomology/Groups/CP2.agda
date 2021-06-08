@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-}
+{-# OPTIONS --safe --experimental-lossy-unification #-}
 module Cubical.ZCohomology.Groups.CP2 where
 
 open import Cubical.ZCohomology.Base
@@ -29,7 +29,7 @@ open import Cubical.HITs.Pushout
 open import Cubical.HITs.S1 renaming (_·_ to _·''_)
 open import Cubical.HITs.Sn
 open import Cubical.HITs.Susp
-open import Cubical.HITs.SetTruncation renaming (rec to sRec ; elim to sElim ; elim2 to sElim2) hiding (map)
+open import Cubical.HITs.SetTruncation renaming (rec to sRec ; elim to sElim ; elim2 to sElim2 ; map to sMap)
 open import Cubical.HITs.PropositionalTruncation renaming (rec to pRec ; elim2 to pElim2 ; ∣_∣ to ∣_∣₁) hiding (map)
 open import Cubical.HITs.Nullification
 open import Cubical.HITs.Truncation renaming (elim to trElim ; elim2 to trElim2 ; map to trMap ; rec to trRec)
@@ -101,9 +101,84 @@ t =
           (sphereElim 1 (λ _ → isSetΠ λ _ → squash₂)
             ∣_∣₂)))))))))
 
-t' : (b : S¹) → {!!}
-t' = {!!}
+t-pathP' : (f g h : S¹ → 0ₖ 2 ≡ 0ₖ 2) (a b c : S¹)
+    → Iso (PathP (λ i → f c i ≡ 0ₖ 2) {!!} {!!})
+          (Path (coHomK 1) ((-ₖ ∣ c ∣ₕ) +ₖ ∣ a ∣ₕ) ∣ b ∣ₕ)
+t-pathP' = {!!}
 
+t-pathP : (a b c : coHomK 1) → Iso ((-ₖ c) +ₖ a ≡ b)
+              (PathP (λ i → Kn→ΩKn+1 1 c i ≡ 0ₖ 2) (Kn→ΩKn+1 1 a) (Kn→ΩKn+1 1 b))
+fun (t-pathP a b c) p i j = hcomp (λ k → λ {(i = i0) → Kn→ΩKn+1 1 a j
+                                         ; (i = i1) → path k j
+                                         ; (j = i0) → Kn→ΩKn+1 1 c i
+                                         ; (j = i1) → 0ₖ 2})
+                                (compPath-filler' (sym (Kn→ΩKn+1 1 c)) (Kn→ΩKn+1 1 a) i j)
+  where
+  path : sym (Kn→ΩKn+1 1 c) ∙ Kn→ΩKn+1 1 a ≡ Kn→ΩKn+1 1 b
+  path = cong (_∙ Kn→ΩKn+1 1 a) (sym (Kn→ΩKn+1-ₖ 1 c)) ∙∙ sym (Kn→ΩKn+1-hom 1 (-ₖ c) a) ∙∙ cong (Kn→ΩKn+1 1) p
+inv (t-pathP a b c) p = {!!}
+  where
+  path : sym (Kn→ΩKn+1 1 c) ∙ (Kn→ΩKn+1 1 a) ≡ Kn→ΩKn+1 1 b
+  path i j =
+    hcomp (λ k → λ { (i = i0) → compPath-filler' (sym (Kn→ΩKn+1 1 c)) (Kn→ΩKn+1 1 a) k j
+                    ; (i = i1) → Kn→ΩKn+1 1 b j
+                    ; (j = i0) → Kn→ΩKn+1 1 c (i ∨ k)
+                    ; (j = i1) → 0ₖ 2})
+           (p i j)
+rightInv (t-pathP a b c) = {!!}
+leftInv (t-pathP a b c) = {!!}
+
+open import Cubical.Foundations.Transport
+
+t'' :
+  Iso ((Σ[ g ∈ (S₊ 1 → 0ₖ 2 ≡ 0ₖ 2) ]
+          Σ[ h ∈ (S₊ 1 → 0ₖ 2 ≡ 0ₖ 2) ]
+            Σ[ m ∈ (S₊ 1 → 0ₖ 2 ≡ 0ₖ 2) ]
+              (((a b : S¹) → PathP (λ i → m (invLooper a ·'' b) i ≡ 0ₖ 2) (g a) (h b)))))
+      (Σ[ g ∈ (S₊ 1 → coHomK 1) ]
+          Σ[ h ∈ (S₊ 1 → coHomK 1) ]
+            Σ[ m ∈ (S₊ 1 → coHomK 1) ]
+              (((a b : S¹) → (-ₖ (m (invLooper a ·'' b))) +ₖ g a ≡ h b)))
+t'' = Σ-cong-iso (codomainIso (invIso (Iso-Kn-ΩKn+1 1)))
+                 λ g
+                 → Σ-cong-iso (codomainIso (invIso (Iso-Kn-ΩKn+1 1)))
+                   λ h → Σ-cong-iso (codomainIso (invIso (Iso-Kn-ΩKn+1 1)))
+                     λ m
+                       → pathToIso ((λ i → (a b : S¹) → PathP (λ j → m (invLooper a ·'' b) (i ∨ j) ≡ 0ₖ 2)
+                                                               (compPath-filler' (sym (m (invLooper a ·'' b))) (g a) i) (h b))
+                                  ∙∙ (λ i → (a b : S¹) → transp (λ j → isoToPath (Iso-Kn-ΩKn+1 1) (~ j ∨ ~ i)) (~ i) (sym (m (invLooper a ·'' b)) ∙ g a)
+                                                         ≡ transp (λ j → isoToPath (Iso-Kn-ΩKn+1 1) (~ j ∨ ~ i)) (~ i) (h b))
+                                  ∙∙ (λ i → (a b : S¹) → ΩKn+1→Kn _ (transportRefl (sym (m (invLooper a ·'' b)) ∙ g a) i) ≡ (ΩKn+1→Kn _ (transportRefl (h b) i)))
+                                  ∙∙ (λ i → (a b : S¹) → ΩKn+1→Kn-hom 1 (sym (m (invLooper a ·'' b))) (g a) i ≡ ΩKn+1→Kn 1 (h b))
+                                  ∙∙ λ i → (a b : S¹) → ΩKn+1→Kn-ₖ 1 (m (invLooper a ·'' b)) i +ₖ ΩKn+1→Kn 1 (g a) ≡ ΩKn+1→Kn 1 (h b))
+
+taha : Iso (Σ[ g ∈ (S₊ 1 → coHomK 1) ] (Σ[ h ∈ (S₊ 1 → coHomK 1) ] ( Σ[ m ∈ (S₊ 1 → coHomK 1) ]
+              ((((a b : S¹) → (-ₖ (m (invLooper a ·'' b))) +ₖ g a ≡ h b))))))
+              (Σ[ g ∈ (S₊ 1 → coHomK 1) ] (Σ[ h ∈ (S₊ 1 → coHomK 1) ] (
+              ((((a b : S¹) → g a ≡ h b))))))
+fun taha (g , h , m , p) = (λ a → (-ₖ (m (invLooper a ·'' {!!}))) +ₖ g a) , {!!}
+inv taha = {!!}
+rightInv taha = {!!}
+leftInv taha = {!!}
+  where{-
+  koko : (x : coHomK 1) (p : 0ₖ 1 ≡ x) → (sym (rUnitₖ 1 x) ∙ λ i → x +ₖ p i) ≡ (sym (lUnitₖ 1 x) ∙ λ i → p i +ₖ x)
+  koko x = J (λ x p → (sym (rUnitₖ 1 x) ∙ λ i → x +ₖ p i) ≡ (sym (lUnitₖ 1 x) ∙ λ i → p i +ₖ x))
+             refl
+
+  invLooperLem : (a : S¹) → (m base ≡ (0ₖ 1)) → (-ₖ (m (invLooper a))) ≡ m a
+  invLooperLem base p = cong -ₖ_ p ∙ sym p
+  invLooperLem (loop i) p = {!!}
+    where
+    help : sym (cong -ₖ_ p ∙ sym p) ∙∙ cong (λ x → -ₖ (m x)) (sym loop) ∙∙ (cong -ₖ_ p ∙ sym p) ≡ cong m loop
+    help = {!!} ∙∙ {!!} ∙∙ {!!}
+  
+  s : (m : S¹ → coHomK 1) → (m base ≡ (0ₖ 1)) → (a b : S¹) → m (a ·'' b) ≡ (m a) +ₖ (m b)
+  s m p =
+    wedgeconFun 0 0
+      (λ _ _ → isOfHLevelTrunc 3 _ _)
+      (λ x → sym (lUnitₖ 1 _) ∙ cong (_+ₖ m x) (sym p))
+      (λ x → cong m (rot-rUnit x) ∙∙ sym (rUnitₖ 1 _) ∙∙ cong (m x +ₖ_) (sym p))
+      (koko (m base) (sym p)) -}
 
 S3->S1*S1 : S₊ 3 → join S¹ S¹
 S3->S1*S1 north = inl base

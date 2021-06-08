@@ -355,6 +355,12 @@ private
         substAbove x i = transp (λ j → north≡merid a (i ∨ j)) i
                                 (compPath-filler (cong ∣_∣ (merid x)) (λ j → ∣ merid a (~ j ∨ i) ∣) (~ i))
 
+    decode-elim-sym : (a : S₊ (2 + n)) → Code n ∣ a ∣ → Path (coHomK (2 + n)) ∣ a ∣ ∣ north ∣
+    decode-elim-sym a p = sym (decode-elim a p)
+
+  encode-sym : {n : ℕ} {x : coHomK (2 + n)} → Path (coHomK (2 + n)) x ∣ north ∣ → Code n (-ₖ x)
+  encode-sym {n = n} p = transport (cong (Code n) (cong -ₖ_ (sym p))) ∣ (ptSn (suc n)) ∣
+
   encode : {n : ℕ} {x : coHomK (2 + n)} → Path (coHomK (2 + n)) ∣ north ∣ x → Code n x
   encode {n = n} p = transport (cong (Code n) p) ∣ (ptSn (suc n)) ∣
 
@@ -477,6 +483,15 @@ Kn→ΩKn+1-ₖ n x = (lUnit _ ∙∙ cong (_∙ Kn→ΩKn+1 n (-ₖ x)) (sym (l
   where
   help : Kn→ΩKn+1 n x ∙ Kn→ΩKn+1 n (-ₖ x) ≡ refl
   help = sym (Kn→ΩKn+1-hom n x (-ₖ x)) ∙∙ cong (Kn→ΩKn+1 n) (rCancelₖ n x) ∙∙ Kn→ΩKn+10ₖ n
+
+ΩKn+1→Kn-ₖ : (n : ℕ) (p : typ (Ω (coHomK-ptd (suc n)))) → ΩKn+1→Kn n (sym p) ≡ -ₖ (ΩKn+1→Kn n p)
+ΩKn+1→Kn-ₖ n p =
+     sym (rUnitₖ n (ΩKn+1→Kn n (sym p)))
+  ∙∙ cong (ΩKn+1→Kn n (sym p) +ₖ_) (sym (rCancelₖ n (ΩKn+1→Kn n p)))
+  ∙∙ assocₖ n (ΩKn+1→Kn n (sym p)) (ΩKn+1→Kn n p) (-ₖ ΩKn+1→Kn n p)
+  ∙∙ cong (λ x → x +ₖ (-ₖ ΩKn+1→Kn n p)) (sym (ΩKn+1→Kn-hom n (p ⁻¹) p)
+  ∙∙ cong (ΩKn+1→Kn n) (lCancel p) ∙∙ ΩKn+1→Kn-refl n)
+  ∙∙ lUnitₖ _ _
 
 isHomogeneousKn : (n : HLevel) → isHomogeneous (coHomK-ptd n)
 isHomogeneousKn n =

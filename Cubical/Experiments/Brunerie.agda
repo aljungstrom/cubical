@@ -250,6 +250,9 @@ g10 = SetTrunc.rec isSetInt (idfun Int)
 brunerie : Int
 brunerie = g10 (g9 (g8 (f7 (f6 (f5 (f4 (f3 (λ i j k → surf i j k))))))))
 
+test : brunerie ≡ 2
+test = {!refl!}
+
 -- simpler tests
 
 test63 : ℕ → Int
