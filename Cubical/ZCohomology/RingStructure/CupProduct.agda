@@ -459,9 +459,9 @@ private
                  ; (k = i1) → (Kn→ΩKn+1 _ ∣ a ∣ i) ⌣ₖ b})
         (∣ compPath-filler (merid a) (sym (merid north)) k i ∣ ⌣ₖ b)
 
-  assoc-helper : (n m : ℕ) (x : coHomK (suc n)) (y : coHomK (suc m))
-               → Kn→ΩKn+1 _ (x ⌣ₖ y) ≡ λ i → (Kn→ΩKn+1 _ x i) ⌣ₖ y
-  assoc-helper n m x y = funExt⁻ (cong fst (assocer-helpFun≡ n m x)) y
+assoc-helper : (n m : ℕ) (x : coHomK (suc n)) (y : coHomK (suc m))
+             → Kn→ΩKn+1 _ (x ⌣ₖ y) ≡ λ i → (Kn→ΩKn+1 _ x i) ⌣ₖ y
+assoc-helper n m x y = funExt⁻ (cong fst (assocer-helpFun≡ n m x)) y
 
 assoc-⌣ₖ· : (n m k : ℕ) → (x : coHomK (suc n)) → assocer n m k x ≡ assocer2 n m k x
 assoc-⌣ₖ· n m k =
