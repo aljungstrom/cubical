@@ -319,8 +319,8 @@ pre-cup zero (suc m) base (merid b j) = north
 pre-cup zero (suc m) (loop i) (merid b j) =
      (sym (rCancel (merid north))
   ∙∙ cong (λ x → merid x ∙ sym (merid north))
-       (sym (pre-cup-id m b) ∙∙ cong (λ x → pre-cup zero m x b) loop ∙∙ pre-cup-id m b)
-  ∙∙ rCancel (merid north)) i j
+       (merid b ∙ sym (merid (ptSn _)))
+  ∙∙ rCancel (merid north)) j i
 pre-cup (suc n) (suc m) north (merid b j) = north
 pre-cup (suc n) (suc m) south (merid b j) = north
 pre-cup (suc n) (suc m) (merid a i) (merid b j) =
@@ -408,9 +408,32 @@ cup∙≡ n m =
     main zero (suc m) (loop i) north k = Kn→ΩKn+10ₖ _ (~ k) i
     main zero (suc m) (loop i) south k =
       ∣ ((λ i → merid (merid (ptSn (suc m)) (~ i)) ∙ sym (merid north)) ∙ rCancel (merid north)) (~ k) i ∣ₕ
-    main zero (suc m) (loop i) (merid b j) =
-      {!!}
-    main (suc n) zero a b = {!!}
+    main zero (suc m) (loop i) (merid b j) k =
+      hcomp (λ r → λ {(i = i0) → ∣ north ∣
+                     ; (i = i1) → ∣ north ∣
+                     ; (j = i0) → ∣ rCancel (merid north) (~ k ∧ r) i ∣ₕ
+                     ; (j = i1) → ∣ compPath-filler ((λ i → merid (merid (ptSn (suc m)) (~ i)) ∙ sym (merid north))) (rCancel (merid north)) r (~ k) i ∣ₕ
+                     ; (k = i0) → ∣ doubleCompPath-filler (sym (rCancel _)) (cong (λ x → merid x ∙ sym (merid north))
+                                      (merid b ∙ sym (merid (ptSn _)))) (rCancel _) r j i ∣ₕ
+                     ; (k = i1) → _⌣ₖ_ {n = 1} {m = suc (suc m)} ∣ loop i ∣ ∣ merid b j ∣ₕ})
+            (Kn→ΩKn+1 _ (hcomp (λ r → λ { (j = i0) → ∣ merid b j ∣ₕ
+                                          ; (j = i1) → ∣ merid (ptSn (suc m)) (~ r ∨ k) ∣
+                                          ; (k = i0) → ∣ compPath-filler (merid b) (sym (merid (ptSn (suc m)))) r j ∣
+                                          ; (k = i1) → ∣ (merid b) j ∣})
+                                ∣ merid b j ∣) i)
+    main (suc n) zero north base = refl
+    main (suc n) zero north (loop i) = refl
+    main (suc n) zero south base = refl
+    main (suc n) zero south (loop i) = refl
+    main (suc n) zero (merid a i) base k = (sym (Kn→ΩKn+10ₖ _) ∙ cong (Kn→ΩKn+1 _) (main n zero a base)) k i
+    main (suc n) zero (merid a i) (loop j) k =
+      hcomp (λ r → λ {(i = i0) → ∣ north ∣
+                     ; (i = i1) → ∣ north ∣
+                     ; (j = i0) → compPath-filler' (sym (Kn→ΩKn+10ₖ _)) (cong (Kn→ΩKn+1 _) (main n zero a base)) r k i
+                     ; (j = i1) → compPath-filler' (sym (Kn→ΩKn+10ₖ _)) (cong (Kn→ΩKn+1 _) (main n zero a base)) r k i
+                     ; (k = i0) → ∣ doubleCompPath-filler (sym (rCancel _)) (cong (λ x → merid x ∙ sym (merid north)) (cong (pre-cup n zero a) loop) ) (rCancel _) r j i ∣ₕ
+                     ; (k = i1) → _⌣ₖ_ {n = suc (suc n)} {m = suc zero} ∣ merid a i ∣ ∣ loop j ∣})
+            (Kn→ΩKn+1 _ (main n zero a (loop j) k) i)
     main (suc n) (suc m) north north = refl
     main (suc n) (suc m) south north = refl
     main (suc zero) (suc m) (merid a i) north k =
@@ -446,7 +469,6 @@ cup∙≡ n m =
                       ; (k = i1) → _⌣ₖ_ {n = 3 + n} {m = 2 + m} ∣ merid a i ∣ ∣ merid b j ∣})
             (Kn→ΩKn+1 _ (main (suc n) (suc m) a (merid b j) k) i)
 
-
 natTranspLem : ∀ {A : ℕ → Type} (n m : ℕ) (a : A n) (B : (n : ℕ) → Type)
   (f : (n : ℕ) → (a : A n) → B n) (p : n ≡ m) 
   → f m (subst A p a) ≡ subst B p (f n a)
@@ -471,24 +493,194 @@ cup'-anti-comm' :
                           ∙ cong (-ₖ-gen (suc n) (suc m) p q) (subst-help n m))
 cup'-anti-comm' = {!!}
   where
+  open import Cubical.Foundations.Transport
+
+  lem₂ : {k : ℕ} (n m : ℕ) (x : _) (y : _) → (p : refl {x = 0ₖ (suc (suc k))} ≡ refl {x = 0ₖ (suc (suc k))})
+                  → cong (cong (-ₖ-gen n m (inr x) (inr y))) p
+                  ≡ sym p
+  lem₂ n m x y p = {!!}
+  {-
+         rUnit _
+      ∙∙ (λ k → (λ i → cong-₂ (suc (suc (suc n))) (suc (suc (suc m))) x y refl (i ∧ k))
+              ∙∙ cong (λ z → cong-₂ (suc (suc (suc n))) (suc (suc (suc m))) x y z k) p
+              ∙∙ λ i → cong-₂ (suc (suc (suc n))) (suc (suc (suc m))) x y refl (~ i ∧ k))
+      ∙∙ (λ k → transportRefl (λ _ _ → ∣ north ∣) k
+              ∙∙ cong sym p
+              ∙∙ sym (transportRefl (λ _ _ → ∣ north ∣) k))
+      ∙∙ sym (rUnit _)
+      ∙∙ sym (inst4 p) -}
+
+
+  module _ (n m : ℕ) where
+    t₁ = transport (λ i → refl {x = 0ₖ (+'-comm (suc (suc m)) (suc (suc n)) i)}
+                         ≡ refl {x = 0ₖ (+'-comm (suc (suc m)) (suc (suc n)) i)})
+
+    t₂ = transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))}
+                         ≡ refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))})
+    
+    t₃ = transport (λ i → refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))}
+                         ≡ refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))})
+
+    t₄ = transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i))}
+                         ≡ refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i)) })
+
+  t : (n m : ℕ) → _ → _
+  t n m = transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))}
+                          ≡ refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))})
+         ∘ (transport (λ i → refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))}
+                            ≡ refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))}))
+          ∘ (transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i))}
+                            ≡ refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i)) }))
+
+
+  final : (n m : ℕ) (p : _) → (t₁ n m ∘ t n m) p
+          ≡ p
+  final n m p =
+       sym (substComposite (λ n → refl {x = 0ₖ n} ≡ refl {x = 0ₖ n}) (cong suc ((+'-comm (suc (suc n)) (suc m)))) (+'-comm (suc (suc m)) (suc (suc n)))
+            (((transport (λ i → refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))} ≡ refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))}))
+          ∘ (transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i))} ≡ refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i))}))) p))
+    ∙∙ sym (substComposite (λ n → refl {x = 0ₖ n} ≡ refl {x = 0ₖ n}) (cong (suc ∘ suc) (+'-comm (suc m) (suc n)))
+                           (((λ i₁ → suc (+'-comm (suc (suc n)) (suc m) i₁)) ∙ +'-comm (suc (suc m)) (suc (suc n))))
+                           (transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i))} ≡ refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i))}) p))
+    ∙∙ sym (substComposite (λ n → refl {x = 0ₖ n} ≡ refl {x = 0ₖ n}) (cong suc (+'-comm (suc n) (suc (suc m))))
+                           (((λ i₁ → suc (suc (+'-comm (suc m) (suc n) i₁)))
+                           ∙ (λ i₁ → suc (+'-comm (suc (suc n)) (suc m) i₁))
+                           ∙ +'-comm (suc (suc m)) (suc (suc n)))) p)
+    ∙∙ cong (λ x → subst (λ n → refl {x = 0ₖ n} ≡ refl {x = 0ₖ n}) x p) (isSetℕ _ _ _ refl)
+    ∙∙ transportRefl p
+
+
+
+  lem₈ : (n m : ℕ) → (p : refl {x = 0ₖ _} ≡ refl {x = 0ₖ _})
+      → cong (cong (subst coHomK (+'-comm (suc (suc m)) (suc (suc n))))) p
+       ≡ transport (λ i → refl {x = 0ₖ (+'-comm (suc (suc m)) (suc (suc n)) i)}
+                         ≡ refl {x = 0ₖ (+'-comm (suc (suc m)) (suc (suc n)) i)}) p
+  lem₈ n m p k = transp (λ i → refl {x = 0ₖ (+'-comm (suc (suc m)) (suc (suc n)) (i ∨ ~ k))}
+                           ≡ refl {x = 0ₖ (+'-comm (suc (suc m)) (suc (suc n)) (i ∨ ~ k))}) (~ k)
+                      ((λ i j → transp (λ i → coHomK (+'-comm (suc (suc m)) (suc (suc n)) (i ∧ ~ k))) k (p i j)))
+
+  lUnit₁ : (n m : ℕ) (a : _) → cup' (suc n) m ∣ north ∣ₕ ∣ a ∣ₕ ≡ 0ₖ _
+  lUnit₁ n zero base = refl
+  lUnit₁ n zero (loop i) = refl
+  lUnit₁ n (suc m) north = refl
+  lUnit₁ n (suc m) south = refl
+  lUnit₁ n (suc m) (merid a i) = refl
+
+  lUnit₂ : (n m : ℕ) (a : _) → cup' (suc n) m ∣ south ∣ₕ ∣ a ∣ₕ ≡ 0ₖ _
+  lUnit₂ n zero base = refl
+  lUnit₂ n zero (loop i) = refl
+  lUnit₂ n (suc m) north = refl
+  lUnit₂ n (suc m) south = refl
+  lUnit₂ n (suc m) (merid a i) = refl
+
+  lem₁ : (n m : ℕ) (a : _) (b : _) → (λ i j → cup' (suc m) (suc n) ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ)
+       ≡ (sym (Kn→ΩKn+10ₖ _)
+       ∙∙ cong (Kn→ΩKn+1 _) ((λ i → cup' m (suc n) ∣ b ∣ₕ ∣ merid a i ∣ₕ))
+       ∙∙ Kn→ΩKn+10ₖ _)
+  lem₁ n m a b =
+       (λ k i j → ∣ (sym (rCancel _) ∙∙ cong (λ x → merid x ∙ sym (merid north)) (rUnit (λ i → pre-cup m (suc n) b (merid a i)) (~ k)) ∙∙ rCancel _) i j ∣ₕ)
+     ∙ (λ k i j → hcomp (λ r → λ {(i = i0) → ∣ rCancel (merid north) r j ∣
+                                 ; (i = i1) → ∣ rCancel (merid north) r j ∣
+                                 ; (j = i0) → ∣ north ∣
+                                 ; (j = i1) → ∣ north ∣
+                                 ; (k = i0) → ∣ doubleCompPath-filler
+                                                  (sym (rCancel _))
+                                                  (cong (λ x → merid x ∙ sym (merid north))
+                                                  ((λ i → pre-cup m (suc n) b (merid a i)))) (rCancel _) r i j ∣ₕ})
+                         (Kn→ΩKn+1 _ (cup' m (suc n) ∣ b ∣ₕ ∣ merid a i ∣) j))
+
+  lem₃ : (n m : ℕ) (a : _) (b : _)
+      → (sym (lUnit₁ n m b) ∙∙ ((λ i → cup' (suc n) m ∣ merid a i ∣ₕ ∣ b ∣ₕ)) ∙∙ lUnit₂ n m b)
+       ≡ Kn→ΩKn+1 _ (cup' n m ∣ a ∣ₕ ∣ b ∣ₕ)
+  lem₃ n zero a base = sym (rUnit refl) ∙ sym (Kn→ΩKn+10ₖ _)
+  lem₃ n zero a (loop i) k =
+    hcomp (λ r → λ {(i = i0) → compPath-filler' (sym (rUnit refl)) (sym (Kn→ΩKn+10ₖ _)) r k
+                   ; (i = i1) → compPath-filler' (sym (rUnit refl)) (sym (Kn→ΩKn+10ₖ _)) r k
+                   ; (k = i0) → rUnit (λ i₂ → cup' (suc n) zero ∣ merid a i₂ ∣ₕ ∣ loop i ∣ₕ) r
+                   ; (k = i1) → Kn→ΩKn+1 (suc (suc (n + zero)))
+                                  (cup' n zero ∣ a ∣ₕ ∣ loop i ∣ₕ) })
+          λ j → hcomp (λ r → λ {(i = i0) → ∣ rCancel (merid north) (r ∧ ~ k) j ∣ₕ
+                      ; (i = i1) → ∣ rCancel (merid north) (r ∧ ~ k) j ∣ₕ
+                      ; (k = i0) → ∣ doubleCompPath-filler (sym (rCancel _))
+                                      (cong (λ x → merid x ∙ sym (merid north)) ((λ i → pre-cup n zero a (loop i))))
+                                      (rCancel _) r i j ∣ₕ
+                      ; (k = i1) → Kn→ΩKn+1 (suc (suc (n + zero)))
+                                       (cup' n zero ∣ a ∣ₕ ∣ loop i ∣ₕ) j
+                      ; (j = i0) → ∣ north ∣
+                      ; (j = i1) → ∣ north ∣})
+                 (Kn→ΩKn+1 _ (cup' n zero ∣ a ∣ₕ ∣ loop i ∣ₕ) j)
+  lem₃ n (suc m) a north = sym (rUnit refl) ∙ sym (Kn→ΩKn+10ₖ _)
+  lem₃ n (suc m) a south = sym (rUnit refl) ∙ sym (Kn→ΩKn+10ₖ _)
+  lem₃ n (suc m) a (merid b i) k =
+    hcomp (λ r → λ {(i = i0) → compPath-filler' (sym (rUnit refl)) (sym (Kn→ΩKn+10ₖ _)) r k
+                   ; (i = i1) → compPath-filler' (sym (rUnit refl)) (sym (Kn→ΩKn+10ₖ _)) r k
+                   ; (k = i0) → rUnit (λ i₂ → cup' (suc n) (suc m) ∣ merid a i₂ ∣ₕ ∣ merid b i ∣ₕ) r
+                   ; (k = i1) → Kn→ΩKn+1 (suc (suc (n + suc m)))
+                                  (cup' n (suc m) ∣ a ∣ₕ ∣ merid b i ∣ₕ)})
+      (λ j → hcomp (λ r → λ {(i = i0) → ∣ rCancel (merid north) (r ∧ ~ k) j ∣ₕ
+                      ; (i = i1) → ∣ rCancel (merid north) (r ∧ ~ k) j ∣ₕ
+                      ; (k = i0) → ∣ doubleCompPath-filler (sym (rCancel _))
+                                      (cong (λ x → merid x ∙ sym (merid north)) (rUnit (λ i → pre-cup n (suc m) a (merid b i)) r))
+                                      (rCancel _) r i j ∣ₕ
+                      ; (k = i1) → Kn→ΩKn+1 (suc (suc (n + suc m)))
+                                       (cup' n (suc m) ∣ a ∣ₕ ∣ merid b i ∣ₕ) j
+                      ; (j = i0) → ∣ north ∣
+                      ; (j = i1) → ∣ north ∣})
+             (Kn→ΩKn+1 (suc (suc (n + suc m)))
+                                       (cup' n (suc m) ∣ a ∣ₕ ∣ merid b i ∣ₕ) j))
+
+
+
   main : (n m : ℕ) (p : _) (q : _) (a : _) (b : _)
       → (cup' n m ∣ a ∣ₕ ∣ b ∣ₕ) ≡ (-ₖ-gen (suc n) (suc m) p q) (subst coHomK (+'-comm (suc m) (suc n)) (cup' m n ∣ b ∣ₕ ∣ a ∣ₕ))
   main zero zero p q base base = refl
   main zero zero p q base (loop i) = refl
   main zero zero p q (loop i) base = refl
-  main zero zero p q (loop i) (loop i₁) = {!refl!}
+  main zero zero p q (loop i) (loop j) = {!refl!}
   main zero (suc m) p q base north = refl
   main zero (suc m) p q base south = refl
   main zero (suc m) p q base (merid a i) = refl
   main zero (suc m) p q (loop i) north = refl
   main zero (suc m) p q (loop i) south = refl
-  main zero (suc m) p q (loop i) (merid a i₁) = {!!}
+  main zero (suc m) p q (loop i) (merid a j) = {!!}
   main (suc n) zero p q north base = refl
   main (suc n) zero p q north (loop i) = refl
   main (suc n) zero p q south base = refl
   main (suc n) zero p q south (loop i) = refl
   main (suc n) zero p q (merid a i) base = refl
-  main (suc n) zero p q (merid a i) (loop i₁) = {!!}
+  main (suc n) zero (inl x) q (merid a i) (loop j) = {!!}
+  main (suc n) zero (inr x) (inr tt) (merid a i) (loop j) = {!Susp (S₊ (suc (n + 0))) ≡ Susp (S₊ (suc n))!}
+    where
+    lem1 : (transport (λ i → refl {x = 0ₖ (+'-comm 1 (suc (suc n)) i)} ≡ refl {x = 0ₖ (+'-comm 1 (suc (suc n)) i)}))
+                (λ i j → ∣ (sym (rCancel _) ∙∙ cong (λ x → merid x ∙ sym (merid north)) (merid a ∙ sym (merid (ptSn _))) ∙∙ rCancel _) j i ∣ₕ)
+        ≡ flipSquare (cong (cong ∣_∣ₕ) (sym (rCancel (merid north)) ∙∙ cong (λ x → merid x ∙ sym (merid north))
+                     (transport (λ i → Path (S₊ ((suc (suc (+-comm n 0 (~ i)))))) north north)
+                       (merid a ∙ sym (merid (ptSn _))))
+                     ∙∙ rCancel (merid north)))
+        {- λ i j → ∣ (sym (rCancel _)
+                  ∙∙ cong (λ x → merid x ∙ sym (merid north))
+                     (transport (λ i → Path (S₊ {!+'-comm 2 (suc n) (~ i)!}) north north) (merid a ∙ sym (merid (ptSn _))))
+                  ∙∙ rCancel _ ) j i ∣ₕ -}
+    lem1 = {!!}
+
+    help : cong (λ x → cong (λ y → cup' (suc n) zero ∣ x ∣ₕ ∣ y ∣ₕ) loop) (merid a)
+         ≡ λ i j → -ₖ-gen (suc (suc n)) 1 (inr x) (inr tt)
+      (subst coHomK (+'-comm 1 (suc (suc n)))
+       (cup' zero (suc n) ∣ loop j ∣ₕ ∣ merid a i ∣ₕ))
+    help = (λ k i j → ∣ (sym (rCancel _) ∙∙ cong (λ x → merid x ∙ sym (merid north)) (rUnit (λ i → pre-cup n zero a (loop i)) k) ∙∙ rCancel _) j i ∣ₕ)
+        ∙∙ (λ k i j → ∣ (sym (rCancel _) ∙∙ cong (λ x → merid x ∙ sym (merid north)) ({!lem₃!} ∙∙ (λ i → {!!}) ∙∙ {!!}) ∙∙ rCancel _) j i ∣ₕ)
+        ∙∙ {!!}
+        ∙∙ {!!}
+        ∙∙ {!natTranspLem _ _ !}
+        ∙∙ cong (transport (λ i → refl {x = 0ₖ (+'-comm 1 (suc (suc n)) i)} ≡ refl {x = 0ₖ (+'-comm 1 (suc (suc n)) i)}))
+                (λ _ i j → ∣ (sym (rCancel _) ∙∙ cong (λ x → merid x ∙ sym (merid north)) (merid a ∙ sym (merid (ptSn _))) ∙∙ rCancel _) j i ∣ₕ)
+        ∙∙ (λ k → transp (λ i → refl {x = 0ₖ (+'-comm 1 (suc (suc n)) (i ∨ k))} ≡ refl {x = 0ₖ (+'-comm 1 (suc (suc n)) (i ∨ k))}) k
+                    λ i j → transp (λ i → coHomK (+'-comm 1 (suc (suc n)) (i ∧ k))) (~ k)
+                        (cup' zero (suc n) ∣ loop i ∣ₕ ∣ merid a j ∣ₕ))
+        ∙∙ sym (inst _ ((cong (cong (subst coHomK (+'-comm 1 (suc (suc n)))))
+                (λ i j → cup' zero (suc n) ∣ loop j ∣ₕ ∣ merid a i ∣ₕ))))
+        ∙∙ sym (lem₂ (suc (suc n)) 1 x tt (cong (cong (subst coHomK (+'-comm 1 (suc (suc n)))))
+                (λ i j → cup' zero (suc n) ∣ loop j ∣ₕ ∣ merid a i ∣ₕ)))
   main (suc n) (suc m) p q north north = refl
   main (suc n) (suc m) p q north south = refl
   main (suc n) (suc m) p q north (merid a i) = refl
@@ -497,53 +689,9 @@ cup'-anti-comm' = {!!}
   main (suc n) (suc m) p q south (merid a i) = refl
   main (suc n) (suc m) p q (merid a i) north = refl
   main (suc n) (suc m) p q (merid a i) south = refl
-  main (suc n) (suc m) (inl x) (inl y) (merid a i) (merid b j) = {!x!}
+  main (suc n) (suc m) (inl x) (inl y) (merid a i) (merid b j) k = {!!} -- help k i j
     where
-    s : {A : ℕ → Type} (n m : ℕ) (q : n ≡ m) (x y : A n) (p : x ≡ y)
-     → cong (subst A q) p
-      ≡ transport (λ i → transp (λ j → A (q (i ∧ j))) (~ i) x ≡ transp (λ j → A (q (i ∧ j))) (~ i) y) p
-    s {A = A} n m =
-      J (λ m q → (x y : A n) (p : x ≡ y)
-               → cong (subst A q) p
-                ≡ transport (λ i → transp (λ j → A (q (i ∧ j))) (~ i) x ≡ transp (λ j → A (q (i ∧ j))) (~ i) y) p)
-        λ x y → J (λ y p → cong (subst A refl) p
-                           ≡ transport (λ i → transp (λ j → A n) (~ i) x ≡ transp (λ j → A n) (~ i) y) p)
-                   (sym (rCancel _)
-                ∙∙ (λ k → transp (λ i → transportRefl x (~ i ∧ k) ≡ transportRefl x (~ i ∧ k)) (~ k)
-                                  ((λ i → transportRefl x (i ∨ k)) ∙ (λ i → transportRefl x (~ i ∨ k))))
-                ∙∙ cong (transport (λ i → transportRefl x (~ i) ≡ transportRefl x (~ i))) (sym (rUnit refl)))
-
-
-    lUnit₁ : (n m : ℕ) (a : _) → cup' (suc n) m ∣ north ∣ₕ ∣ a ∣ₕ ≡ 0ₖ _
-    lUnit₁ n zero base = refl
-    lUnit₁ n zero (loop i) = refl
-    lUnit₁ n (suc m) north = refl
-    lUnit₁ n (suc m) south = refl
-    lUnit₁ n (suc m) (merid a i) = refl
-    
-    lUnit₂ : (n m : ℕ) (a : _) → cup' (suc n) m ∣ south ∣ₕ ∣ a ∣ₕ ≡ 0ₖ _
-    lUnit₂ n zero base = refl
-    lUnit₂ n zero (loop i) = refl
-    lUnit₂ n (suc m) north = refl
-    lUnit₂ n (suc m) south = refl
-    lUnit₂ n (suc m) (merid a i) = refl
-
-    lem₁ : (n m : ℕ) (a : _) (b : _) → (λ i j → cup' (suc m) (suc n) ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ)
-         ≡ (sym (Kn→ΩKn+10ₖ _)
-         ∙∙ cong (Kn→ΩKn+1 _) ((λ i → cup' m (suc n) ∣ b ∣ₕ ∣ merid a i ∣ₕ))
-         ∙∙ Kn→ΩKn+10ₖ _)
-    lem₁ n m a b =
-         (λ k i j → ∣ (sym (rCancel _) ∙∙ cong (λ x → merid x ∙ sym (merid north)) (rUnit (λ i → pre-cup m (suc n) b (merid a i)) (~ k)) ∙∙ rCancel _) i j ∣ₕ)
-       ∙ (λ k i j → hcomp (λ r → λ {(i = i0) → ∣ rCancel (merid north) r j ∣
-                                   ; (i = i1) → ∣ rCancel (merid north) r j ∣
-                                   ; (j = i0) → ∣ north ∣
-                                   ; (j = i1) → ∣ north ∣
-                                   ; (k = i0) → ∣ doubleCompPath-filler
-                                                    (sym (rCancel _))
-                                                    (cong (λ x → merid x ∙ sym (merid north))
-                                                    ((λ i → pre-cup m (suc n) b (merid a i)))) (rCancel _) r i j ∣ₕ})
-                           (Kn→ΩKn+1 _ (cup' m (suc n) ∣ b ∣ₕ ∣ merid a i ∣) j))
-
+    {-
     lem₂ : (n m : ℕ) (p : is-even n) (q : is-even m) (a : _) (b : _) →
         ((sym (Kn→ΩKn+10ₖ _)
          ∙∙ cong (Kn→ΩKn+1 _) ((λ i → cup' m (suc n) ∣ b ∣ₕ ∣ merid a i ∣ₕ))
@@ -616,46 +764,6 @@ cup'-anti-comm' = {!!}
       lem n (suc m) a south q p = Susp-case i1 n m a (ptSn (suc m)) q p
       lem n (suc m) a (merid b i) q p = Susp-case i n m a b q p
 
-    lem₃ : (n m : ℕ) (a : _) (b : _)
-        → (sym (lUnit₁ n m b) ∙∙ ((λ i → cup' (suc n) m ∣ merid a i ∣ₕ ∣ b ∣ₕ)) ∙∙ lUnit₂ n m b)
-         ≡ Kn→ΩKn+1 _ (cup' n m ∣ a ∣ₕ ∣ b ∣ₕ)
-    lem₃ n zero a base = sym (rUnit refl) ∙ sym (Kn→ΩKn+10ₖ _)
-    lem₃ n zero a (loop i) k =
-      hcomp (λ r → λ {(i = i0) → compPath-filler' (sym (rUnit refl)) (sym (Kn→ΩKn+10ₖ _)) r k
-                     ; (i = i1) → compPath-filler' (sym (rUnit refl)) (sym (Kn→ΩKn+10ₖ _)) r k
-                     ; (k = i0) → rUnit (λ i₂ → cup' (suc n) zero ∣ merid a i₂ ∣ₕ ∣ loop i ∣ₕ) r
-                     ; (k = i1) → Kn→ΩKn+1 (suc (suc (n + zero)))
-                                    (cup' n zero ∣ a ∣ₕ ∣ loop i ∣ₕ) })
-            λ j → hcomp (λ r → λ {(i = i0) → ∣ rCancel (merid north) (r ∧ ~ k) j ∣ₕ
-                        ; (i = i1) → ∣ rCancel (merid north) (r ∧ ~ k) j ∣ₕ
-                        ; (k = i0) → ∣ doubleCompPath-filler (sym (rCancel _))
-                                        (cong (λ x → merid x ∙ sym (merid north)) ((λ i → pre-cup n zero a (loop i))))
-                                        (rCancel _) r i j ∣ₕ
-                        ; (k = i1) → Kn→ΩKn+1 (suc (suc (n + zero)))
-                                         (cup' n zero ∣ a ∣ₕ ∣ loop i ∣ₕ) j
-                        ; (j = i0) → ∣ north ∣
-                        ; (j = i1) → ∣ north ∣})
-                   (Kn→ΩKn+1 _ (cup' n zero ∣ a ∣ₕ ∣ loop i ∣ₕ) j)
-    lem₃ n (suc m) a north = sym (rUnit refl) ∙ sym (Kn→ΩKn+10ₖ _)
-    lem₃ n (suc m) a south = sym (rUnit refl) ∙ sym (Kn→ΩKn+10ₖ _)
-    lem₃ n (suc m) a (merid b i) k =
-      hcomp (λ r → λ {(i = i0) → compPath-filler' (sym (rUnit refl)) (sym (Kn→ΩKn+10ₖ _)) r k
-                     ; (i = i1) → compPath-filler' (sym (rUnit refl)) (sym (Kn→ΩKn+10ₖ _)) r k
-                     ; (k = i0) → rUnit (λ i₂ → cup' (suc n) (suc m) ∣ merid a i₂ ∣ₕ ∣ merid b i ∣ₕ) r
-                     ; (k = i1) → Kn→ΩKn+1 (suc (suc (n + suc m)))
-                                    (cup' n (suc m) ∣ a ∣ₕ ∣ merid b i ∣ₕ)})
-        (λ j → hcomp (λ r → λ {(i = i0) → ∣ rCancel (merid north) (r ∧ ~ k) j ∣ₕ
-                        ; (i = i1) → ∣ rCancel (merid north) (r ∧ ~ k) j ∣ₕ
-                        ; (k = i0) → ∣ doubleCompPath-filler (sym (rCancel _))
-                                        (cong (λ x → merid x ∙ sym (merid north)) (rUnit (λ i → pre-cup n (suc m) a (merid b i)) r))
-                                        (rCancel _) r i j ∣ₕ
-                        ; (k = i1) → Kn→ΩKn+1 (suc (suc (n + suc m)))
-                                         (cup' n (suc m) ∣ a ∣ₕ ∣ merid b i ∣ₕ) j
-                        ; (j = i0) → ∣ north ∣
-                        ; (j = i1) → ∣ north ∣})
-               (Kn→ΩKn+1 (suc (suc (n + suc m)))
-                                         (cup' n (suc m) ∣ a ∣ₕ ∣ merid b i ∣ₕ) j))
-
     lem₄ : Kn→ΩKn+1 _ (cup' n m ∣ a ∣ₕ ∣ b ∣ₕ) ≡ sym (Kn→ΩKn+1 _ (subst coHomK (+'-comm (suc m) (suc n)) (cup' m n ∣ b ∣ ∣ a ∣)))
     lem₄ = cong (Kn→ΩKn+1 _) (main n m (inr x) (inr y) a b)
          ∙ -ₖ-gen-Kn→ΩKn+1 (suc n) (suc m) x y (subst coHomK (+'-comm (suc m) (suc n)) (cup' m n ∣ b ∣ ∣ a ∣))
@@ -666,16 +774,81 @@ cup'-anti-comm' = {!!}
     lem₅ n m a b = sym (lem₃ m n b a)
 
     lem₆ : (sym (lUnit₁ m n a) ∙∙ (λ i → cup' (suc m) n ∣ merid b i ∣ ∣ a ∣) ∙∙ lUnit₂ m n a)
-         ≡ ({!!} ∙∙ {!λ i → ?!} ∙∙ {!!})
-    lem₆ = {!!}
+         ≡ transport (λ i → 0ₖ (+'-comm (suc n) (suc (suc m)) i) ≡ 0ₖ (+'-comm (suc n) (suc (suc m)) i))
+                     λ i → cup' n (suc m) ∣ a ∣ₕ ∣ merid b i ∣ₕ
+    lem₆ = cong (sym (lUnit₁ m n a) ∙∙_∙∙ lUnit₂ m n a)
+                (rUnit _ ∙ (λ i → (λ k → main (suc m) n (inl y) (inr x) north a (i ∧ k))
+                               ∙∙ (λ k → main (suc m) n (inl y) (inr x) (merid b k) a i)
+                               ∙∙ λ k → main (suc m) n (inl y) (inr x) south a (i ∧ ~ k))
+                          ∙ cong (main (suc m) n (inl y) (inr x) north a ∙∙_∙∙ sym (main (suc m) n (inl y) (inr x) south a))
+                                  (rUnit _
+                                    ∙ λ k → (λ i → (-ₖ-gen-inl-left (suc (suc m)) (suc n) y (inr x)
+                                              (subst coHomK (+'-comm (suc n) (suc (suc m)))
+                                               (cup' n (suc m) ∣ a ∣ₕ ∣ north ∣ₕ))) (i ∧ k))
+                                         ∙∙ (λ i → (-ₖ-gen-inl-left (suc (suc m)) (suc n) y (inr x)
+                                              (subst coHomK (+'-comm (suc n) (suc (suc m)))
+                                               (cup' n (suc m) ∣ a ∣ₕ ∣ merid b i ∣ₕ))) k)
+                                          ∙∙ λ i → (-ₖ-gen-inl-left (suc (suc m)) (suc n) y (inr x)
+                                              (subst coHomK (+'-comm (suc n) (suc (suc m)))
+                                               (cup' n (suc m) ∣ a ∣ₕ ∣ south ∣ₕ))) (~ i ∧ k)))
+        ∙∙ lem n m a b x y
+        ∙∙ refl
+      where
+      lemType : (n m : ℕ) (a : _) (b : _) (x : _) (y : _) → Type
+      lemType n m a b x y =
+        ((sym (lUnit₁ m n a)) ∙∙
+       main (suc m) n (inl y) (inr x) north a ∙∙
+       (-ₖ-gen-inl-left (suc (suc m)) (suc n) y (inr x)
+          (subst coHomK (+'-comm (suc n) (suc (suc m)))
+           (cup' n (suc m) ∣ a ∣ₕ ∣ north ∣ₕ)))
+       ∙∙
+       (λ i₁ →
+          (subst coHomK (+'-comm (suc n) (suc (suc m)))
+           (cup' n (suc m) ∣ a ∣ₕ ∣ merid b i₁ ∣ₕ)))
+       ∙∙
+       (sym (-ₖ-gen-inl-left (suc (suc m)) (suc n) y (inr x)
+          (subst coHomK (+'-comm (suc n) (suc (suc m)))
+           (cup' n (suc m) ∣ a ∣ₕ ∣ south ∣ₕ))))
+       ∙∙ (sym (main (suc m) n (inl y) (inr x) south a))
+       ∙∙ lUnit₂ m n a)
+       ≡ transport (λ i → 0ₖ (+'-comm (suc n) (suc (suc m)) i) ≡ 0ₖ (+'-comm (suc n) (suc (suc m)) i))
+                     λ i → cup' n (suc m) ∣ a ∣ₕ ∣ merid b i ∣ₕ
+
+      S¹-case : (i : I) → (m : ℕ) (b : _) (x : _) (y : _) → lemType zero m (loop i) b x y
+      S¹-case i m b x y =
+           sym (rUnit _)
+        ∙∙ sym (rUnit _)
+        ∙∙ sym (rUnit _)
+         ∙ λ k → transp (λ i → 0ₖ (+'-comm 1 (suc (suc m)) (i ∨ ~ k)) ≡ 0ₖ (+'-comm 1 (suc (suc m)) (i ∨ ~ k)))
+                         (~ k)
+                         λ j → transp (λ i → coHomK (+'-comm 1 (suc (suc m)) (i ∧ ~ k))) k
+                               (cup' zero (suc m) ∣ loop i ∣ₕ ∣ merid b j ∣ₕ)
+
+      Susp-case : (i : I) (n m : ℕ) (a : _) (b : _) (x : _) (y : _) → lemType (suc n) m (merid a i) b x y
+      Susp-case i n m a b x y =
+           sym (rUnit _)
+        ∙∙ sym (rUnit _)
+        ∙∙ sym (rUnit _)
+         ∙ λ k → transp (λ i → 0ₖ (+'-comm (suc (suc n)) (suc (suc m)) (i ∨ ~ k)) ≡ 0ₖ (+'-comm (suc (suc n)) (suc (suc m)) (i ∨ ~ k)))
+                         (~ k)
+                         λ j → transp (λ i → coHomK (+'-comm (suc (suc n)) (suc (suc m)) (i ∧ ~ k))) k
+                               (cup' (suc n) (suc m) ∣ merid a i ∣ₕ ∣ merid b j ∣ₕ)
+
+      lem : (n m : ℕ) (a : _) (b : _) (x : _) (y : _) → lemType n m a b x y
+      lem zero m base b x y = S¹-case i0 m b x y
+      lem zero m (loop i) b x y = S¹-case i m b x y
+      lem (suc n) m north b x y = Susp-case i0 n m (ptSn (suc n)) b x y
+      lem (suc n) m south b x y = Susp-case i1 n m (ptSn (suc n)) b x y
+      lem (suc n) m (merid a i) b x y = Susp-case i n m a b x y
 
     MAIN₂ : (sym (Kn→ΩKn+10ₖ _)
          ∙∙ cong (Kn→ΩKn+1 _) ((λ i → cup' m (suc n) ∣ b ∣ₕ ∣ merid a i ∣ₕ))
          ∙∙ Kn→ΩKn+10ₖ _)
          ≡ transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))} ≡ refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))})
-           (transport (λ i → refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))} ≡ refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))}) ((sym (Kn→ΩKn+10ₖ _)
-         ∙∙ cong (Kn→ΩKn+1 _) (sym (Kn→ΩKn+1 _ (cup' m n ∣ b ∣ ∣ a ∣)))
-         ∙∙ Kn→ΩKn+10ₖ _)))
+           (transport (λ i → refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))} ≡ refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))})
+            (sym ((sym (Kn→ΩKn+10ₖ _)
+         ∙∙ cong (Kn→ΩKn+1 _) ((Kn→ΩKn+1 _ (cup' m n ∣ b ∣ ∣ a ∣)))
+         ∙∙ Kn→ΩKn+10ₖ _))))
     MAIN₂ = lem₂ n m x y a b
           ∙ cong (transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))}
                                    ≡ refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))}))
@@ -688,26 +861,388 @@ cup'-anti-comm' = {!!}
               ∙∙ Kn→ΩKn+10ₖ _)) (+'-comm (suc m) (suc n))
                  ∙∙ refl)
 
+    MAIN₃ : (sym (Kn→ΩKn+10ₖ _)
+         ∙∙ cong (Kn→ΩKn+1 _) ((λ i → cup' m (suc n) ∣ b ∣ₕ ∣ merid a i ∣ₕ))
+         ∙∙ Kn→ΩKn+10ₖ _)
+         ≡ transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))} ≡ refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))})
+           (transport (λ i → refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))} ≡ refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))})
+             (transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i))} ≡ refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i)) })
+                        (sym ((sym (Kn→ΩKn+10ₖ _)
+                       ∙∙ cong (Kn→ΩKn+1 _) ((λ i → cup' n (suc m) ∣ a ∣ ∣ merid b i ∣))
+                       ∙∙ Kn→ΩKn+10ₖ _)))))
+    MAIN₃ = MAIN₂
+          ∙ cong (transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))}
+                                  ≡ refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))}) ∘
+                 (transport (λ i → refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))}
+                                  ≡ refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))})))
+             (cong (λ x → (sym (λ i₁ j₁ → ∣ rCancel (merid north) i₁ j₁ ∣) ∙∙
+               cong (Kn→ΩKn+1 (suc (suc (suc (m + n))))) (sym x)
+               ∙∙ (λ i₁ j₁ → ∣ rCancel (merid north) i₁ j₁ ∣))) (lem₅ n m a b ∙ lem₆)
+               ∙ natTranspLem {λ n → 0ₖ n ≡ 0ₖ n} _ _ ((λ i₂ → cup' n (suc m) ∣ a ∣ ∣ merid b i₂ ∣)) _
+                    (λ _ p → sym (Kn→ΩKn+10ₖ _)
+                           ∙∙ cong (Kn→ΩKn+1 _) (sym p)
+                           ∙∙ Kn→ΩKn+10ₖ _) (+'-comm (suc n) (suc (suc m))))
+    lem₇ : (sym ((sym (Kn→ΩKn+10ₖ _)
+                       ∙∙ cong (Kn→ΩKn+1 _) ((λ i → cup' n (suc m) ∣ a ∣ ∣ merid b i ∣))
+                       ∙∙ Kn→ΩKn+10ₖ _)))
+           ≡ (λ i j → cup' (suc n) (suc m) ∣ merid a i ∣ₕ ∣ merid b j ∣ₕ)
+    lem₇ = cong sym (sym (lem₁ _ _ b a))
+        ∙∙ sym (inst _ (λ i j → cup' (suc n) (suc m) ∣ merid a i ∣ₕ ∣ merid b (~ j) ∣ₕ))
+        ∙∙ sym (inst2 _ _)
+
+    MAIN₄ : transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))} ≡ refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))})
+           (transport (λ i → refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))} ≡ refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))})
+             (transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i))} ≡ refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i)) })
+                        (sym ((sym (Kn→ΩKn+10ₖ _)
+                       ∙∙ cong (Kn→ΩKn+1 _) ((λ i → cup' n (suc m) ∣ a ∣ ∣ merid b i ∣))
+                       ∙∙ Kn→ΩKn+10ₖ _)))))
+         ≡ t n m (λ i j → cup' (suc n) (suc m) ∣ merid a i ∣ₕ ∣ merid b j ∣ₕ)
+    MAIN₄ =
+         cong (λ x → transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))} ≡ refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc m) i))})
+           (transport (λ i → refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))} ≡ refl {x = 0ₖ (suc (suc (+'-comm (suc m) (suc n) i)))})
+             (transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i))} ≡ refl {x = 0ₖ (suc (+'-comm (suc n) (suc (suc m)) i)) }) x)))
+               lem₇
+
     help : (cong (λ x → (cong (λ y → cup' (suc n) (suc m) ∣ x ∣ₕ ∣ y ∣)) (merid b)) (merid a))
          ≡ λ i j → -ₖ-gen (suc (suc n)) (suc (suc m)) (inl x) (inl y)
       (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
        (cup' (suc m) (suc n) ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ))
     help =
-         {!? ∙∙ ? ∙∙ ?!}
+         ((sym (final n m ((cong (λ x → (cong (λ y → cup' (suc n) (suc m) ∣ x ∣ₕ ∣ y ∣)) (merid b)) (merid a))))
+         ∙ cong (transport (λ i → refl {x = 0ₖ (+'-comm (suc (suc m)) (suc (suc n)) i)}
+                                 ≡ refl {x = 0ₖ (+'-comm (suc (suc m)) (suc (suc n)) i)}))
+                 (sym (MAIN₃ ∙ MAIN₄))
+         ∙ sym (lem₈ n m (lem₁ n m a b i1)))
+         ∙ cong (cong (cong (subst coHomK (+'-comm (suc (suc m)) (suc (suc n))))))
+           (sym (lem₁ n m a b)))
        ∙ (λ k → cong (cong (λ z → -ₖ-gen-inl-left (suc (suc n)) (suc (suc m)) x (inl y) z (~ k)) ∘ cong (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))))
-                         (λ i j → cup' (suc m) (suc n) ∣ merid b j ∣ ∣ merid a i ∣))
+                         (λ i j → cup' (suc m) (suc n) ∣ merid b j ∣ ∣ merid a i ∣)) -}
+
+  main (suc n) (suc (suc m)) (inl x) (inr y) (merid a i) (merid b j) = {!y!}
+    where
+    {-
+    lem1 : (n m : ℕ)  (x : is-even n) (y : is-odd (suc (suc (suc m)))) (a : _) (b : _)
+         → cong (cup' (suc m) (suc n) ∣ b ∣ₕ ∘ ∣_∣ₕ) (merid a)
+         ≡ transport (λ i → 0ₖ (+'-comm (suc (suc n)) (suc (suc m)) i) ≡ 0ₖ (+'-comm (suc (suc n)) (suc (suc m)) i))
+                     ((sym (lUnit₁ n _ b) ∙∙ (λ i → cup' (suc n) (suc m) ∣ merid a i ∣ₕ ∣ b ∣ₕ) ∙∙ lUnit₂ n _ b))
+    lem1 n m x y a = λ { north → m-case i0 a (ptSn (suc m))
+                       ; south → m-case i1 a (ptSn (suc m))
+                       ; (merid b i) → m-case i a b }
+      where
+      m-case : (i : I) → (a : _) (b : _)
+             → cong (cup' (suc m) (suc n) ∣ merid b i ∣ₕ ∘ ∣_∣ₕ) (merid a)
+         ≡ transport (λ i → 0ₖ (+'-comm (suc (suc n)) (suc (suc m)) i) ≡ 0ₖ (+'-comm (suc (suc n)) (suc (suc m)) i))
+                     ((sym (lUnit₁ n _ (merid b i)) ∙∙ (λ j → cup' (suc n) (suc m) ∣ merid a j ∣ₕ ∣ merid b i ∣ₕ) ∙∙ lUnit₂ n _ (merid b i))) 
+      m-case i a b =
+           (λ k j →  main (suc m) (suc n) (inl y) (inl x) (merid b i) (merid a j) k)
+        ∙∙ (λ k j → -ₖ-gen-inl-left (suc (suc m)) (suc (suc n)) y (inl x) (subst coHomK (+'-comm (suc (suc n)) (suc (suc m)))
+                       (cup' (suc n) (suc m) ∣ merid a j ∣ ∣ merid b i ∣)) k)
+        ∙∙ (rUnit _
+          ∙ λ k → transp (λ i → 0ₖ (+'-comm (suc (suc n)) (suc (suc m)) (i ∨ ~ k)) ≡ 0ₖ (+'-comm (suc (suc n)) (suc (suc m)) (i ∨ ~ k))) (~ k)
+                          ((λ j → transp (λ i → coHomK (+'-comm (suc (suc n)) (suc (suc m)) (i ∧ ~ k))) k
+                                          (cup' (suc n) (suc m) ∣ merid a j ∣ ∣ merid b i ∣)) ∙ refl))
+
+    lem2 : (sym (Kn→ΩKn+10ₖ (suc (suc (suc m + suc n)))) ∙∙
+                cong (Kn→ΩKn+1 (suc (suc (suc m + suc n))))
+                (λ i₁ → cup' (suc m) (suc n) ∣ b ∣ₕ ∣ merid a i₁ ∣ₕ)
+                ∙∙ Kn→ΩKn+10ₖ (suc (suc (suc m + suc n))))
+        ≡ t₂ n (suc m)
+            (t₃ n (suc m)
+              ((sym (Kn→ΩKn+10ₖ _) ∙∙
+                cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (cup' (suc m) n ∣ b ∣ ∣ a ∣))
+                ∙∙ Kn→ΩKn+10ₖ _)))
+    lem2 =
+         cong (λ x → sym (Kn→ΩKn+10ₖ (suc (suc (suc m + suc n)))) ∙∙
+                cong (Kn→ΩKn+1 (suc (suc (suc m + suc n)))) x
+                ∙∙ Kn→ΩKn+10ₖ (suc (suc (suc m + suc n))))
+              (lem1 n m x y a b
+              ∙ cong (transport (λ i₁ →
+                      0ₖ (+'-comm (suc (suc n)) (suc (suc m)) i₁) ≡
+                      0ₖ (+'-comm (suc (suc n)) (suc (suc m)) i₁)))
+                     (lem₃ n (suc m) a b
+                      ∙ cong (Kn→ΩKn+1 (suc (suc (n + suc m))))
+                             (main n (suc m) (inr x) (inl y) a b
+                             ∙ -ₖ-gen-inl-right (suc n) (suc (suc m)) (inr x) y
+                                       (subst coHomK (+'-comm (suc (suc m)) (suc n))
+                                        (cup' (suc m) n ∣ b ∣ₕ ∣ a ∣ₕ)))))
+      ∙∙ natTranspLem {A = λ n → 0ₖ n ≡ 0ₖ n} _ _ ((Kn→ΩKn+1 _) (subst coHomK (+'-comm (suc (suc m)) (suc n)) (cup' (suc m) n ∣ b ∣ₕ ∣ a ∣ₕ))) _
+           (λ _ x → sym (Kn→ΩKn+10ₖ _) ∙∙ cong (Kn→ΩKn+1 _) x ∙∙ Kn→ΩKn+10ₖ _) (+'-comm (suc (suc n)) (suc (suc m)))
+      ∙∙ cong (subst (λ n₁ → refl ≡ refl) (+'-comm (suc (suc n)) (suc (suc m))))
+              (natTranspLem {A = coHomK} _ _ (cup' (suc m) n ∣ b ∣ ∣ a ∣) _
+                (λ _ x → sym (Kn→ΩKn+10ₖ _) ∙∙ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ x) ∙∙ Kn→ΩKn+10ₖ _)
+                (+'-comm (suc (suc m)) (suc n)))
+
+    lem3 : (n m : ℕ) (x : is-even n) (y : is-odd (suc (suc (suc m)))) (b : _) (a : _) → (sym (lUnit₁ (suc m) n a) ∙∙
+                                        (λ i₁ → cup' (suc (suc m)) n ∣ merid b i₁ ∣ₕ ∣ a ∣ₕ) ∙∙
+                                        lUnit₂ (suc m) n a)
+                                     ≡ transport (λ i → 0ₖ (+'-comm (suc n) (suc (suc (suc m))) i)
+                                                       ≡ 0ₖ (+'-comm (suc n) (suc (suc (suc m))) i))
+                                         λ i₁ → cup' n (suc (suc m)) ∣ a ∣ₕ ∣ merid b (~ i₁) ∣ₕ
+    lem3 = λ { zero m x y b base → S¹-case i0 m x y b
+             ; zero m x y b (loop i) → S¹-case i m x y b
+             ; (suc n) m x y b north → merid-case i0 n m x y (ptSn (suc n)) b
+             ; (suc n) m x y b south → merid-case i1 n m x y (ptSn (suc n)) b
+             ; (suc n) m x y b (merid a i) → merid-case i n m x y a b}
+      where
+      S¹-case : (i : I) → (m : ℕ) (x : is-even zero) (y : is-odd (suc (suc (suc m)))) (b : _) → (sym (lUnit₁ (suc m) zero (loop i)) ∙∙
+                                        (λ i₁ → cup' (suc (suc m)) zero ∣ merid b i₁ ∣ₕ ∣ (loop i) ∣ₕ) ∙∙
+                                        lUnit₂ (suc m) zero (loop i))
+                                     ≡ transport (λ i → 0ₖ (+'-comm (suc zero) (suc (suc (suc m))) i)
+                                                       ≡ 0ₖ (+'-comm (suc zero) (suc (suc (suc m))) i))
+                                         λ i₁ → cup' zero (suc (suc m)) ∣ loop i ∣ₕ ∣ merid b (~ i₁) ∣ₕ
+      S¹-case i m x y b =
+           sym (rUnit _)
+        ∙∙ (λ k j → main (suc (suc m)) zero (inr y) (inr x) (merid b j) (loop i) k)
+        ∙∙ cong-₂ (suc (suc (suc m))) 1 y x ((λ j₁ → (subst coHomK (+'-comm 1 (suc (suc (suc m))))
+                                                       (cup' zero (suc (suc m)) ∣ loop i ∣ ∣ merid b j₁ ∣))))
+         ∙ λ k → transp (λ i → 0ₖ (+'-comm 1 (suc (suc (suc m))) (i ∨ ~ k))
+                                   ≡ 0ₖ (+'-comm 1 (suc (suc (suc m))) (i ∨ ~ k))) (~ k)
+                   (λ j → transp (λ i → coHomK (+'-comm (suc zero) (suc (suc (suc m))) (i ∧ ~ k))) k
+                                  (cup' zero (suc (suc m)) ∣ loop i ∣ₕ ∣ merid b (~ j) ∣ₕ))
 
 
+      merid-case : (i : I) (n m : ℕ) (x : is-even (suc n)) (y : is-odd (suc (suc (suc m)))) (a : _) (b : _)
+                 → (sym (lUnit₁ (suc m) (suc n) (merid a i)) ∙∙
+                    (λ i₁ → cup' (suc (suc m)) (suc n) ∣ merid b i₁ ∣ₕ ∣ (merid a i) ∣ₕ) ∙∙
+                    lUnit₂ (suc m) (suc n) (merid a i))
+                 ≡ transport (λ i → 0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) i)
+                                   ≡ 0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) i))
+                     λ i₁ → cup' (suc n) (suc (suc m)) ∣ merid a i ∣ₕ ∣ merid b (~ i₁) ∣ₕ
+      merid-case i n m x y a b =
+        sym (rUnit _)
+        ∙∙ (λ k j → main (suc (suc m)) (suc n) (inr y) (inr x) (merid b j) (merid a i) k)
+        ∙∙ cong-₂ (suc (suc (suc m))) (suc (suc n)) y x ((λ j₁ → (subst coHomK (+'-comm (suc (suc n)) (suc (suc (suc m))))
+                                                       (cup' (suc n) (suc (suc m)) ∣ merid a i ∣ ∣ merid b j₁ ∣))))
+         ∙ λ k → transp (λ i → 0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) (i ∨ ~ k))
+                                   ≡ 0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) (i ∨ ~ k))) (~ k)
+                   (λ j → transp (λ i → coHomK (+'-comm (suc (suc n)) (suc (suc (suc m))) (i ∧ ~ k))) k
+                                  (cup' (suc n) (suc (suc m)) ∣ merid a i ∣ₕ ∣ merid b (~ j) ∣ₕ))
 
-  main (suc n) (suc m) (inl x) (inr y) (merid a i) (merid b j) = {!i = i0 ⊢ lem₃ n (suc m) a north k
-i = i1 ⊢ lem₃ n (suc m) a south k
-k = i0 ⊢ sym (lUnit₁ n (suc m) (merid b i)) ∙∙
-         (λ i₂ → cup' (suc n) (suc m) ∣ merid a i₂ ∣ₕ ∣ merid b i ∣ₕ) ∙∙
-         lUnit₂ n (suc m) (merid b i)
-k = i1 ⊢ Kn→ΩKn+1 (suc (suc (n + suc m)))
-         (cup' n (suc m) ∣ a ∣ₕ ∣ merid b i ∣ₕ)!}
+    help : (cong (λ x → (cong (λ y → cup' (suc n) (suc (suc m)) ∣ x ∣ₕ ∣ y ∣)) (merid b)) (merid a))
+         ≡ λ i j → -ₖ-gen (suc (suc n)) (suc (suc (suc m))) (inl x) (inr y)
+              (subst coHomK (+'-comm (suc (suc (suc m))) (suc (suc n)))
+               (cup' (suc (suc m)) (suc n) ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ))
+    help =
+      sym ((λ k i j → -ₖ-gen-inl-left (suc (suc n)) (suc (suc (suc m))) x (inr y)
+              (subst coHomK (+'-comm (suc (suc (suc m))) (suc (suc n)))
+               (cup' (suc (suc m)) (suc n) ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ)) k)
+        ∙∙ lem₈ n (suc m) (λ i j → (cup' (suc (suc m)) (suc n) ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ))
+        ∙∙ cong (transport (λ i₁ → refl ≡ refl))
+                (lem₁ n (suc m) a b
+              ∙∙ lem2
+              ∙∙ cong (t₂ n (suc m) ∘ t₃ n (suc m))
+                   (cong (λ x → (sym (Kn→ΩKn+10ₖ _) ∙∙
+                                 cong (Kn→ΩKn+1 _) x
+                                 ∙∙ Kn→ΩKn+10ₖ _))
+                         (sym (lem₃ (suc m) n b a)
+                       ∙ lem3 n m x y b a
+                      )
+                  ∙ natTranspLem {A = λ n → 0ₖ n ≡ 0ₖ n} _ _ (λ i₂ → cup' n (suc (suc m)) ∣ a ∣ ∣ merid b (~ i₂) ∣) _
+                                  (λ _ x → (sym (Kn→ΩKn+10ₖ _) ∙∙
+                                 cong (Kn→ΩKn+1 _) x
+                                 ∙∙ Kn→ΩKn+10ₖ _))
+                                  (+'-comm (suc n) (suc (suc (suc m))))
+                  ∙ cong (t₄ n (suc m)) ( sym (cong sym (lem₁ (suc m) n b a)))))
+        ∙∙ final n (suc m)
+             (λ i₁ j₁ →
+            cup' (suc n) (suc (suc m)) ∣ merid a j₁ ∣ ∣ merid b (~ i₁) ∣)
+        ∙∙ inst _ (λ i₁ j₁ →
+         cup' (suc n) (suc (suc m)) ∣ merid a j₁ ∣ ∣ merid b i₁ ∣))
+    -}
   main (suc n) (suc m) (inr x) (inl y) (merid a i) (merid b j) = {!!}
-  main (suc n) (suc m) (inr x) (inr y) (merid a i) (merid b j) = {!!}
+    where
+    help : (cong (λ x → (cong (λ y → cup' (suc n) (suc m) ∣ x ∣ₕ ∣ y ∣)) (merid b)) (merid a))
+         ≡ λ i j → -ₖ-gen (suc (suc n)) (suc (suc m)) (inr x) (inl y)
+              (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+               (cup' (suc m) (suc n) ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ))
+    help = ((sym (transportRefl _)
+          ∙ cong (λ x → subst (λ n → refl {x = 0ₖ n} ≡ refl {x = 0ₖ n}) x (λ i₁ j₁ → cup' (suc n) (suc m) ∣ merid a i₁ ∣ ∣ merid b j₁ ∣)) (isSetℕ _ _ refl _))
+          ∙ substComposite (λ n → refl {x = 0ₖ n} ≡ refl {x = 0ₖ n})
+                            (+'-comm (suc (suc n)) (suc (suc m)))
+                            (+'-comm (suc (suc m)) (suc (suc n)))
+                            (λ i₁ j₁ → cup' (suc n) (suc m) ∣ merid a i₁ ∣ ∣ merid b j₁ ∣))
+        ∙∙ (λ k → lem₈ n m (lem₈ m n (λ i j → cup' (suc n) (suc m) ∣ merid a i ∣ ∣ merid b j ∣) (~ k)) (~ k))
+        ∙∙ (cong (cong (cong ((subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))))))
+                  λ k i j → -ₖ-gen-inl-left (suc (suc m)) (suc (suc n)) y (inr x)
+                              (subst coHomK (+'-comm (suc (suc n)) (suc (suc m)))
+                              (cup' (suc n) (suc m) ∣ merid a i ∣ ∣ merid b j ∣)) (~ k))
+        ∙∙ sym (cong (cong (cong ((subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))))))
+                (λ k i j → main (suc m) (suc n) (inl y) (inr x) (merid b j) (merid a i) k))
+        ∙∙ λ k i j → -ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (inr x) y
+         (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+          (cup' (suc m) (suc n) ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ)) (~ k)
+  main (suc (suc n)) (suc (suc m)) (inr x) (inr y) (merid a i) (merid b j) =
+    {!!}
+    where
+    {-
+    lem₂ : {k : ℕ} (p : refl {x = 0ₖ (suc (suc k))} ≡ refl {x = 0ₖ (suc (suc k))})
+                  → cong (cong (-ₖ-gen (suc (suc (suc n))) (suc (suc (suc m))) (inr x) (inr y))) p
+                  ≡ sym p
+    lem₂ p =
+         rUnit _
+      ∙∙ (λ k → (λ i → cong-₂ (suc (suc (suc n))) (suc (suc (suc m))) x y refl (i ∧ k))
+              ∙∙ cong (λ z → cong-₂ (suc (suc (suc n))) (suc (suc (suc m))) x y z k) p
+              ∙∙ λ i → cong-₂ (suc (suc (suc n))) (suc (suc (suc m))) x y refl (~ i ∧ k))
+      ∙∙ (λ k → transportRefl (λ _ _ → ∣ north ∣) k
+              ∙∙ cong sym p
+              ∙∙ sym (transportRefl (λ _ _ → ∣ north ∣) k))
+      ∙∙ sym (rUnit _)
+      ∙∙ sym (inst4 p)
+
+    lem2 : cong (cup' (suc m) (suc (suc n)) ∣ b ∣ₕ ∘ ∣_∣ₕ) (merid a)
+      ≡ transport (λ i → 0ₖ (+'-comm (suc (suc (suc n))) (suc (suc m)) i) ≡ 0ₖ (+'-comm (suc (suc (suc n))) (suc (suc m)) i))
+                  (sym (lUnit₁ (suc n) _ b) ∙∙ (λ i → cup' (suc (suc n)) (suc m) ∣ merid a i ∣ₕ ∣ b ∣ₕ) ∙∙ lUnit₂ _ _ b)
+    lem2 = fin b
+      where
+      help : (i : I) (b : _) →
+                 cong (cup' (suc m) (suc (suc n)) ∣ merid b i ∣ₕ ∘ ∣_∣ₕ) (merid a)
+               ≡ transport (λ i → 0ₖ (+'-comm (suc (suc (suc n))) (suc (suc m)) i)
+                                 ≡ 0ₖ (+'-comm (suc (suc (suc n))) (suc (suc m)) i))
+                 (sym (lUnit₁ (suc n) _ (merid b i)) ∙∙ (λ j → cup' (suc (suc n)) (suc m) ∣ merid a j ∣ₕ ∣ merid b i ∣ₕ) ∙∙ lUnit₂ (suc n) _ (merid b i))
+      help i b =
+           (λ k j → main (suc m) (suc (suc n)) (inl y) (inr x) (merid b i) (merid a j) k)
+         ∙ (λ k j → -ₖ-gen-inl-left (suc (suc m)) (suc (suc (suc n))) y (inr x)
+                 (subst coHomK (+'-comm (suc (suc (suc n))) (suc (suc m)))
+                   (cup' (suc (suc n)) (suc m) ∣ merid a j ∣ ∣ merid b i ∣)) k)
+         ∙ (λ k → transp (λ i → 0ₖ (+'-comm (suc (suc (suc n))) (suc (suc m)) (i ∨ ~ k))
+                                ≡ 0ₖ (+'-comm (suc (suc (suc n))) (suc (suc m)) (i ∨ ~ k))) (~ k)
+                          λ j → transp (λ i → coHomK (+'-comm (suc (suc (suc n))) (suc (suc m)) (i ∧ ~ k))) k
+                                        (cup' (suc (suc n)) (suc m) ∣ merid a j ∣ ∣ merid b i ∣))
+         ∙ cong (transport (λ i → 0ₖ (+'-comm (suc (suc (suc n))) (suc (suc m)) i)
+                                 ≡ 0ₖ (+'-comm (suc (suc (suc n))) (suc (suc m)) i)))
+                 (rUnit λ j → cup' (suc (suc n)) (suc m) ∣ merid a j ∣ₕ ∣ merid b i ∣ₕ)
+
+      fin : (b : _) → cong (cup' (suc m) (suc (suc n)) ∣ b ∣ₕ ∘ ∣_∣ₕ) (merid a)
+             ≡ transport (λ i → 0ₖ (+'-comm (suc (suc (suc n))) (suc (suc m)) i)
+                                 ≡ 0ₖ (+'-comm (suc (suc (suc n))) (suc (suc m)) i))
+              (sym (lUnit₁ (suc n) _ b) ∙∙ (λ i → cup' (suc (suc n)) (suc m) ∣ merid a i ∣ₕ ∣ b ∣ₕ) ∙∙ lUnit₂ _ _ b)
+      fin north = help i0 (ptSn (suc m))
+      fin south = help i1 (ptSn (suc m))
+      fin (merid a i) = help i a
+
+    lem3 : (sym (Kn→ΩKn+10ₖ (suc (suc (suc m + suc (suc n))))) ∙∙
+       cong (Kn→ΩKn+1 (suc (suc (suc m + suc (suc n)))))
+       (λ i₁ → cup' (suc m) (suc (suc n)) ∣ b ∣ₕ ∣ merid a i₁ ∣ₕ)
+       ∙∙ Kn→ΩKn+10ₖ (suc (suc (suc m + suc (suc n)))))
+        ≡ transport (λ i → refl {x = 0ₖ (suc (+'-comm (suc (suc (suc n))) (suc (suc m)) i))}
+                          ≡ refl {x = 0ₖ ((suc (+'-comm (suc (suc (suc n))) (suc (suc m)) i)))})
+                    (sym (Kn→ΩKn+10ₖ _)
+                  ∙∙ cong (Kn→ΩKn+1 _) (sym (lUnit₁ (suc n) _ b) ∙∙ (λ i → cup' (suc (suc n)) (suc m) ∣ merid a i ∣ₕ ∣ b ∣ₕ) ∙∙ lUnit₂ _ _ b)
+                  ∙∙ Kn→ΩKn+10ₖ _)
+    lem3 =
+        cong (λ x → (sym (Kn→ΩKn+10ₖ (suc (suc (suc m + suc (suc n))))) ∙∙
+       cong (Kn→ΩKn+1 (suc (suc (suc m + suc (suc n))))) x
+       ∙∙ Kn→ΩKn+10ₖ (suc (suc (suc m + suc (suc n)))))) lem2
+      ∙ natTranspLem {A = λ n → 0ₖ n ≡ 0ₖ n}
+          _ _ ((sym (lUnit₁ (suc n) _ b) ∙∙ (λ i → cup' (suc (suc n)) (suc m) ∣ merid a i ∣ₕ ∣ b ∣ₕ) ∙∙ lUnit₂ _ _ b)) _
+              (λ _ x → (sym (Kn→ΩKn+10ₖ _) ∙∙ cong (Kn→ΩKn+1 _) x ∙∙ Kn→ΩKn+10ₖ _))
+         ((+'-comm (suc (suc (suc n))) (suc (suc m))))
+
+    lem4 : (sym (lUnit₁ (suc n) _ b) ∙∙ (λ i → cup' (suc (suc n)) (suc m) ∣ merid a i ∣ₕ ∣ b ∣ₕ) ∙∙ lUnit₂ _ _ b)
+                     ≡ Kn→ΩKn+1 _ ((subst coHomK (+'-comm (suc (suc m)) (suc (suc n))) (cup' (suc m) (suc n) ∣ b ∣ₕ ∣ a ∣ₕ)))
+    lem4 = lem₃ (suc n) (suc m) a b
+        ∙∙ cong (Kn→ΩKn+1 _) (main (suc n) (suc m) (inl x) (inl y) a b)
+        ∙∙ cong (Kn→ΩKn+1 _) (-ₖ-gen-inl-left (suc (suc n)) (suc (suc m)) x (inl y) _)
+
+    lem₅ : ((λ i₁ → Kn→ΩKn+10ₖ _ (~ i₁)) ∙∙
+       (λ i₁ →
+          Kn→ΩKn+1 _
+          (Kn→ΩKn+1 _
+           (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+            (cup' (suc m) (suc n) ∣ b ∣ₕ ∣ a ∣ₕ))
+           i₁))
+       ∙∙ Kn→ΩKn+10ₖ _)
+       ≡ transport (λ i → refl {x = 0ₖ (suc (suc (+'-comm (suc (suc m)) (suc (suc n)) i)))}
+                         ≡ refl {x = 0ₖ (suc (suc (+'-comm (suc (suc m)) (suc (suc n)) i)))})
+                   ((λ i₁ → Kn→ΩKn+10ₖ _ (~ i₁)) ∙∙
+       (λ i₁ →
+          Kn→ΩKn+1 _
+          (Kn→ΩKn+1 _
+            (cup' (suc m) (suc n) ∣ b ∣ₕ ∣ a ∣ₕ)
+           i₁))
+       ∙∙ Kn→ΩKn+10ₖ _)
+    lem₅ =
+      natTranspLem {A = coHomK} _ _ (cup' (suc m) (suc n) ∣ b ∣ₕ ∣ a ∣ₕ) _
+        (λ _ x → sym (Kn→ΩKn+10ₖ _) ∙∙ (cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ x)) ∙∙ Kn→ΩKn+10ₖ _)
+        (+'-comm (suc (suc m)) (suc (suc n)))
+
+    lem6 : (Kn→ΩKn+1 (suc (suc (suc (m + suc n))))
+             (cup' (suc m) (suc n) ∣ b ∣ ∣ a ∣))
+          ≡ (sym (lUnit₁ (suc m) _ a) ∙∙ (λ i → cup' (suc (suc m)) (suc n) ∣ merid b i ∣ ∣ a ∣) ∙∙ lUnit₂ (suc m) _ a)
+    lem6 = sym (lem₃ (suc m) (suc n) b a)
+
+    lem7 : (sym (lUnit₁ (suc m) _ a) ∙∙ (λ i → cup' (suc (suc m)) (suc n) ∣ merid b i ∣ ∣ a ∣) ∙∙ lUnit₂ (suc m) _ a)
+         ≡ transport (λ i → 0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) i) ≡  0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) i))
+             (λ i → cup' (suc n) (suc (suc m)) ∣ a ∣ ∣ merid b i ∣)
+    lem7 = mainLem n m a b x y
+      where
+      meridCase : (i : I) (n m : ℕ) (a : _) (b : _ ) (x : _) (y : _)
+        → (sym (lUnit₁ (suc m) _ (merid a i)) ∙∙ (λ j → cup' (suc (suc m)) (suc n) ∣ merid b j ∣ ∣ merid a i ∣) ∙∙ lUnit₂ (suc m) _ (merid a i))
+         ≡ transport (λ i → 0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) i) ≡  0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) i))
+                     λ j → cup' (suc n) (suc (suc m)) ∣ merid a i ∣ ∣ merid b j ∣
+      meridCase i n m a b x y =
+           sym (rUnit _)
+        ∙∙ (λ k j → main (suc (suc m)) (suc n) (inr y) (inl x) (merid b j) (merid a i) k)
+        ∙∙ (λ k j → -ₖ-gen-inl-right ((suc (suc (suc m)))) (suc (suc n)) (inr y) x
+                       (subst coHomK (+'-comm (suc (suc n)) (suc (suc (suc m))))
+                        (cup' (suc n) (suc (suc m)) ∣ merid a i ∣ ∣ merid b j ∣)) k)
+         ∙ λ k → transp (λ i → 0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) (i ∨ ~ k))
+                               ≡ 0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) (i ∨ ~ k))) (~ k)
+                        λ j → (transp (λ i → coHomK (+'-comm (suc (suc n)) (suc (suc (suc m))) (i ∧ ~ k))) k)
+                               (cup' (suc n) (suc (suc m)) ∣ merid a i ∣ ∣ merid b j ∣)
+
+      mainLem : (n m : ℕ) (a : _) (b : _ ) (x : is-even (suc (suc n))) (y : is-odd (suc (suc (suc m))))
+          → (sym (lUnit₁ (suc m) _ a) ∙∙ (λ j → cup' (suc (suc m)) (suc n) ∣ merid b j ∣ ∣ a ∣) ∙∙ lUnit₂ (suc m) _ a)
+           ≡ transport (λ i → 0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) i) ≡  0ₖ (+'-comm (suc (suc n)) (suc (suc (suc m))) i))
+                       λ j → cup' (suc n) (suc (suc m)) ∣ a ∣ ∣ merid b j ∣
+      mainLem n m north b x y = meridCase i0 n m (ptSn (suc n)) b x y
+      mainLem n m south b x y = meridCase i1 n m (ptSn (suc n)) b x y
+      mainLem n m (merid a i) b x y = meridCase i n m a b x y
+
+    lem8 : (sym (Kn→ΩKn+10ₖ _) ∙∙
+       (cong (Kn→ΩKn+1 _)
+          (Kn→ΩKn+1 (suc (suc (suc (m + suc n))))
+           (cup' (suc m) (suc n) ∣ b ∣ₕ ∣ a ∣ₕ)))
+       ∙∙ Kn→ΩKn+10ₖ _)
+      ≡ transport (λ i → refl {x = 0ₖ ((suc (+'-comm (suc (suc n)) (suc (suc (suc m))) i)))}
+                        ≡ refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc (suc (suc m))) i))})
+                  (λ i j → cup' (suc (suc n)) (suc (suc m)) ∣ merid a j ∣ ∣ merid b i ∣)
+    lem8 = cong (λ x → (sym (Kn→ΩKn+10ₖ _) ∙∙ (cong (Kn→ΩKn+1 _) x) ∙∙ Kn→ΩKn+10ₖ _))
+                (lem6 ∙ lem7)
+        ∙∙ natTranspLem {A = λ n → 0ₖ n ≡ 0ₖ n} _ _ ((λ i₁ → cup' (suc n) (suc (suc m)) ∣ a ∣ ∣ merid b i₁ ∣))
+                        _ ((λ _ x → (sym (Kn→ΩKn+10ₖ _) ∙∙ (cong (Kn→ΩKn+1 _) x) ∙∙ Kn→ΩKn+10ₖ _)))
+                        (+'-comm (suc (suc n)) (suc (suc (suc m))))
+        ∙∙ cong (transport (λ i → refl {x = 0ₖ ((suc (+'-comm (suc (suc n)) (suc (suc (suc m))) i)))}
+                        ≡ refl {x = 0ₖ (suc (+'-comm (suc (suc n)) (suc (suc (suc m))) i))}))
+                (sym (lem₁ _ _ b a))
+
+    help : (cong (λ x → (cong (λ y → cup' (suc (suc n)) (suc (suc m)) ∣ x ∣ₕ ∣ y ∣)) (merid b)) (merid a))
+         ≡ λ i j → -ₖ-gen (suc (suc (suc n))) (suc (suc (suc m))) (inr x) (inr y)
+      (subst coHomK (+'-comm (suc (suc (suc m))) (suc (suc (suc n))))
+       (cup' (suc (suc m)) (suc (suc n)) ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ))
+    help =
+         ((sym (inst _ (λ i j →
+         cup' (suc (suc n)) (suc (suc m)) ∣ merid a j ∣ ∣ merid b i ∣)))
+        ∙ sym (final (suc n) (suc m) ((λ i j₁ →
+              cup' (suc (suc n)) (suc (suc m)) ∣ merid a j₁ ∣ ∣ merid b (~ i) ∣))))
+      ∙∙ cong (transport (λ i₁ → refl ≡ refl))
+              ((cong (sym ∘ transport (λ i₂ → refl ≡ refl))
+                     ((cong (transport (λ i₁ → refl ≡ refl))
+                       (sym lem8)
+                     ∙ sym lem₅) ∙
+                     (cong (λ x → (sym (Kn→ΩKn+10ₖ (suc (suc (suc (suc (n + suc m)))))) ∙∙
+                                    cong (Kn→ΩKn+1 (suc (suc (suc (suc (n + suc m)))))) x
+                                    ∙∙ Kn→ΩKn+10ₖ (suc (suc (suc (suc (n + suc m)))))))
+                           (sym lem4)))
+              ∙ sym (cong sym lem3))
+              ∙∙ inst _ _
+              ∙∙ sym (cong flipSquare (lem₁ (suc n) (suc m) a b)))
+      ∙∙ sym (lem₈ (suc n) (suc m) (λ i j → cup' (suc (suc m)) (suc (suc n)) ∣ merid b i ∣ₕ ∣ merid a j ∣ₕ))
+      ∙∙ sym (inst _ _)
+      ∙∙ sym (lem₂ (cong (cong (subst coHomK (+'-comm (suc (suc (suc m))) (suc (suc (suc n))))))
+             λ i j → cup' (suc (suc m)) (suc (suc n)) ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ))
+
+  -}
 
   {-
   main : (n m : ℕ) (p : _) (q : _) (a : _) (b : _)
