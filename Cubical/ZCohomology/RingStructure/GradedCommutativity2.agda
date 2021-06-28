@@ -17,6 +17,7 @@ open import Cubical.HITs.Truncation
 
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Pointed
 open import Cubical.Foundations.Pointed.Homogeneous
@@ -471,35 +472,304 @@ mainₗ (suc n) p q (merid a i) (loop j) k =
                                 ; (r = i1) → help₂ n a p q (~ k) j i})
                                        (help₂ n a p q i1 j i)))))
 
+
+testP2 : (n m : ℕ) → subst coHomK (+'-comm (suc (suc n)) (suc m)) (0ₖ _) ≡ 0ₖ _
+testP2 n zero = refl
+testP2 n (suc m) = refl
+
+
+
+cuteLem₁ : (n m : ℕ) (q : _) (p : is-even (suc (suc n)) ⊎ is-odd (suc (suc n))) (a : _) (b : _)
+        → cong (Kn→ΩKn+1 _) (((sym (cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)) (testP2 m n))
+                               ∙∙ (λ j → trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)
+                              (subst coHomK (+'-comm (suc (suc m)) (suc n)) (_⌣ₖ_ {n = suc (suc m)} {m = (suc n)} ∣ merid b j ∣ₕ ∣ a ∣)))
+                  ∙∙ cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)) (testP2 m n))))
+         ≡ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q) -- (suc n) * m
+                                             (subst coHomK (cong suc (+-comm (suc m) n))
+                                             (_⌣ₖ_ {n = suc m} {m = (suc n)} ∣ b ∣ₕ ∣ a ∣))))
+cuteLem₁ n m p a b = {!!}
+
+cuteLem₂ : (n m : ℕ) (p : _) (q : _) (a : _) (b : _) → cong (cong (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                      ∘ (subst coHomK (+'-comm (suc (suc m)) (suc (suc n))))))
+                      (sym (Kn→ΩKn+10ₖ _) ∙∙ (λ i j → Kn→ΩKn+1 _ ((sym (cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (testP2 n m))
+                                                                     ∙∙ (λ i → -ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                                                                                   (subst coHomK (+'-comm (suc (suc n)) (suc m))
+                                                                                     (_⌣ₖ_ {n = suc (suc n)} {m = suc m} ∣ merid a i ∣ₕ ∣ b ∣ₕ)))
+                                                                     ∙∙ cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (testP2 n m)) i) j)
+                                           ∙∙ Kn→ΩKn+10ₖ _)
+             ≡ (sym (Kn→ΩKn+10ₖ _)
+            ∙∙ (λ i j → Kn→ΩKn+1 _
+                          ((Kn→ΩKn+1 _ (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                            (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                              (subst coHomK (cong suc (sym (+-suc n m))) (_⌣ₖ_ {n = suc n} {m = suc m} ∣ a ∣ₕ ∣ b ∣ₕ))))) i) j)
+            ∙∙ Kn→ΩKn+10ₖ _)
+cuteLem₂ = {!-ₖ-gen-inr ?!}
+
+cuteLem₃ : (n m : ℕ) (p : _) (q : _) (a : _) (b : _) → flipSquare (sym (Kn→ΩKn+10ₖ _)
+     ∙∙ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)
+                                           (subst coHomK (cong suc (+-comm (suc m) n))
+                                           (_⌣ₖ_ {n = suc m} {m = (suc n)} ∣ b ∣ₕ ∣ a ∣))))
+     ∙∙ Kn→ΩKn+10ₖ _)
+     ≡ (sym (Kn→ΩKn+10ₖ _)
+          ∙∙ (λ i j → Kn→ΩKn+1 _
+                        ((Kn→ΩKn+1 _ (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                          (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                            (subst coHomK (cong suc (sym (+-suc n m)))
+                              (-ₖ-gen (suc n) (suc m) (evenOrOdd (suc n)) (evenOrOdd (suc m))
+                                (subst coHomK (+'-comm (suc m) (suc n)) (∣ b ∣ₕ ⌣ₖ ∣ a ∣ₕ))))))) i) j)
+          ∙∙ Kn→ΩKn+10ₖ _)
+cuteLem₃ = {!!}
+
+main : (k n m : ℕ) (term : n + m ≡ k) (p : _) (q : _) (a : _) (b : _) →
+      (_⌣ₖ_  {n = suc n} {m = (suc m)} ∣ a ∣ₕ ∣ b ∣ₕ)
+    ≡ (-ₖ-gen (suc n) (suc m) p q)
+       (subst coHomK (+'-comm (suc m) (suc n))
+        (_⌣ₖ_  {n = suc m} {m = suc n} ∣ b ∣ₕ ∣ a ∣ₕ))
+main k zero zero term p q a b = mainₗ zero p q a b
+main k zero (suc m) term (inr tt) q a b = help q ∙ sym (cong (-ₖ-gen 1 (suc (suc m)) (inr tt) q ∘
+                                                (subst coHomK (+'-comm (suc (suc m)) 1))) (mainₗ (suc m) q (inr tt) b a))
+  where
+  help : (q : _) → ∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ ≡
+            -ₖ-gen 1 (suc (suc m)) (inr tt) q
+            (subst coHomK (+'-comm (suc (suc m)) 1)
+             (-ₖ-gen (suc (suc m)) 1 q (inr tt)
+              (subst coHomK (+'-comm 1 (suc (suc m))) (∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ))))
+  help (inl x) =
+      (sym (transportRefl _)
+     ∙ (λ i → subst coHomK (isSetℕ _ _ refl (+'-comm 1 (suc (suc m)) ∙ +'-comm (suc (suc m)) 1) i) (∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ)))
+    ∙∙ substComposite coHomK
+         (+'-comm 1 (suc (suc m)))
+          (+'-comm (suc (suc m)) 1)
+           ((∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ))
+    ∙∙ λ i → -ₖ-gen-inl-right (suc zero) (suc (suc m)) (inr tt) x
+            ((subst coHomK (+'-comm (suc (suc m)) 1)
+             (-ₖ-gen-inl-left (suc (suc m)) 1 x (inr tt) 
+              (subst coHomK (+'-comm 1 (suc (suc m))) (∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ)) (~ i)))) (~ i)
+  help (inr x) =
+       ({!!}
+     ∙ {!-ₖ-ₖ!})
+    ∙∙ (λ i → -ₖ-gen-inr 1 (suc (suc m)) tt x
+                (-ₖ-gen-inr (suc (suc m)) 1 x tt
+                  (substComposite coHomK (+'-comm 1 (suc (suc m))) (+'-comm (suc (suc m)) 1) (∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ) i)
+                  (~ i)) (~ i))
+    ∙∙ λ i → (-ₖ-gen 1 (suc (suc m)) (inr tt) (inr x)
+                  (transp (λ j → coHomK ((+'-comm (suc (suc m)) 1) (j ∨ ~ i))) (~ i)
+                    (-ₖ-gen (suc (suc m)) 1 (inr x) (inr tt)
+                      (transp (λ j → coHomK ((+'-comm (suc (suc m)) 1) (j ∧ ~ i))) i
+                              ((subst coHomK (+'-comm 1 (suc (suc m))) (∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ)))))))
+main k (suc n) zero term p q a b = mainₗ (suc n) p q a b
+main zero (suc n) (suc m) term p q a b = ⊥-rec (snotz (sym (+-suc n m) ∙ cong predℕ term))
+main (suc zero) (suc n) (suc m) term p q a b = ⊥-rec (snotz (sym (+-suc n m) ∙ cong predℕ term))
+main (suc (suc k)) (suc n) (suc m) term p q north north = refl
+main (suc (suc k)) (suc n) (suc m) term p q north south = refl
+main (suc (suc k)) (suc n) (suc m) term p q north (merid a i) r =
+  trMap (-ₖ-helper (suc (suc n)) (suc (suc m)) p q) (
+                (subst coHomK (+'-comm (suc (suc m)) (suc (suc n))))
+                  ((sym (Kn→ΩKn+10ₖ _)
+                  ∙ cong (Kn→ΩKn+1 _) (cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (sym (testP2 n m))
+                                     ∙ sym (main (suc k) m (suc n) (+-suc m n ∙ +-comm (suc m) n ∙ cong predℕ term)
+                                 (evenOrOdd (suc m)) p a north))) r i))
+main (suc (suc k)) (suc n) (suc m) term p q south north = refl
+main (suc (suc k)) (suc n) (suc m) term p q south south = refl
+main (suc (suc k)) (suc n) (suc m) term p q south (merid a i) r =
+  trMap (-ₖ-helper (suc (suc n)) (suc (suc m)) p q) (
+                (subst coHomK (+'-comm (suc (suc m)) (suc (suc n))))
+                  ((sym (Kn→ΩKn+10ₖ _)
+                  ∙ cong (Kn→ΩKn+1 _) (cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (sym (testP2 n m))
+                                     ∙ sym (main (suc k) m (suc n) (+-suc m n ∙ +-comm (suc m) n ∙ cong predℕ term)
+                                 (evenOrOdd (suc m)) p a south))) r i))
+main (suc (suc k)) (suc n) (suc m) term p q (merid a i) north r =
+    (cong (Kn→ΩKn+1 (suc (suc (n + suc m))))
+      (main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a north
+       ∙ cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q))  (testP2 m n))
+   ∙' Kn→ΩKn+10ₖ _) r i
+main (suc (suc k)) (suc n) (suc m) term p q (merid a i) south r =
+    (cong (Kn→ΩKn+1 (suc (suc (n + suc m))))
+      (main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a south
+       ∙ cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q))  (testP2 m n))
+   ∙' Kn→ΩKn+10ₖ _) r i
+main (suc (suc k)) (suc n) (suc m) term p q (merid a i) (merid b j) r =
+  hcomp (λ l → λ {(i = i0) → trMap (-ₖ-helper (suc (suc n)) (suc (suc m)) p q) (
+                               (subst coHomK (+'-comm (suc (suc m)) (suc (suc n))))
+                                 ((compPath-filler (sym (Kn→ΩKn+10ₖ _))
+                                  (cong (Kn→ΩKn+1 _) (cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (sym (testP2 n m))
+                                                    ∙ sym (main (suc k) m (suc n) (+-suc m n ∙ +-comm (suc m) n ∙ cong predℕ term)
+                                                (evenOrOdd (suc m)) p b north))) l r j)))
+                 ; (i = i1) → trMap (-ₖ-helper (suc (suc n)) (suc (suc m)) p q) (
+                               (subst coHomK (+'-comm (suc (suc m)) (suc (suc n))))
+                                 ((compPath-filler (sym (Kn→ΩKn+10ₖ _))
+                                  (cong (Kn→ΩKn+1 _) (cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (sym (testP2 n m))
+                                                    ∙ sym (main (suc k) m (suc n) (+-suc m n ∙ +-comm (suc m) n ∙ cong predℕ term)
+                                                (evenOrOdd (suc m)) p b south))) l r j)))
+                 ; (r = i0) → help₁ l i j
+                 ; (r = i1) → -ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                                 (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+                                  (help₃ l i j))})
+        (hcomp (λ l → λ {(i = i0) → -ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                                      (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+                                        (Kn→ΩKn+10ₖ _ (~ r ∨ ~ l) j))
+                       ; (i = i1) → -ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                                      (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+                                        (Kn→ΩKn+10ₖ _ (~ r ∨ ~ l) j))
+                       ; (j = i0) → Kn→ΩKn+10ₖ _ r i
+                       ; (j = i1) → Kn→ΩKn+10ₖ _ r i
+                       ; (r = i0) → help₂ (~ l) j i
+                       ; (r = i1) → -ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                                      (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+                                        (doubleCompPath-filler (sym (Kn→ΩKn+10ₖ _)) ((λ i j → Kn→ΩKn+1 _ ((sym (cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (testP2 n m))
+                                                                     ∙∙ (λ i → -ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                                                                                   (subst coHomK (+'-comm (suc (suc n)) (suc m))
+                                                                                     (_⌣ₖ_ {n = suc (suc n)} {m = suc m} ∣ merid a i ∣ₕ ∣ b ∣ₕ)))
+                                                                     ∙∙ cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (testP2 n m)) i) j))
+                                                               (Kn→ΩKn+10ₖ _) (~ l) i j))})
+               (hcomp (λ l → λ {(i = i0) → ∣ north ∣
+                               ; (i = i1) → ∣ north ∣
+                               ; (j = i0) → Kn→ΩKn+10ₖ _ r i
+                               ; (j = i1) → Kn→ΩKn+10ₖ _ r i
+                               ; (r = i0) → help₂ i1 j i
+                               ; (r = i1) → help₄ (~ l) i j})
+                               (hcomp (λ l → λ {(i = i0) → ∣ north ∣
+                               ; (i = i1) → ∣ north ∣
+                               ; (j = i0) → Kn→ΩKn+10ₖ _ (r ∨ ~ l) i
+                               ; (j = i1) → Kn→ΩKn+10ₖ _ (r ∨ ~ l) i
+                               ; (r = i0) → doubleCompPath-filler (sym (Kn→ΩKn+10ₖ _)) (λ i j → help₂ i1 i j) (Kn→ΩKn+10ₖ _) (~ l) j i
+                               ; (r = i1) → (sym (Kn→ΩKn+10ₖ _)
+                                           ∙∙ (λ i j → Kn→ΩKn+1 _
+                                                         ((Kn→ΩKn+1 _ (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                                                           (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                                                             (subst coHomK (cong suc (sym (+-suc n m)))
+                                                               (main k n m
+                                                                 (+-comm n m ∙∙ cong predℕ (+-comm (suc m) n) ∙∙ cong (predℕ ∘ predℕ) term)
+                                                                 (evenOrOdd (suc n)) (evenOrOdd (suc m)) a b (~ l)))))) i) j)
+                                           ∙∙ Kn→ΩKn+10ₖ _) i j})
+                        (final r i j))))
+  where
+  final : flipSquare (sym (Kn→ΩKn+10ₖ _)
+       ∙∙ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)
+                                             (subst coHomK (cong suc (+-comm (suc m) n))
+                                             (_⌣ₖ_ {n = suc m} {m = (suc n)} ∣ b ∣ₕ ∣ a ∣))))
+       ∙∙ Kn→ΩKn+10ₖ _)
+       ≡ (sym (Kn→ΩKn+10ₖ _)
+            ∙∙ (λ i j → Kn→ΩKn+1 _
+                          ((Kn→ΩKn+1 _ (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                            (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                              (subst coHomK (cong suc (sym (+-suc n m)))
+                                (-ₖ-gen (suc n) (suc m) (evenOrOdd (suc n)) (evenOrOdd (suc m))
+                                  (subst coHomK (+'-comm (suc m) (suc n)) (∣ b ∣ₕ ⌣ₖ ∣ a ∣ₕ))))))) i) j)
+            ∙∙ Kn→ΩKn+10ₖ _)
+  final = cuteLem₃ n m p q a b
+
+  help₄ : cong (cong (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                      ∘ (subst coHomK (+'-comm (suc (suc m)) (suc (suc n))))))
+                      (sym (Kn→ΩKn+10ₖ _) ∙∙ (λ i j → Kn→ΩKn+1 _ ((sym (cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (testP2 n m))
+                                                                     ∙∙ (λ i → -ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                                                                                   (subst coHomK (+'-comm (suc (suc n)) (suc m))
+                                                                                     (_⌣ₖ_ {n = suc (suc n)} {m = suc m} ∣ merid a i ∣ₕ ∣ b ∣ₕ)))
+                                                                     ∙∙ cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (testP2 n m)) i) j)
+                                           ∙∙ Kn→ΩKn+10ₖ _)
+             ≡ (sym (Kn→ΩKn+10ₖ _)
+            ∙∙ (λ i j → Kn→ΩKn+1 _
+                          ((Kn→ΩKn+1 _ (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                            (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                              (subst coHomK (cong suc (sym (+-suc n m))) (_⌣ₖ_ {n = suc n} {m = suc m} ∣ a ∣ₕ ∣ b ∣ₕ))))) i) j)
+            ∙∙ Kn→ΩKn+10ₖ _)
+  help₄ = cuteLem₂ n m p q a b
+
+  help₃ :
+    Cube (λ i j → Kn→ΩKn+1 _ ((sym (cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (testP2 n m))
+                             ∙∙ (λ i → -ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                                           (subst coHomK (+'-comm (suc (suc n)) (suc m))
+                                             (_⌣ₖ_ {n = suc (suc n)} {m = suc m} ∣ merid a i ∣ₕ ∣ b ∣ₕ)))
+                             ∙∙ cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (testP2 n m)) i) j)
+         (λ i j → (_⌣ₖ_ {n = suc (suc m)} {m = suc (suc n)} ∣ merid b j ∣ₕ ∣ merid a i ∣ₕ))
+         (λ l j → Kn→ΩKn+1 _ ((cong ((-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p)) (sym (testP2 n m))
+                              ∙ sym (main (suc k) m (suc n) (+-suc m n ∙ +-comm (suc m) n ∙ cong predℕ term)
+                                                (evenOrOdd (suc m)) p b north)) l) j)
+         (λ l j → Kn→ΩKn+1 _ ((cong ((-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p)) (sym (testP2 n m))
+                              ∙ sym (main (suc k) m (suc n) (+-suc m n ∙ +-comm (suc m) n ∙ cong predℕ term)
+                                                (evenOrOdd (suc m)) p b south)) l) j)
+         refl
+         refl
+  help₃ l i =
+    Kn→ΩKn+1 _
+      (hcomp (λ r → λ { (i = i0) → compPath-filler' (cong ((-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p)) (sym (testP2 n m)))
+                                                            (sym (main (suc k) m (suc n) (+-suc m n ∙ +-comm (suc m) n ∙ cong predℕ term)
+                                                                 (evenOrOdd (suc m)) p b north)) r l
+                       ; (i = i1) → compPath-filler' (cong ((-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p)) (sym (testP2 n m)))
+                                                            (sym (main (suc k) m (suc n) (+-suc m n ∙ +-comm (suc m) n ∙ cong predℕ term)
+                                                                 (evenOrOdd (suc m)) p b south)) r l
+                       ; (l = i0) → doubleCompPath-filler (sym (cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (testP2 n m)))
+                                                           (λ i → -ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                                                                    (subst coHomK (+'-comm (suc (suc n)) (suc m))
+                                                                      (_⌣ₖ_ {n = suc (suc n)} {m = suc m} ∣ merid a i ∣ₕ ∣ b ∣ₕ)))
+                                                           (cong (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p) (testP2 n m)) r i
+                       ; (l = i1) → _⌣ₖ_ {n = suc m} {m = suc (suc n)} ∣ b ∣ₕ ∣ merid a i ∣ₕ})
+             (main (suc k) m (suc n) (+-suc m n ∙ +-comm (suc m) n ∙ cong predℕ term) (evenOrOdd (suc m)) p b (merid a i) (~ l)))
+
+  help₂ : cong (Kn→ΩKn+1 _) (((sym (cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)) (testP2 m n))
+                               ∙∙ (λ j → trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)
+                              (subst coHomK (+'-comm (suc (suc m)) (suc n)) (_⌣ₖ_ {n = suc (suc m)} {m = (suc n)} ∣ merid b j ∣ₕ ∣ a ∣)))
+                  ∙∙ cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)) (testP2 m n))))
+         ≡ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q) -- (suc n) * m
+                                             (subst coHomK (cong suc (+-comm (suc m) n))
+                                             (_⌣ₖ_ {n = suc m} {m = (suc n)} ∣ b ∣ₕ ∣ a ∣))))
+  help₂ = cuteLem₁ n m q p a b
+
+  help₁ : Cube (λ i j → Kn→ΩKn+1 _ ((sym (cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)) (testP2 m n))
+            ∙∙ (λ j → trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)
+                        (subst coHomK (+'-comm (suc (suc m)) (suc n)) (_⌣ₖ_ {n = suc (suc m)} {m = (suc n)} ∣ merid b j ∣ₕ ∣ a ∣)))
+            ∙∙ cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)) (testP2 m n)) j) i)
+               (λ i j → Kn→ΩKn+1 _ (_⌣ₖ_ {n = (suc n)} {m = suc (suc m)} ∣ a ∣ ∣ merid b j ∣ₕ) i)
+               refl refl
+               (λ l → Kn→ΩKn+1 (suc (suc (n + suc m)))
+                          ((main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a north
+                           ∙ cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q))  (testP2 m n)) (~ l)))
+               (λ l → Kn→ΩKn+1 (suc (suc (n + suc m)))
+                          ((main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a south
+                           ∙ cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q))  (testP2 m n)) (~ l)))
+  help₁ l i j =
+    hcomp (λ r → λ {(i = i0) → ∣ north ∣
+                   ; (i = i1) → ∣ north ∣
+                   ; (j = i0) →
+                     Kn→ΩKn+1 (suc (suc (n + suc m)))
+                          (compPath-filler (main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a north)
+                            (cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q))  (testP2 m n)) r (~ l)) i
+                   ; (j = i1) →
+                        Kn→ΩKn+1 (suc (suc (n + suc m)))
+                          (compPath-filler (main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a south)
+                            (cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q))  (testP2 m n)) r (~ l)) i
+                   ; (l = i0) →
+                     Kn→ΩKn+1 _
+                       (doubleCompPath-filler (sym (cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)) (testP2 m n)))
+                                              (λ j → trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)
+                                                       (subst coHomK (+'-comm (suc (suc m)) (suc n)) (_⌣ₖ_ {n = suc (suc m)} {m = (suc n)} ∣ merid b j ∣ₕ ∣ a ∣)))
+                                              (cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)) (testP2 m n)) r j) i
+                   ; (l = i1) → Kn→ΩKn+1 _ (_⌣ₖ_ {n = (suc n)} {m = suc (suc m)} ∣ a ∣ ∣ merid b j ∣ₕ) i})
+          (hcomp (λ r → λ {(i = i0) → ∣ north ∣
+                          ; (i = i1) → ∣ north ∣
+                          ; (j = i0) → Kn→ΩKn+1 (suc (suc (n + suc m)))
+                                         (main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a north (~ l ∨ ~ r)) i
+                          ; (j = i1) → Kn→ΩKn+1 (suc (suc (n + suc m)))
+                                         (main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a south (~ l ∨ ~ r)) i
+                          ; (l = i0) → Kn→ΩKn+1 (suc (suc (n + suc m)))
+                                         (main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a (merid b j) i1) i
+                          ; (l = i1) → Kn→ΩKn+1 _ (main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a (merid b j) (~ r)) i})
+                 (Kn→ΩKn+1 (suc (suc (n + suc m)))
+                                         (main (suc k) n (suc m) (cong predℕ term) (evenOrOdd (suc n)) q a (merid b j) i1) i))
+
 {-
-r = i0 ⊢ -ₖ-gen (suc (suc n)) 1 p q
-         (subst coHomK (+'-comm 1 (suc (suc n)))
-          (∣ loop j ∣ₕ ⌣ₖ Kn→ΩKn+1 (suc n) ∣ a ∣ₕ i))
-r = i1 ⊢ ∣ merid a i ∣ₕ ⌣ₖ ∣ loop j ∣ₕ
-i = i0 ⊢ (trMap (-ₖ-helper (suc (suc n)) 1 p q) ∘
-          subst coHomK (+'-comm 1 (suc (suc n))))
-         ∣ rCancel (merid (ptSn (suc (suc n)))) r j ∣
-i = i1 ⊢ (trMap (-ₖ-helper (suc (suc n)) 1 p q) ∘
-          subst coHomK (+'-comm 1 (suc (suc n))))
-         ∣ rCancel (merid (ptSn (suc (suc n)))) r j ∣
-j = i0 ⊢ (sym (Kn→ΩKn+10ₖ (suc (suc (n + 0)))) ∙
-          (λ j₂ →
-             Kn→ΩKn+1 (suc (suc (n + 0)))
-             (sym
-              (mainₗ n (evenOrOdd (suc n)) (inr tt) a base ∙
-               cong (trMap (-ₖ-helper (suc n) 1 (evenOrOdd (suc n)) (inr tt)))
-               (testP n))
-              j₂)))
-         r i
-j = i1 ⊢ (sym (Kn→ΩKn+10ₖ (suc (suc (n + 0)))) ∙
-          (λ j₂ →
-             Kn→ΩKn+1 (suc (suc (n + 0)))
-             (sym
-              (mainₗ n (evenOrOdd (suc n)) (inr tt) a base ∙
-               cong (trMap (-ₖ-helper (suc n) 1 (evenOrOdd (suc n)) (inr tt)))
-               (testP n))
-              j₂)))
-         r i
+i = i0 ⊢ main (suc (suc k)) (suc n) (suc m) term p q north
+         (merid b j) r
+i = i1 ⊢ main (suc (suc k)) (suc n) (suc m) term p q south
+         (merid b j) r
+j = i0 ⊢ main (suc (suc k)) (suc n) (suc m) term p q (merid a i)
+         north r
+j = i1 ⊢ main (suc (suc k)) (suc n) (suc m) term p q (merid a i)
+         south r
+r = i0 ⊢ ∣ merid a i ∣ₕ ⌣ₖ ∣ merid b j ∣ₕ
+r = i1 ⊢ -ₖ-gen (suc (suc n)) (suc (suc m)) p q
+         (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+          (∣ merid b j ∣ₕ ⌣ₖ ∣ merid a i ∣ₕ))
 -}
 
 -- mainₗ zero p q a b = {!!}

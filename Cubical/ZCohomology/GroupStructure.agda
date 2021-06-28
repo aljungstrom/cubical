@@ -15,7 +15,7 @@ open import Cubical.Foundations.GroupoidLaws renaming (assoc to assoc∙)
 open import Cubical.Data.Sigma
 open import Cubical.HITs.Susp
 open import Cubical.HITs.SetTruncation renaming (rec to sRec ; rec2 to sRec2 ; elim to sElim ; elim2 to sElim2 ; setTruncIsSet to §)
-open import Cubical.Data.Int hiding (-_) renaming (Int to ℤ ; _+_ to _ℤ+_)
+open import Cubical.Data.Int renaming (Int to ℤ ; _+_ to _ℤ+_ ; -_ to -ℤ_)
 open import Cubical.Data.Nat renaming (+-assoc to +-assocℕ ; +-comm to +-commℕ)
 open import Cubical.HITs.Truncation renaming (elim to trElim ; map to trMap ; rec to trRec ; elim3 to trElim3 ; map2 to trMap2)
 open import Cubical.Homotopy.Loopspace
@@ -144,6 +144,30 @@ private
 
 _-ₖ_ : {n : ℕ} → coHomK n → coHomK n → coHomK n
 _-ₖ_ {n = n} x y = _+ₖ_ {n = n} x (-ₖ_ {n = n} y)
+
+-ₖ^2 : {n : ℕ} → (x : coHomK n) → (-ₖ (-ₖ x)) ≡ x
+-ₖ^2 {n = zero} x =
+  +-comm (pos zero) (-ℤ (pos zero ℤ+ (-ℤ x))) ∙∙ -Dist+  (pos zero) (-ℤ x)
+     ∙∙ (+-comm (pos zero) (-ℤ (-ℤ x)) ∙ -Involutive x)
+-ₖ^2 {n = suc zero} =
+  trElim (λ _ → isOfHLevelPath 3 (isOfHLevelTrunc 3) _ _) λ { base → refl ; (loop i) → refl}
+-ₖ^2 {n = suc (suc n)} =
+  trElim (λ _ → isOfHLevelPath (4 + n) (isOfHLevelTrunc (4 + n)) _ _)
+              λ { north → refl
+                ; south j → ∣ merid (ptSn _) j ∣ₕ
+                ; (merid a i) j → hcomp (λ k → λ {(i = i0) → ∣ north ∣
+                                                  ; (i = i1) → ∣ compPath-filler' (merid a) (sym (merid (ptSn _))) (~ k) (~ j) ∣ₕ
+                                                  ; (j = i0) → help a (~ k) i
+                                                  ; (j = i1) → ∣ merid a (i ∧ k) ∣})
+                                         ∣ (merid a ∙ sym (merid (ptSn _))) (i ∧ ~ j) ∣ₕ}
+  where
+  help : (a : _) → cong (-ₖ_ ∘ (-ₖ_ {n = suc (suc n)})) (cong ∣_∣ₕ (merid a))
+       ≡ cong ∣_∣ₕ (merid a ∙ sym (merid (ptSn _)))
+  help a = cong (cong ((-ₖ_ {n = suc (suc n)}))) (cong-∙ ∣_∣ₕ (merid (ptSn (suc n))) (sym (merid a)))
+        ∙∙ cong-∙ (-ₖ_ {n = suc (suc n)}) (cong ∣_∣ₕ (merid (ptSn (suc n)))) (cong ∣_∣ₕ (sym (merid a)))
+        ∙∙ (λ i → (λ j → ∣ rCancel (merid (ptSn (suc n))) i j ∣ₕ)
+                 ∙ λ j → ∣ symDistr (merid (ptSn (suc n))) (sym (merid a)) i j ∣ₕ)
+         ∙ sym (lUnit _)
 
 +ₖ-syntax : (n : ℕ) → coHomK n → coHomK n → coHomK n
 +ₖ-syntax n = _+ₖ_ {n = n}
