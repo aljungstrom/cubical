@@ -241,6 +241,10 @@ cong-₂ {k = k} n m p q P = code≡sym (0ₖ _) P
   code≡sym : (x : coHomK (2 + k)) → (p : 0ₖ _ ≡ x) → code x p ≡ sym p
   code≡sym x = J (λ x p → code x p ≡ sym p) refl
 
+natTranspLem : ∀ {A : ℕ → Type} (n m : ℕ) (a : A n) (B : (n : ℕ) → Type)
+  (f : (n : ℕ) → (a : A n) → B n) (p : n ≡ m) 
+  → f m (subst A p a) ≡ subst B p (f n a)
+natTranspLem {A = A} n m a B f = J (λ m p → f m (subst A p a) ≡ subst B p (f n a)) (cong (f n) (substRefl a) ∙ sym (substRefl (f n a)))
 
 
 -ₖ-gen-Kn→ΩKn+1 : {k : ℕ} → (n m : ℕ) (p : _) (q : _) (x : coHomK k) → Kn→ΩKn+1 _ (-ₖ-gen n m (inr p) (inr q) x) ≡ sym (Kn→ΩKn+1 _ x)
@@ -262,12 +266,110 @@ transpLem' : (n : ℕ) (a : _) (p : _) (q : _) → (cong (cong (-ₖ-gen (suc (s
               ≡ (sym (Kn→ΩKn+10ₖ _) ∙∙ cong (Kn→ΩKn+1 (suc (suc (n + zero))))
                     (sym (testP n) ∙∙ cong (subst coHomK (+'-comm (suc zero) (suc n))) (cong (-ₖ-gen (suc (suc n)) (suc zero) p q) (Kn→ΩKn+1 (suc n) ∣ a ∣ₕ)) ∙∙ testP n)
                   ∙∙ Kn→ΩKn+10ₖ _)
-transpLem' n a (inl x) (inr tt) = {!!}
-{-
-    (λ k i j → -ₖ-gen-inl-left (suc (suc n)) 1 x (inr tt)
-                {!!} k)
-  ∙ {!!} -}
-transpLem' n a (inr x) (inr tt) = {!!}
+transpLem' zero a (inl x) (inr tt) =
+  (λ k i j → -ₖ-gen-inl-left (suc (suc zero)) (suc zero) x (inr tt)
+                  (subst coHomK (+'-comm 1 (suc (suc zero)))
+                    (((sym (Kn→ΩKn+10ₖ _) ∙∙ (λ i j →  Kn→ΩKn+1 _ ((Kn→ΩKn+1 (suc zero) ∣ a ∣ₕ i)) j) ∙∙ (Kn→ΩKn+10ₖ _))) i j)) k)
+  ∙∙ (λ k → transp (λ i → refl {x = 0ₖ ((+'-comm 1 (suc (suc zero))) (i ∨ ~ k))}
+                          ≡ refl {x = 0ₖ ((+'-comm 1 (suc (suc zero))) (i ∨ ~ k))}) (~ k)
+                    λ i j → transp (λ i → coHomK (+'-comm 1 (suc (suc zero)) (i ∨ k))) k
+                      (((sym (Kn→ΩKn+10ₖ _)
+                     ∙∙ (λ i j →  Kn→ΩKn+1 _ ((Kn→ΩKn+1 (suc zero) ∣ a ∣ₕ i)) j)
+                     ∙∙ (Kn→ΩKn+10ₖ _))) i j))
+  ∙∙ (λ k → transport (λ i → refl {x = 0ₖ (isSetℕ _ _ (+'-comm 1 (suc (suc zero))) (cong suc (+'-comm (suc zero) (suc zero))) k i)}
+                             ≡ refl {x = 0ₖ (isSetℕ _ _ (+'-comm 1 (suc (suc zero))) (cong suc (+'-comm (suc zero) (suc zero))) k i)})
+                       (sym (Kn→ΩKn+10ₖ _)
+                     ∙∙ (cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 (suc zero) ∣ a ∣ₕ))
+                     ∙∙ Kn→ΩKn+10ₖ _))
+   ∙ sym (natTranspLem {λ n → 0ₖ n ≡ 0ₖ n} _ _ (Kn→ΩKn+1 (suc zero) ∣ a ∣ₕ)
+         (λ n → refl {x = 0ₖ (suc n)} ≡ refl {x = 0ₖ (suc n)})
+         (λ _ p → sym (Kn→ΩKn+10ₖ _) ∙∙ (cong (Kn→ΩKn+1 _) p) ∙∙ Kn→ΩKn+10ₖ _) (+'-comm (suc zero) (suc zero)))
+  ∙∙ (λ k → sym (Kn→ΩKn+10ₖ _)
+          ∙∙ cong (Kn→ΩKn+1 (suc (suc (zero + zero))))
+              (transp (λ i → 0ₖ (+'-comm (suc zero) (suc zero) (i ∨ k))
+                            ≡ 0ₖ (+'-comm (suc zero) (suc zero) (i ∨ k))) k
+                (λ i → transp (λ i → coHomK (+'-comm (suc zero) (suc zero) (i ∧ k))) (~ k)
+                         (Kn→ΩKn+1 (suc zero) ∣ a ∣ₕ i)))
+          ∙∙ Kn→ΩKn+10ₖ _)
+  ∙∙ λ k → (sym (Kn→ΩKn+10ₖ _)
+          ∙∙ cong (Kn→ΩKn+1 (suc (suc (zero + zero))))
+                  (rUnit (λ i → subst coHomK (+'-comm (suc zero) (suc zero))
+                           (-ₖ-gen-inl-left (suc (suc zero)) (suc zero) x (inr tt)
+                            (Kn→ΩKn+1 (suc zero) ∣ a ∣ₕ i) (~ k))) k)
+            ∙∙ Kn→ΩKn+10ₖ _)
+transpLem' (suc n) a (inl x) (inr tt) =
+    (λ k i j → -ₖ-gen-inl-left (suc (suc (suc n))) (suc zero) x (inr tt)
+                  (subst coHomK (+'-comm 1 (suc (suc (suc n))))
+                    (((sym (Kn→ΩKn+10ₖ _) ∙∙ (λ i j →  Kn→ΩKn+1 _ ((Kn→ΩKn+1 _ ∣ a ∣ₕ i)) j) ∙∙ (Kn→ΩKn+10ₖ _))) i j)) k)
+  ∙∙ ((λ k → transp (λ i → refl {x = 0ₖ ((+'-comm 1 (suc (suc (suc n)))) (i ∨ ~ k))}
+                          ≡ refl {x = 0ₖ ((+'-comm 1 (suc (suc (suc n)))) (i ∨ ~ k))}) (~ k)
+                    λ i j → transp (λ i → coHomK (+'-comm 1 (suc (suc (suc n))) (i ∧ ~ k))) k
+                      ((((sym (Kn→ΩKn+10ₖ _)
+                     ∙∙ (λ i j →  Kn→ΩKn+1 _ ((Kn→ΩKn+1 (suc (suc n)) ∣ a ∣ₕ i)) j)
+                     ∙∙ (Kn→ΩKn+10ₖ _))) i j))))
+  ∙∙ ((λ k → transport (λ i → refl {x = 0ₖ (isSetℕ _ _ (+'-comm 1 (suc (suc (suc n))))
+                                                         (cong suc (+'-comm (suc zero) (suc (suc n)))) k i)}
+                             ≡ refl {x = 0ₖ (isSetℕ _ _ (+'-comm 1 (suc (suc (suc n))))
+                                                         (cong suc (+'-comm (suc zero) (suc (suc n)))) k i)})
+                       (sym (Kn→ΩKn+10ₖ _)
+                     ∙∙ (cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 (suc (suc n)) ∣ a ∣ₕ))
+                     ∙∙ Kn→ΩKn+10ₖ _)))
+   ∙ sym (natTranspLem {λ n → 0ₖ n ≡ 0ₖ n} _ _ (Kn→ΩKn+1 (suc (suc n)) ∣ a ∣ₕ)
+         (λ n → refl {x = 0ₖ (suc n)} ≡ refl {x = 0ₖ (suc n)})
+         (λ _ p → sym (Kn→ΩKn+10ₖ _) ∙∙ (cong (Kn→ΩKn+1 _) p) ∙∙ Kn→ΩKn+10ₖ _) (+'-comm (suc zero) (suc (suc n))))
+  ∙∙ (λ k → sym (Kn→ΩKn+10ₖ _)
+          ∙∙ cong (Kn→ΩKn+1 (suc (suc ((suc n) + zero))))
+              (transp (λ i → 0ₖ (+'-comm (suc zero) (suc (suc n)) (i ∨ k))
+                            ≡ 0ₖ (+'-comm (suc zero) (suc (suc n)) (i ∨ k))) k
+                (λ i → transp (λ i → coHomK (+'-comm (suc zero) (suc (suc n)) (i ∧ k))) (~ k)
+                         (Kn→ΩKn+1 (suc (suc n)) ∣ a ∣ₕ i)))
+          ∙∙ Kn→ΩKn+10ₖ _)
+  ∙∙ λ k → (sym (Kn→ΩKn+10ₖ _)
+          ∙∙ cong (Kn→ΩKn+1 (suc (suc ((suc n) + zero))))
+                  (rUnit (λ i → subst coHomK (+'-comm (suc zero) (suc (suc n)))
+                           (-ₖ-gen-inl-left (suc (suc (suc n))) (suc zero) x (inr tt)
+                            (Kn→ΩKn+1 (suc (suc n)) ∣ a ∣ₕ i) (~ k))) k)
+            ∙∙ Kn→ΩKn+10ₖ _)
+transpLem' (suc n) a (inr x) (inr tt) =
+     rUnit _
+  ∙∙ (λ k → (λ i → cong-₂ (suc (suc (suc n))) (suc zero) x tt refl (i ∧ k))
+          ∙∙ (λ i → cong-₂ (suc (suc (suc n))) (suc zero) x tt
+                  (λ j → (subst coHomK (+'-comm 1 (suc (suc (suc n))))
+                    (((sym (Kn→ΩKn+10ₖ _) ∙∙ (λ i j →  Kn→ΩKn+1 _ ((Kn→ΩKn+1 _ ∣ a ∣ₕ i)) j) ∙∙ (Kn→ΩKn+10ₖ _))) i j))) k)
+          ∙∙ λ i → cong-₂ (suc (suc (suc n))) (suc zero) x tt refl (~ i ∧ k))
+  ∙∙ (λ k → transportRefl refl k
+          ∙∙ inst4 (λ i j → (subst coHomK (+'-comm 1 (suc (suc (suc n))))
+                    (((sym (Kn→ΩKn+10ₖ _) ∙∙ (λ i j →  Kn→ΩKn+1 _ ((Kn→ΩKn+1 _ ∣ a ∣ₕ i)) j) ∙∙ (Kn→ΩKn+10ₖ _))) i j))) (~ k)
+          ∙∙ transportRefl refl k)
+  ∙∙ sym (rUnit _)
+  ∙∙ (((λ k → transp (λ i → refl {x = 0ₖ ((+'-comm 1 (suc (suc (suc n)))) (i ∨ ~ k))}
+                          ≡ refl {x = 0ₖ ((+'-comm 1 (suc (suc (suc n)))) (i ∨ ~ k))}) (~ k)
+                    λ i j → transp (λ i → coHomK (+'-comm 1 (suc (suc (suc n))) (i ∧ ~ k))) k
+                      ((((sym (Kn→ΩKn+10ₖ _)
+                     ∙∙ (λ i j →  Kn→ΩKn+1 _ ((Kn→ΩKn+1 (suc (suc n)) ∣ a ∣ₕ i)) j)
+                     ∙∙ (Kn→ΩKn+10ₖ _))) (~ i) j)))))
+  ∙∙ (((λ k → transport (λ i → refl {x = 0ₖ (isSetℕ _ _ (+'-comm 1 (suc (suc (suc n))))
+                                                         (cong suc (+'-comm (suc zero) (suc (suc n)))) k i)}
+                             ≡ refl {x = 0ₖ (isSetℕ _ _ (+'-comm 1 (suc (suc (suc n))))
+                                                         (cong suc (+'-comm (suc zero) (suc (suc n)))) k i)})
+                       (sym (Kn→ΩKn+10ₖ _)
+                     ∙∙ sym (cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 (suc (suc n)) ∣ a ∣ₕ))
+                     ∙∙ Kn→ΩKn+10ₖ _))))
+  ∙∙ sym (natTranspLem {λ n → 0ₖ n ≡ 0ₖ n} _ _ (Kn→ΩKn+1 (suc (suc n)) ∣ a ∣ₕ)
+         (λ n → refl {x = 0ₖ (suc n)} ≡ refl {x = 0ₖ (suc n)})
+         (λ _ p → sym (Kn→ΩKn+10ₖ _) ∙∙ (cong (Kn→ΩKn+1 _) (sym p)) ∙∙ Kn→ΩKn+10ₖ _) (+'-comm (suc zero) (suc (suc n))))
+  ∙∙ (λ k → sym (Kn→ΩKn+10ₖ _)
+          ∙∙ cong (Kn→ΩKn+1 (suc (suc ((suc n) + zero))))
+              (transp (λ i → 0ₖ (+'-comm (suc zero) (suc (suc n)) (i ∨ k))
+                            ≡ 0ₖ (+'-comm (suc zero) (suc (suc n)) (i ∨ k))) k
+                (λ i → transp (λ i → coHomK (+'-comm (suc zero) (suc (suc n)) (i ∧ k))) (~ k)
+                         (Kn→ΩKn+1 (suc (suc n)) ∣ a ∣ₕ (~ i))))
+          ∙∙ Kn→ΩKn+10ₖ _)
+  ∙∙ λ k → (sym (Kn→ΩKn+10ₖ _)
+          ∙∙ cong (Kn→ΩKn+1 (suc (suc ((suc n) + zero))))
+                  (rUnit (cong (subst coHomK (+'-comm (suc zero) (suc (suc n))))
+                           (cong-₂ (suc (suc (suc n))) (suc zero) x tt (Kn→ΩKn+1 (suc (suc n)) ∣ a ∣ₕ) (~ k))) k)
+            ∙∙ Kn→ΩKn+10ₖ _)
 
 mainₗ : (n : ℕ) (p : _) (q : _) (a : _) (b : S¹) →
       (_⌣ₖ_  {n = suc n} {m = (suc zero)} ∣ a ∣ₕ ∣ b ∣ₕ)
@@ -477,7 +579,18 @@ testP2 : (n m : ℕ) → subst coHomK (+'-comm (suc (suc n)) (suc m)) (0ₖ _) �
 testP2 n zero = refl
 testP2 n (suc m) = refl
 
-
+cong-cong-₂ : {k : ℕ} (n m : ℕ) (p : _) (q : _) (P : Square (refl {x = 0ₖ (suc (suc k))}) refl refl refl)
+           → cong (cong (-ₖ-gen n m (inr p) (inr q))) P ≡ sym P
+cong-cong-₂ n m p q P =
+     rUnit _
+  ∙∙ (λ k → (λ i → cong-₂ n m p q refl (i ∧ k))
+          ∙∙ (λ i → cong-₂ n m p q (P i) k)
+          ∙∙ λ i → cong-₂ n m p q refl (~ i ∧ k))
+  ∙∙ (λ k → transportRefl refl k
+          ∙∙ cong sym P
+          ∙∙ transportRefl refl k)
+  ∙∙ sym (rUnit (cong sym P))
+  ∙∙ sym (inst4 P)
 
 cuteLem₁ : (n m : ℕ) (q : _) (p : is-even (suc (suc n)) ⊎ is-odd (suc (suc n))) (a : _) (b : _)
         → cong (Kn→ΩKn+1 _) (((sym (cong (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)) (testP2 m n))
@@ -487,7 +600,111 @@ cuteLem₁ : (n m : ℕ) (q : _) (p : is-even (suc (suc n)) ⊎ is-odd (suc (suc
          ≡ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q) -- (suc n) * m
                                              (subst coHomK (cong suc (+-comm (suc m) n))
                                              (_⌣ₖ_ {n = suc m} {m = (suc n)} ∣ b ∣ₕ ∣ a ∣))))
-cuteLem₁ n m p a b = {!!}
+cuteLem₁ zero m (inl x) (inl y) a b =
+    ((λ k → cong (Kn→ΩKn+1 _)
+        (rUnit
+          ((λ j → -ₖ-gen (suc zero) (suc (suc m)) (inr tt) (inl x)
+                              (transp (λ i → coHomK (+'-comm (suc (suc m)) (suc zero) (i ∨ k))) k
+                                (Kn→ΩKn+1 _ (transp (λ i → coHomK (predℕ (+'-comm (suc (suc m)) (suc zero) (i ∧ k)))) (~ k)
+                                  (_⌣ₖ_ {n = suc m} {m = (suc zero)} ∣ b ∣ₕ ∣ a ∣)) j))))
+          (~ k))))
+  ∙∙ (λ k j → Kn→ΩKn+1 _ ((-ₖ-gen-inl-right (suc zero) (suc (suc m)) (inr y) x
+                             (Kn→ΩKn+1 _ (subst coHomK (cong predℕ (+'-comm (suc (suc m)) (suc zero)))
+                               (_⌣ₖ_ {n = suc m} {m = (suc zero)} ∣ b ∣ₕ ∣ a ∣)) j) k)))
+  ∙∙ λ k → cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (-ₖ-gen-inl-right (suc zero) (suc (suc m)) (inr tt) x
+                                             (subst coHomK
+                                               (isSetℕ _ _ (cong predℕ (+'-comm (suc (suc m)) (suc zero)))
+                                                 (cong suc (+-comm (suc m) zero)) k)
+                                             (_⌣ₖ_ {n = suc m} {m = (suc zero)} ∣ b ∣ₕ ∣ a ∣)) (~ k)))
+cuteLem₁ (suc n) m (inl x) (inl y) a b =
+  ((λ k → cong (Kn→ΩKn+1 _)
+        (rUnit
+          ((λ j → -ₖ-gen (suc (suc n)) (suc (suc m)) (evenOrOdd-Prop n (evenOrOdd n) (inr y) k) (inl x)
+                              (transp (λ i → coHomK (+'-comm (suc (suc m)) (suc (suc n)) (i ∨ k))) k
+                                (Kn→ΩKn+1 _ (transp (λ i → coHomK (predℕ (+'-comm (suc (suc m)) (suc (suc n)) (i ∧ k)))) (~ k)
+                                  (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣)) j))))
+          (~ k))))
+  ∙∙ (λ k j → Kn→ΩKn+1 _ ((-ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (inr y) x
+                             (Kn→ΩKn+1 _ (subst coHomK (cong predℕ (+'-comm (suc (suc m)) (suc (suc n))))
+                               (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣)) j) k)))
+  ∙∙ λ k → cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (-ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (evenOrOdd n) x -- (suc n) * m
+                                             (subst coHomK
+                                               (isSetℕ _ _ (cong predℕ (+'-comm (suc (suc m)) (suc (suc n))))
+                                                 (cong suc (+-comm (suc m) (suc n))) k)
+                                             (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣)) (~ k)))
+cuteLem₁ (suc n) m (inl x) (inr y) a b =
+    ((λ k → cong (Kn→ΩKn+1 _)
+        (rUnit
+          ((λ j → -ₖ-gen (suc (suc n)) (suc (suc m)) (evenOrOdd-Prop n (evenOrOdd n) (inl y) k) (inl x)
+                              (transp (λ i → coHomK (+'-comm (suc (suc m)) (suc (suc n)) (i ∨ k))) k
+                                (Kn→ΩKn+1 _ (transp (λ i → coHomK (predℕ (+'-comm (suc (suc m)) (suc (suc n)) (i ∧ k)))) (~ k)
+                                  (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣)) j))))
+          (~ k))))
+  ∙∙ (λ k j → Kn→ΩKn+1 _ ((-ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (inl y) x
+                             (Kn→ΩKn+1 _ (subst coHomK (cong predℕ (+'-comm (suc (suc m)) (suc (suc n))))
+                               (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣)) j) k)))
+  ∙∙ λ k → cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (-ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (evenOrOdd n) x -- (suc n) * m
+                                             (subst coHomK
+                                               (isSetℕ _ _ (cong predℕ (+'-comm (suc (suc m)) (suc (suc n))))
+                                                 (cong suc (+-comm (suc m) (suc n))) k)
+                                             (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣)) (~ k)))
+cuteLem₁ zero m (inr x) (inl y) a b =
+  ((λ k → cong (Kn→ΩKn+1 _)
+          (rUnit (λ j → -ₖ-gen (suc zero) (suc (suc m)) (inr tt) (inr x)
+                      (transp (λ i → coHomK (+'-comm (suc (suc m)) (suc zero) (i ∨ k))) k
+                              (Kn→ΩKn+1 _ ((transp (λ i → coHomK (predℕ (+'-comm (suc (suc m)) (suc zero) (i ∧ k)))) (~ k)
+                                          (_⌣ₖ_ {n = suc m} {m = (suc zero)} ∣ b ∣ₕ ∣ a ∣))) j))) (~ k))))
+  ∙∙ (λ k → cong (Kn→ΩKn+1 _)
+                  (cong-₂ (suc zero) (suc (suc m)) y x
+                    (Kn→ΩKn+1 _ (subst coHomK (cong predℕ (+'-comm (suc (suc m)) (suc zero)))
+                      (_⌣ₖ_ {n = suc m} {m = (suc zero)} ∣ b ∣ₕ ∣ a ∣))) k))
+  ∙∙ (λ k → cong (Kn→ΩKn+1 _)
+             (-ₖ-gen-Kn→ΩKn+1 (suc zero) (suc (suc m)) y x
+               (subst coHomK (cong predℕ (+'-comm (suc (suc m)) (suc zero)))
+                      (_⌣ₖ_ {n = suc m} {m = (suc zero)} ∣ b ∣ₕ ∣ a ∣)) (~ k)))
+   ∙ λ k → cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (-ₖ-gen (suc zero) (suc (suc m)) (inr tt) (inr x)
+                                             (subst coHomK
+                                               (isSetℕ _ _ (cong predℕ (+'-comm (suc (suc m)) (suc zero)))
+                                                 (cong suc (+-comm (suc m) zero)) k)
+                                             (_⌣ₖ_ {n = suc m} {m = (suc zero)} ∣ b ∣ₕ ∣ a ∣))))
+cuteLem₁ (suc n) m (inr x) (inl y) a b =
+  ((λ k → cong (Kn→ΩKn+1 _)
+          (rUnit (λ j → -ₖ-gen (suc (suc n)) (suc (suc m)) (evenOrOdd-Prop n (evenOrOdd n) (inr y) k) (inr x)
+                      (transp (λ i → coHomK (+'-comm (suc (suc m)) (suc (suc n)) (i ∨ k))) k
+                              (Kn→ΩKn+1 _ ((transp (λ i → coHomK (predℕ (+'-comm (suc (suc m)) (suc (suc n)) (i ∧ k)))) (~ k)
+                                          (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣))) j))) (~ k))))
+  ∙∙ (λ k → cong (Kn→ΩKn+1 _)
+                  (cong-₂ (suc (suc n)) (suc (suc m)) y x
+                    (Kn→ΩKn+1 _ (subst coHomK (cong predℕ (+'-comm (suc (suc m)) (suc (suc n))))
+                      (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣))) k))
+  ∙∙ (λ k → cong (Kn→ΩKn+1 _)
+             (-ₖ-gen-Kn→ΩKn+1 (suc (suc n)) (suc (suc m)) y x
+               (subst coHomK (cong predℕ (+'-comm (suc (suc m)) (suc (suc n))))
+                      (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣)) (~ k)))
+   ∙ λ k → cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (-ₖ-gen (suc (suc n)) (suc (suc m)) (evenOrOdd-Prop n (evenOrOdd n) (inr y) (~ k)) (inr x)
+                                             (subst coHomK
+                                               (isSetℕ _ _ (cong predℕ (+'-comm (suc (suc m)) (suc (suc n))))
+                                                 (cong suc (+-comm (suc m) (suc n))) k)
+                                             (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣))))
+cuteLem₁ (suc n) m (inr x) (inr y) a b =
+     (((λ k → cong (Kn→ΩKn+1 _)
+        (rUnit ((λ j → -ₖ-gen (suc (suc n)) (suc (suc m)) (evenOrOdd-Prop n (evenOrOdd n) (inl y) k) (inr x)
+                              (transp (λ i → coHomK (+'-comm (suc (suc m)) (suc (suc n)) (i ∨ k))) k
+                                (Kn→ΩKn+1 _ (transp (λ i → coHomK (predℕ (+'-comm (suc (suc m)) (suc (suc n)) (i ∧ k)))) (~ k)
+                                  (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣)) j)))) (~ k)))))
+  ∙∙ (λ k → cong (Kn→ΩKn+1 _)
+              λ j → -ₖ-gen-inl-left (suc (suc n)) (suc (suc m)) y (inr x)
+                (Kn→ΩKn+1 _ (subst coHomK (cong predℕ (+'-comm (suc (suc m)) (suc (suc n))))
+                  (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣)) j) k)
+  ∙∙ (λ k → cong (Kn→ΩKn+1 _)
+              (Kn→ΩKn+1 _ (-ₖ-gen-inl-left (suc (suc n)) (suc (suc m)) y (inr x)
+                (subst coHomK (cong predℕ (+'-comm (suc (suc m)) (suc (suc n))))
+                  (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣)) (~ k))))
+   ∙ λ k → cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (-ₖ-gen (suc (suc n)) (suc (suc m)) (evenOrOdd-Prop n (evenOrOdd n) (inl y) (~ k)) (inr x)
+                                             (subst coHomK
+                                               (isSetℕ _ _ (cong predℕ (+'-comm (suc (suc m)) (suc (suc n))))
+                                                 (cong suc (+-comm (suc m) (suc n))) k)
+                                             (_⌣ₖ_ {n = suc m} {m = (suc (suc n))} ∣ b ∣ₕ ∣ a ∣))))
 
 cuteLem₂ : (n m : ℕ) (p : _) (q : _) (a : _) (b : _) → cong (cong (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
                       ∘ (subst coHomK (+'-comm (suc (suc m)) (suc (suc n))))))
@@ -503,7 +720,193 @@ cuteLem₂ : (n m : ℕ) (p : _) (q : _) (a : _) (b : _) → cong (cong (-ₖ-ge
                             (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
                               (subst coHomK (cong suc (sym (+-suc n m))) (_⌣ₖ_ {n = suc n} {m = suc m} ∣ a ∣ₕ ∣ b ∣ₕ))))) i) j)
             ∙∙ Kn→ΩKn+10ₖ _)
-cuteLem₂ = {!-ₖ-gen-inr ?!}
+cuteLem₂ n m p q a b =
+     cong (cong (cong (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                      ∘ (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))))))
+          (cong (sym (Kn→ΩKn+10ₖ _) ∙∙_∙∙ Kn→ΩKn+10ₖ _)
+            (cuteLem₁ m n p q b a))
+   ∙ help p q (_⌣ₖ_ {n = suc n} {m = suc m} ∣ a ∣ ∣ b ∣)
+  where
+  annoying : (x : _)
+    → cong (cong (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))))
+         (sym ((Kn→ΩKn+10ₖ _))
+      ∙∙ cong (Kn→ΩKn+1 _)
+          (Kn→ΩKn+1 (suc (m + suc n))
+              (subst coHomK (cong suc (+-comm (suc n) m)) x))
+      ∙∙ Kn→ΩKn+10ₖ _)
+       ≡ ((sym (Kn→ΩKn+10ₖ _) ∙∙
+       (λ i j →
+          Kn→ΩKn+1 (suc (suc (n + suc m)))
+          (Kn→ΩKn+1 (suc (n + suc m))
+             (subst coHomK (cong suc (sym (+-suc n m))) x)
+           i)
+          j)
+       ∙∙ Kn→ΩKn+10ₖ _))
+  annoying x =
+      ((λ k → transp (λ i → refl {x = 0ₖ ((+'-comm (suc (suc m)) (suc (suc n))) (i ∨  ~ k))}
+                            ≡ refl {x = 0ₖ ((+'-comm (suc (suc m)) (suc (suc n))) (i ∨ ~ k))}) (~ k)
+              
+                λ i j → transp (λ i → coHomK (+'-comm (suc (suc m)) (suc (suc n)) (i ∧ ~ k))) k
+                  ((sym (Kn→ΩKn+10ₖ _)
+                  ∙∙ cong (Kn→ΩKn+1 _)
+                      (Kn→ΩKn+1 _ (subst coHomK (cong suc (+-comm (suc n) m)) x))
+                  ∙∙ Kn→ΩKn+10ₖ _) i j)))
+    ∙∙ cong (transport (λ i → refl {x = 0ₖ ((+'-comm (suc (suc m)) (suc (suc n))) i)}
+                            ≡ refl {x = 0ₖ ((+'-comm (suc (suc m)) (suc (suc n))) i)}))
+            (natTranspLem {A = coHomK} _ _ x _
+              (λ _ z → sym (Kn→ΩKn+10ₖ _)  ∙∙ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ z) ∙∙ Kn→ΩKn+10ₖ _)
+               (cong suc (+-comm (suc n) m)))
+    ∙∙ sym (substComposite (λ n → refl {x = 0ₖ n} ≡ refl {x = 0ₖ n})
+           (cong (suc ∘ suc ∘ suc) (+-comm (suc n) m))
+           (+'-comm (suc (suc m)) (suc (suc n)))
+            (sym (Kn→ΩKn+10ₖ _)  ∙∙ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ x) ∙∙ Kn→ΩKn+10ₖ _))
+    ∙∙ ((λ k → subst (λ n → refl {x = 0ₖ n} ≡ refl {x = 0ₖ n})
+                     (isSetℕ _ _
+                       (cong (suc ∘ suc ∘ suc) (+-comm (suc n) m) ∙ (+'-comm (suc (suc m)) (suc (suc n))))
+                       (cong (suc ∘ suc ∘ suc) (sym (+-suc n m))) k)
+               (sym (Kn→ΩKn+10ₖ _)  ∙∙ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ x) ∙∙ Kn→ΩKn+10ₖ _)))
+    ∙∙ sym (natTranspLem {A = coHomK} _ _ x _ (λ _ x → sym (Kn→ΩKn+10ₖ _)
+                  ∙∙ cong (Kn→ΩKn+1 _)
+                      (Kn→ΩKn+1 _ x)
+                  ∙∙ Kn→ΩKn+10ₖ _) (cong suc (sym (+-suc n m))))
+
+  help : (p : _) (q : _) (x : _) →
+    (λ i i₁ →
+         -ₖ-gen (suc (suc n)) (suc (suc m)) p q
+         (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+          (((λ i₂ → Kn→ΩKn+10ₖ (suc (suc (m + suc n))) (~ i₂)) ∙∙
+            cong (Kn→ΩKn+1 (suc (suc (m + suc n))))
+            (Kn→ΩKn+1 (suc (m + suc n))
+             (trMap (-ₖ-helper (suc m) (suc (suc n)) (evenOrOdd (suc m)) p)
+              (subst coHomK (cong suc (+-comm (suc n) m)) x)))
+            ∙∙ Kn→ΩKn+10ₖ (suc (suc (m + suc n))))
+           i i₁)))
+      ≡
+      (sym (Kn→ΩKn+10ₖ (suc (suc (n + suc m)))) ∙∙
+       (λ i j →
+          Kn→ΩKn+1 (suc (suc (n + suc m)))
+          (Kn→ΩKn+1 (suc (n + suc m))
+           (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+            (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+             (subst coHomK (cong suc (sym (+-suc n m))) x)))
+           i)
+          j)
+       ∙∙ Kn→ΩKn+10ₖ (suc (suc (n + suc m))))
+  help (inl x) (inl y) z =
+    (λ k i i₁ →
+         -ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (inl x) y
+         (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+          (((λ i₂ → Kn→ΩKn+10ₖ (suc (suc (m + suc n))) (~ i₂)) ∙∙
+            cong (Kn→ΩKn+1 (suc (suc (m + suc n))))
+            (Kn→ΩKn+1 (suc (m + suc n))
+             (-ₖ-gen-inl-right (suc m) (suc (suc n)) (evenOrOdd (suc m)) x
+              (subst coHomK (cong suc (+-comm (suc n) m)) z) k))
+            ∙∙ Kn→ΩKn+10ₖ (suc (suc (m + suc n))))
+           i i₁)) k)
+    ∙∙ annoying z
+    ∙∙ λ k → (sym (Kn→ΩKn+10ₖ (suc (suc (n + suc m)))) ∙∙
+       (λ i j →
+          Kn→ΩKn+1 (suc (suc (n + suc m)))
+          (Kn→ΩKn+1 (suc (n + suc m))
+           (-ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (inl x) y
+            (-ₖ-gen-inl-right (suc m) (suc (suc n)) (evenOrOdd (suc m)) x
+             (subst coHomK (cong suc (sym (+-suc n m))) z) (~ k)) (~ k))
+           i)
+          j)
+       ∙∙ Kn→ΩKn+10ₖ (suc (suc (n + suc m))))
+  help (inl x) (inr y) z =
+       ((λ k i i₁ →
+         -ₖ-gen-inl-left (suc (suc n)) (suc (suc m)) x (inr y)
+         (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+          (((λ i₂ → Kn→ΩKn+10ₖ (suc (suc (m + suc n))) (~ i₂)) ∙∙
+            cong (Kn→ΩKn+1 (suc (suc (m + suc n))))
+            (Kn→ΩKn+1 (suc (m + suc n))
+             (-ₖ-gen-inl-right (suc m) (suc (suc n)) (evenOrOdd (suc m)) x
+              (subst coHomK (cong suc (+-comm (suc n) m)) z) k))
+            ∙∙ Kn→ΩKn+10ₖ (suc (suc (m + suc n))))
+           i i₁)) k))
+    ∙∙ annoying z
+    ∙∙ λ k → (sym (Kn→ΩKn+10ₖ (suc (suc (n + suc m)))) ∙∙
+       (λ i j →
+          Kn→ΩKn+1 (suc (suc (n + suc m)))
+          (Kn→ΩKn+1 (suc (n + suc m))
+           (-ₖ-gen-inl-left (suc (suc n)) (suc (suc m)) x (inr y)
+            (-ₖ-gen-inl-right (suc m) (suc (suc n)) (evenOrOdd (suc m)) x
+             (subst coHomK (cong suc (sym (+-suc n m))) z) (~ k)) (~ k))
+           i)
+          j)
+       ∙∙ Kn→ΩKn+10ₖ (suc (suc (n + suc m))))
+  help (inr x) (inl y) z =
+       (((λ k i i₁ →
+         -ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (inr x) y
+         (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+          (((λ i₂ → Kn→ΩKn+10ₖ (suc (suc (m + suc n))) (~ i₂)) ∙∙
+            cong (Kn→ΩKn+1 (suc (suc (m + suc n))))
+                 ((Kn→ΩKn+1 (suc (m + suc n))
+             (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd-Prop (suc m) (evenOrOdd (suc m)) (inr y) k) (inr x)
+              (subst coHomK (cong suc (+-comm (suc n) m)) z))))
+            ∙∙ Kn→ΩKn+10ₖ (suc (suc (m + suc n))))
+           i i₁)) k)))
+    ∙∙ ((λ k i i₁ →
+         (subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+          (((λ i₂ → Kn→ΩKn+10ₖ (suc (suc (m + suc n))) (~ i₂)) ∙∙
+            cong (Kn→ΩKn+1 (suc (suc (m + suc n))))
+                 (Kn→ΩKn+1-ₖ' (suc m) (suc (suc n)) y x
+                   (subst coHomK (cong suc (+-comm (suc n) m)) z) k)
+            ∙∙ Kn→ΩKn+10ₖ (suc (suc (m + suc n))))
+           i i₁))))
+    ∙∙ cong sym (annoying z)
+    ∙∙ (λ k → sym (Kn→ΩKn+10ₖ _)
+            ∙∙ cong (Kn→ΩKn+1 _)
+                 (Kn→ΩKn+1-ₖ' (suc m) (suc (suc n)) y x
+                   (subst coHomK (cong suc (sym (+-suc n m))) z) (~ k))
+            ∙∙ Kn→ΩKn+10ₖ _)
+    ∙∙ λ k → (sym (Kn→ΩKn+10ₖ (suc (suc (n + suc m)))) ∙∙
+       (λ i j →
+          Kn→ΩKn+1 (suc (suc (n + suc m)))
+          (Kn→ΩKn+1 (suc (n + suc m))
+           (-ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (inr x) y
+            (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd-Prop (suc m) (evenOrOdd (suc m)) (inr y) (~ k)) (inr x)
+             (subst coHomK (cong suc (sym (+-suc n m))) z)) (~ k)) i) j)
+       ∙∙ Kn→ΩKn+10ₖ (suc (suc (n + suc m))))
+  help (inr x) (inr y) z =
+       (λ k → cong-cong-₂ (suc (suc n)) (suc (suc m)) x y
+         (λ i j → subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+          (((λ i₂ j → ∣ rCancel (merid north) (~ i₂) j ∣) ∙∙
+            cong (Kn→ΩKn+1 (suc (suc (m + suc n))))
+            (Kn→ΩKn+1 (suc (m + suc n))
+             (trMap (-ₖ-helper (suc m) (suc (suc n)) (evenOrOdd-Prop (suc m) (evenOrOdd (suc m)) (inl y) k) (inr x))
+              (subst coHomK (cong suc (+-comm (suc n) m)) z)))
+            ∙∙ (λ i₂ j → ∣ rCancel (merid north) i₂ j ∣))
+           i j)) k)
+    ∙∙ ((λ k i j → subst coHomK (+'-comm (suc (suc m)) (suc (suc n)))
+          (((λ i₂ j → ∣ rCancel (merid north) (~ i₂) j ∣) ∙∙
+            cong (Kn→ΩKn+1 (suc (suc (m + suc n))))
+            (Kn→ΩKn+1 (suc (m + suc n))
+             (-ₖ-gen-inl-left (suc m) (suc (suc n)) y (inr x)
+              (subst coHomK (cong suc (+-comm (suc n) m)) z) k))
+            ∙∙ (λ i₂ j → ∣ rCancel (merid north) i₂ j ∣))
+           (~ i) j)))
+    ∙∙ cong sym (annoying z)
+    ∙∙ (λ k → (sym (Kn→ΩKn+10ₖ (suc (suc (n + suc m)))) ∙∙
+       (λ i j →
+          Kn→ΩKn+1 (suc (suc (n + suc m)))
+           (Kn→ΩKn+1 _
+            (-ₖ-gen-inl-left (suc m) (suc (suc n)) y (inr x)
+             (subst coHomK (cong suc (sym (+-suc n m))) z) (~ k))
+           (~ i))
+          j)
+       ∙∙ Kn→ΩKn+10ₖ (suc (suc (n + suc m)))))
+    ∙∙ λ k → (sym (Kn→ΩKn+10ₖ (suc (suc (n + suc m)))) ∙∙
+       (λ i j →
+          Kn→ΩKn+1 (suc (suc (n + suc m)))
+          (Kn→ΩKn+1-ₖ' (suc (suc n)) (suc (suc m)) x y (
+            (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd-Prop (suc m) (evenOrOdd (suc m)) (inl y) (~ k)) (inr x)
+             (subst coHomK (cong suc (sym (+-suc n m))) z))) (~ k)
+           i)
+          j)
+       ∙∙ Kn→ΩKn+10ₖ (suc (suc (n + suc m))))
+
 
 cuteLem₃ : (n m : ℕ) (p : _) (q : _) (a : _) (b : _) → flipSquare (sym (Kn→ΩKn+10ₖ _)
      ∙∙ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)
@@ -518,7 +921,86 @@ cuteLem₃ : (n m : ℕ) (p : _) (q : _) (a : _) (b : _) → flipSquare (sym (Kn
                               (-ₖ-gen (suc n) (suc m) (evenOrOdd (suc n)) (evenOrOdd (suc m))
                                 (subst coHomK (+'-comm (suc m) (suc n)) (∣ b ∣ₕ ⌣ₖ ∣ a ∣ₕ))))))) i) j)
           ∙∙ Kn→ΩKn+10ₖ _)
-cuteLem₃ = {!!}
+cuteLem₃ n m p q a b =
+    sym (inst _ (sym (Kn→ΩKn+10ₖ _)
+     ∙∙ cong (Kn→ΩKn+1 _) (Kn→ΩKn+1 _ (trMap (-ₖ-helper (suc n) (suc (suc m)) (evenOrOdd (suc n)) q)
+                                           (subst coHomK (cong suc (+-comm (suc m) n))
+                                           (_⌣ₖ_ {n = suc m} {m = (suc n)} ∣ b ∣ₕ ∣ a ∣))))
+     ∙∙ Kn→ΩKn+10ₖ _))
+   ∙ cong (sym (Kn→ΩKn+10ₖ _) ∙∙_∙∙ Kn→ΩKn+10ₖ _)
+       (cong (cong (Kn→ΩKn+1 _))
+         (mainHelp (subst coHomK (cong suc (+-comm (suc m) n)) (_⌣ₖ_ {n = suc m} {m = (suc n)} ∣ b ∣ ∣ a ∣))
+           p q
+         ∙ cong (Kn→ΩKn+1 _) (sym (help (∣ b ∣ ⌣ₖ ∣ a ∣)))))
+  where
+  mainHelp : (x : _) (p : _) (q : _) → sym (Kn→ΩKn+1 (suc (n + suc m)) (-ₖ-gen (suc n) (suc (suc m)) (evenOrOdd (suc n)) q x))
+                     ≡ Kn→ΩKn+1 (suc (n + suc m)) ((-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                        (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                         (-ₖ-gen (suc n) (suc m) (evenOrOdd (suc n)) (evenOrOdd (suc m)) x))))
+  mainHelp z (inl x) (inl y) =
+       cong (λ x → sym (Kn→ΩKn+1 (suc (n + suc m)) x)) (-ₖ-gen-inl-right (suc n) (suc (suc m)) (evenOrOdd (suc n)) y z)
+    ∙∙ sym (Kn→ΩKn+1-ₖ' (suc n) (suc m) x y z)
+    ∙∙ λ k → Kn→ΩKn+1 (suc (n + suc m))
+      (-ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (inl x) y
+       (-ₖ-gen-inl-right (suc m) (suc (suc n)) (evenOrOdd (suc m)) x
+        (-ₖ-gen (suc n) (suc m) (evenOrOdd-Prop (suc n) (inr x) (evenOrOdd (suc n)) k) (evenOrOdd-Prop (suc m) (inr y) (evenOrOdd (suc m)) k)
+         z) (~ k)) (~ k))
+  mainHelp z (inl x) (inr y) =
+       (λ k → sym (Kn→ΩKn+1 (suc (n + suc m))
+                    (-ₖ-gen (suc n) (suc (suc m)) (evenOrOdd-Prop (suc n) (evenOrOdd (suc n)) (inr x) k) (inr y) z)))
+    ∙∙ cong sym (Kn→ΩKn+1-ₖ' (suc n) (suc (suc m)) x y z)
+    ∙∙ cong (Kn→ΩKn+1 (suc (n + suc m))) (sym (-ₖ-gen-inl-right (suc n) (suc m) (inr x) y z))
+     ∙ λ k → Kn→ΩKn+1 (suc (n + suc m))
+      (-ₖ-gen-inl-left (suc (suc n)) (suc (suc m)) x (inr y)
+       (-ₖ-gen-inl-right (suc m) (suc (suc n)) (evenOrOdd (suc m)) x
+        (-ₖ-gen (suc n) (suc m) (evenOrOdd-Prop (suc n) (inr x) (evenOrOdd (suc n)) k) (evenOrOdd-Prop (suc m) (inl y) (evenOrOdd (suc m)) k)
+         z) (~ k)) (~ k))
+  mainHelp z (inr x) (inl y) =
+       cong (λ x → sym (Kn→ΩKn+1 (suc (n + suc m)) x)) (-ₖ-gen-inl-right (suc n) (suc (suc m)) (evenOrOdd (suc n)) y z)
+    ∙∙ (λ k → Kn→ΩKn+1-ₖ' (suc m) (suc (suc n)) y x
+                (-ₖ-gen-inl-left (suc n) (suc m) x (inr y) z (~ k)) (~ k))
+    ∙∙ λ k → Kn→ΩKn+1 (suc (n + suc m))
+               (-ₖ-gen-inl-right (suc (suc n)) (suc (suc m)) (inr x) y
+                (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd-Prop (suc m) (inr y) (evenOrOdd (suc m)) k) (inr x)
+                 (-ₖ-gen (suc n) (suc m) (evenOrOdd-Prop (suc n) (inl x) (evenOrOdd (suc n)) k)
+                   (evenOrOdd-Prop (suc m) (inr y) (evenOrOdd (suc m)) k)
+                  z)) (~ k))
+  mainHelp z (inr x) (inr y) =
+       ((λ k → sym (Kn→ΩKn+1 (suc (n + suc m))
+                    (-ₖ-gen (suc n) (suc (suc m)) (evenOrOdd-Prop (suc n) (evenOrOdd (suc n)) (inl x) k) (inr y) z))))
+    ∙∙ cong sym (cong (Kn→ΩKn+1 (suc (n + suc m))) (-ₖ-gen-inl-left (suc n) (suc (suc m)) x (inr y) z))
+    ∙∙ (λ k → sym (Kn→ΩKn+1 (suc (n + suc m))
+                   (-ₖ-gen-inl-left (suc m) (suc (suc n)) y (inr x)
+                     (-ₖ-gen-inl-right (suc n) (suc m) (inl x) y z (~ k)) (~ k))))
+     ∙ λ k → Kn→ΩKn+1-ₖ' (suc (suc n)) (suc (suc m)) x y
+                (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd-Prop (suc m) (inl y) (evenOrOdd (suc m)) k) (inr x)
+                 (-ₖ-gen (suc n) (suc m) (evenOrOdd-Prop (suc n) (inl x) (evenOrOdd (suc n)) k)
+                                         (evenOrOdd-Prop (suc m) (inl y) (evenOrOdd (suc m)) k)
+                  z)) (~ k)
+
+  help : (x : _) →
+     (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                          (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                            (subst coHomK (cong suc (sym (+-suc n m)))
+                              (-ₖ-gen (suc n) (suc m) (evenOrOdd (suc n)) (evenOrOdd (suc m))
+                                (subst coHomK (+'-comm (suc m) (suc n)) x)))))
+   ≡ -ₖ-gen (suc (suc n)) (suc (suc m)) p q
+      (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+        (-ₖ-gen (suc n) (suc m) (evenOrOdd (suc n)) (evenOrOdd (suc m))
+          (subst coHomK (cong suc (+-comm (suc m) n)) x)))
+  help x =
+       (λ k → -ₖ-gen (suc (suc n)) (suc (suc m)) p q
+                (-ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+                  (transp (λ i → coHomK ((cong suc (sym (+-suc n m))) (i ∨ k))) k
+                   (-ₖ-gen (suc n) (suc m) (evenOrOdd (suc n)) (evenOrOdd (suc m))
+                     (transp (λ i → coHomK ((cong suc (sym (+-suc n m))) (i ∧ k))) (~ k)
+                       (subst coHomK (+'-comm (suc m) (suc n)) x))))))
+     ∙ cong (-ₖ-gen (suc (suc n)) (suc (suc m)) p q
+               ∘ -ₖ-gen (suc m) (suc (suc n)) (evenOrOdd (suc m)) p
+               ∘ -ₖ-gen (suc n) (suc m) (evenOrOdd (suc n)) (evenOrOdd (suc m)))
+            (sym (substComposite coHomK (+'-comm (suc m) (suc n)) ((cong suc (sym (+-suc n m)))) x)
+            ∙ λ k → subst coHomK (isSetℕ _ _ (+'-comm (suc m) (suc n) ∙ cong suc (sym (+-suc n m)))
+                      ((cong suc (+-comm (suc m) n))) k) x)
 
 main : (k n m : ℕ) (term : n + m ≡ k) (p : _) (q : _) (a : _) (b : _) →
       (_⌣ₖ_  {n = suc n} {m = (suc m)} ∣ a ∣ₕ ∣ b ∣ₕ)
@@ -546,8 +1028,9 @@ main k zero (suc m) term (inr tt) q a b = help q ∙ sym (cong (-ₖ-gen 1 (suc 
              (-ₖ-gen-inl-left (suc (suc m)) 1 x (inr tt) 
               (subst coHomK (+'-comm 1 (suc (suc m))) (∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ)) (~ i)))) (~ i)
   help (inr x) =
-       ({!!}
-     ∙ {!-ₖ-ₖ!})
+       (sym (transportRefl _)
+    ∙∙ (λ k → subst coHomK (isSetℕ _ _ refl (+'-comm 1 (suc (suc m)) ∙ +'-comm (suc (suc m)) 1) k) (∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ))
+    ∙∙ sym (-ₖ^2 (subst coHomK (+'-comm 1 (suc (suc m)) ∙ +'-comm (suc (suc m)) 1) (∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ))))
     ∙∙ (λ i → -ₖ-gen-inr 1 (suc (suc m)) tt x
                 (-ₖ-gen-inr (suc (suc m)) 1 x tt
                   (substComposite coHomK (+'-comm 1 (suc (suc m))) (+'-comm (suc (suc m)) 1) (∣ a ∣ₕ ⌣ₖ ∣ b ∣ₕ) i)
