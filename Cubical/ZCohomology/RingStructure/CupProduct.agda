@@ -88,7 +88,6 @@ suc a +' suc b = 2 + (a + b)
 +'-zero zero = refl
 +'-zero (suc n) = refl
 
-
 +'≡+ : (n m : ℕ) → n +' m ≡ n + m
 +'≡+ zero m = refl
 +'≡+ (suc n) zero = cong suc (sym (+-comm n zero))
