@@ -31,7 +31,7 @@ open import Cubical.Data.Empty renaming (rec to ⊥-rec)
 
 open import Cubical.Data.Bool
 open import Cubical.Data.Sigma
-open import Cubical.Data.Int renaming (_+_ to _+ℤ_; +Comm to +ℤ-comm ; +Assoc to +ℤ-assoc)
+open import Cubical.Data.Int renaming (_+_ to _+ℤ_; +Comm to +ℤ-comm ; +Assoc to +ℤ-assoc ; _·_ to _·ℤ_)
 open import Cubical.Data.Nat
 open import Cubical.HITs.Truncation renaming (elim to trElim ; map to trMap ; rec to trRec)
 
@@ -305,6 +305,9 @@ private
   to₃ : coHom 3 (S₊ 3) → ℤ
   to₃ = Iso.fun (fst (Hⁿ-Sⁿ≅ℤ 2))
 
+  to₄ : coHom 4 (S₊ 4) → ℤ
+  to₄ = Iso.fun (fst (Hⁿ-Sⁿ≅ℤ 3))
+
 
   from₁ : ℤ → coHom 1 S¹
   from₁ = Iso.inv (fst (Hⁿ-Sⁿ≅ℤ 0))
@@ -314,6 +317,9 @@ private
 
   from₃ : ℤ → coHom 3 (S₊ 3)
   from₃ = Iso.inv (fst (Hⁿ-Sⁿ≅ℤ 2))
+
+  from₄ : ℤ → coHom 4 (S₊ 4)
+  from₄ = Iso.inv (fst (Hⁿ-Sⁿ≅ℤ 3))
 
 {-
 Strangely, the following won't compute

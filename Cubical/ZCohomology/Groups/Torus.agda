@@ -278,7 +278,6 @@ test7 : to₂ (from₂ 1 +ₕ from₂ 0) ≡ 1
 test7 = refl
 -}
 
-
 -- Proof (by computation) that T² ≠ S² ∨ S¹ ∨ S¹
 private
   hasTrivial⌣₁ : ∀ {ℓ} (A : Type ℓ) → Type ℓ
