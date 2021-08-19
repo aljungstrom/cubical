@@ -296,3 +296,46 @@ sorghum i j k =
 
 goo : Ω³ S²∙ .fst → ℤ
 goo x = g10 (g9 (g8 (f7 (f6 (f5 x)))))
+
+gooey : ℤ
+gooey = g10 (g9 (g8 (sym (multTwoTildeAux ∣ base ∣₄))))
+
+stdfiller : ∀ {ℓ} {A : Pointed ℓ} → (p : typ ((Ω^ 2) A)) → PathP (λ i → p i ≡ p i) p p
+stdfiller p i j =
+  hcomp (λ k → λ {(i = i0) → p (j ∨ ~ k)
+                 ; (i = i1) → p j
+                 ; (j = i0) → p (i ∨ ~ k)
+                 ; (j = i1) → p i})
+        (p (i ∧ j))
+
+EH' : ∀ {ℓ} {A : Pointed ℓ} → (p : typ ((Ω^ 2) A)) → (p ∙ sym p) ≡ (sym p ∙ p)
+EH' {A = A} p i j =
+    hcomp (λ k → λ {(i = i0) → compPath-filler p (sym p) k j
+                   ; (i = i1) → compPath-filler' (sym p) p k j
+                   ; (j = i0) → p (k ∨ ~ i)
+                   ; (j = i1) → p (~ k ∧ ~ i)})
+          (stdfiller p (~ i) j)
+
+EH'' : ∀ {ℓ} {A : Pointed ℓ} → (p : typ ((Ω^ 2) A)) → typ (Ω (Ω (Ω A)))
+EH'' {A = A} p i j =
+  hcomp (λ k → λ { (i = i0) → p (j ∨ k)
+                  ; (i = i1) → p (~ j ∨ k)
+                  ; (j = i0) → p (k ∨ i)
+                  ; (j = i1) → p (k ∨ ~ i)})
+        (p ((i ∨ j) ∧ ~ (i ∧ j)))
+
+gooT : ℤ
+gooT = goo λ i j k → surf (~ k ∨ i ∨ j) (~ k ∧ i ∧ j)
+
+s = EH
+
+EH-alt : ∀ {ℓ} {A : Pointed ℓ}
+      → (p q : typ ((Ω^ 2) A))
+      → PathP (λ i → q i ≡ q i) p p
+EH-alt p q i = {!!}
+{-
+i = i0 ⊢ p j
+i = i1 ⊢ p j
+j = i0 ⊢ q i
+j = i1 ⊢ q i
+-}
