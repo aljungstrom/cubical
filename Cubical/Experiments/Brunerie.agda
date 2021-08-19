@@ -298,7 +298,7 @@ goo : Ω³ S²∙ .fst → ℤ
 goo x = g10 (g9 (g8 (f7 (f6 (f5 x)))))
 
 gooey : ℤ
-gooey = g10 (g9 (g8 (sym (multTwoTildeAux ∣ base ∣₄))))
+gooey = g10 (g9 (g8 (sym (λ i j → ∣ surf i j ∣₄))))
 
 stdfiller : ∀ {ℓ} {A : Pointed ℓ} → (p : typ ((Ω^ 2) A)) → PathP (λ i → p i ≡ p i) p p
 stdfiller p i j =

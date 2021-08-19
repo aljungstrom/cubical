@@ -1,5 +1,5 @@
 {-# OPTIONS --safe #-}
--sf
+
 module Cubical.Homotopy.Loopspace where
 
 open import Cubical.Core.Everything
