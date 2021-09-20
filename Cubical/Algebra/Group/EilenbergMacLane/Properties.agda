@@ -6,6 +6,7 @@ open import Cubical.Algebra.Group.EilenbergMacLane.Base
 open import Cubical.Algebra.Group.EilenbergMacLane.WedgeConnectivity
 open import Cubical.Algebra.Group.EilenbergMacLane.GroupStructure
 open import Cubical.Algebra.Group.Base
+open import Cubical.Algebra.Group.MorphismProperties
 open import Cubical.Algebra.Group.Properties
 open import Cubical.Algebra.AbGroup.Base
 
@@ -459,3 +460,79 @@ module _ where
         (λ i → EM∙ G (suc n)
              →∙ →∙EMPath {G = L} (EM∙ H (suc m)) (suc (suc (l + n + m))) (~ i))
         (isOfHLevel↑∙∙ n m l)
+
+open import Cubical.HITs.Wedge
+open import Cubical.HITs.SetTruncation renaming (rec2 to sRec2 ; map to sMap ; elim to sElim ; elim2 to sElim2 ; elim3 to sElim3)
+
+coHom : ∀ {ℓ ℓ'} (A : Type ℓ) (n : ℕ) (G : AbGroup ℓ') → Type _
+coHom A n G = ∥ (A → EM G n) ∥₂
+
+module _ {ℓ ℓ' : Level} {A : Type ℓ} {n : ℕ} {G : AbGroup ℓ'} where
+  coHomImplicit : Type _
+  coHomImplicit = coHom A n G
+  
+  hlevLem : {x y : coHomImplicit} → isSet (x ≡ y)
+  hlevLem = isOfHLevelPath 2 squash₂ _ _
+  
+
+  0ₕ : coHomImplicit
+  0ₕ = ∣ (λ _ → 0ₖ _) ∣₂
+
+  _+ₕ_ : coHomImplicit → coHomImplicit → coHomImplicit
+  _+ₕ_ = sRec2 squash₂ λ f g → ∣ (λ x → f x +ₖ g x) ∣₂
+
+  -ₕ_ : coHomImplicit → coHomImplicit
+  -ₕ_ = sMap λ f x → -ₖ (f x)
+
+  rCancelₕ : (x : coHomImplicit) → x +ₕ (-ₕ x) ≡ 0ₕ
+  rCancelₕ = sElim (λ _ → hlevLem) λ f i → ∣ (λ x → rCancelₖ n (f x) i) ∣₂
+
+  lCancelₕ : (x : coHomImplicit) → (-ₕ x) +ₕ x ≡ 0ₕ
+  lCancelₕ = sElim (λ _ → hlevLem) λ f i → ∣ (λ x → lCancelₖ n (f x) i) ∣₂
+
+  rUnitₕ : (x : coHomImplicit) → x +ₕ 0ₕ ≡ x
+  rUnitₕ = sElim (λ _ → hlevLem) λ f i → ∣ (λ x → rUnitₖ n (f x) i) ∣₂
+
+  lUnitₕ : (x : coHomImplicit) → 0ₕ +ₕ x ≡ x
+  lUnitₕ = sElim (λ _ → hlevLem) λ f i → ∣ (λ x → lUnitₖ n (f x) i) ∣₂
+
+  assocₕ : (x y z : coHomImplicit) → x +ₕ (y +ₕ z) ≡ ((x +ₕ y) +ₕ z)
+  assocₕ = sElim3 (λ _ _ _ → hlevLem) λ f g h i → ∣ (λ x → assocₖ n (f x) (g x) (h x) i) ∣₂
+
+  commₕ : (x y : coHomImplicit) → x +ₕ y ≡ y +ₕ x
+  commₕ = sElim2 (λ _ _ → hlevLem) λ f g i → ∣ (λ x → commₖ n (f x) (g x) i) ∣₂
+
+-- coHomGr : ∀ {ℓ ℓ'} (A : Type ℓ) (n : ℕ) (G : AbGroup ℓ') → AbGroup _
+-- fst (coHomGr A n G) = coHom A n G
+-- snd (coHomGr A n G) = {!!}
+--   where
+--   h : AbGroupStr (coHom A n G)
+--   AbGroupStr.0g h = 0ₕ
+--   AbGroupStr._+_ h = _+ₕ_
+--   AbGroupStr.- h = -ₕ_
+--   AbGroupStr.isAbGroup h = makeIsAbGroup squash₂ assocₕ rUnitₕ rCancelₕ commₕ
+
+-- -- suspHom : ∀ {ℓ ℓ'} (A : Type ℓ) (n : ℕ) (G : AbGroup ℓ')
+-- --         → AbGroupHom (coHomGr A n G)
+-- --                       (coHomGr (Susp A) (suc n) G)
+-- -- fst (suspHom A zero G) = sMap h
+-- --   where
+-- --   h : (A → EM G zero) → Susp A → EM G 1
+-- --   h f north = embase
+-- --   h f south = embase
+-- --   h f (merid a i) = emloop (f a) i
+-- -- fst (suspHom A (suc n) G) = sMap h
+-- --   where
+-- --   h : (A → EM G (suc n)) → Susp A → EM G (suc (suc n))
+-- --   h f north = 0ₖ _
+-- --   h f south = 0ₖ _
+-- --   h f (merid a i) = EM→ΩEM+1 _ (f a) i
+-- -- snd (suspHom A zero G) =
+-- --   makeIsGroupHom (sElim2 (λ _ _ → hlevLem) {!!})
+-- --     where
+-- --     h : (f g 
+-- --     h = ?
+-- -- snd (suspHom A (suc n) G) = {!!}
+
+-- -- suspAx : {!!}
+-- -- suspAx = {!!}

@@ -308,3 +308,35 @@ isConnectedPathSⁿ n x y =
    (pathIdTruncSⁿretract n x y)
      ((isContr→isProp (sphereConnected (suc n)) ∣ x ∣ ∣ y ∣)
       , isProp→isSet (isContr→isProp (sphereConnected (suc n))) _ _ _)
+
+
+
+-- 3→4 : ∀ {ℓ} {A : Pointed ℓ} (p : typ ((Ω^ 3) A)) → typ ((Ω^ 4) (Susp (fst A) , north))
+-- 3→4 {A = A} p i j k l =
+--   hcomp (λ r → λ { (i = i0) → north
+--                   ; (i = i1) → north
+--                   ; (j = i0) → rCancel (merid (pt A)) r i
+--                   ; (j = i1) → rCancel (merid (pt A)) r i
+--                   ; (k = i0) → rCancel (merid (pt A)) r i
+--                   ; (k = i1) → rCancel (merid (pt A)) r i
+--                   ; (l = i0) → rCancel (merid (pt A)) r i
+--                   ; (l = i1) → rCancel (merid (pt A)) r i})
+--         ((merid (p j k l) ∙ sym (merid (pt A))) i)
+
+-- 3→4-gen : ∀ {ℓ} {A : Pointed ℓ} (x y : typ ((Ω^ 2) (S₊∙ 2)))
+--         → (p : x ≡ y) → PathP (λ i → Cube (λ k l → (merid (x k l) ∙ sym (merid north)) i)
+--                                             (λ k l → (merid (y k l) ∙ sym (merid north)) i)
+--                                             (λ j l → (merid north ∙ sym (merid north)) i)
+--                                             (λ j l → (merid north ∙ sym (merid north)) i)
+--                                             (λ j k → (merid north ∙ sym (merid north)) i)
+--                                             (λ j k → (merid north ∙ sym (merid north)) i))
+--                                 (λ _ _ _ → north)
+--                                 (λ _ _ _ → north)
+-- 3→4-gen {A = A} x y p i j k l =
+--   (merid (p j k l) ∙ sym (merid north)) i
+
+-- S²→S³ : typ ((Ω^ 3) (S₊∙ 2)) → typ ((Ω^ 4) (S₊∙ 3))
+-- S²→S³ = 3→4
+
+-- z : (p : typ ((Ω^ 3) (S₊∙ 2))) → {!!}
+-- z p = {!!}
