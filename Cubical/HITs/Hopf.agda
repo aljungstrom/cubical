@@ -366,8 +366,6 @@ record isHSpace {ℓ : Level} (carrier : Type ℓ) (0h : carrier) (μ : carrier 
   field
     μₗ : (x : carrier) → μ 0h x ≡ x
     μᵣ : (x : carrier) → μ x 0h ≡ x
-    μₗₗ : (x : carrier) → isEquiv (μ x)
-    μᵣᵣ : (x : carrier) → isEquiv λ y → μ y x
 
 isImaginaroid : Type ℓ → Type ℓ
 isImaginaroid A =
@@ -431,6 +429,13 @@ module joinHSpace {ℓ : Level} (A : Type ℓ) (e' : isAssocImaginaroid A) (invo
   diamondType {A = A} {B = B} a a' b b' =
     Square {A = join A B} (push a b) (sym (push a' b'))
                           (push a b') (sym (push a' b))
+
+  diamondSol' : {A : Type ℓ}
+                → (a a' : A) (b b' : A) → (a' ≡ b)
+                → diamondType a a' b b'
+  diamondSol' a a' b b' =
+    J (λ b _ → diamondType a a' b b')
+      {!diamondType a a' a' b'!}
 
   diamondSol : {A B : Type ℓ}
                 → (a a' : A) (b b' : B) → (a ≡ a') ⊎ (b ≡ b')
@@ -496,6 +501,19 @@ module joinHSpace {ℓ : Level} (A : Type ℓ) (e' : isAssocImaginaroid A) (invo
         ∙∙ *distr (y *) (x *)
         ∙∙ cong₂ _·A_ (*² x) (*² y))
 
+
+  unit*l : (x : Susp A) → (x *) ·A x ≡ north 
+  unit*l x =
+       cong (_·A x) (sym (-² (x *)) ∙ cong -A (sym (-* x)))
+    ∙∙ lem123 (-A x *) x
+    ∙∙ cong -A (cong ((-A x *) ·A_) (sym (*² x))
+             ∙∙ sym (*distr (x *) (-A x))
+             ∙∙ cong (_*) (-distr (x *) x)
+             ∙ -* ((x *) ·A x)) -- cong (_*) (λ i → (x *) ·A x)
+    ∙∙ -² (((x *) ·A x) *)
+    ∙∙ *distr (x *) x
+     ∙ *unit (x *)
+
   f-1 : (a b c d : Susp A) → f a b c d south ≡ (a ·A c)
   f-1 a b c d =
        cong (-A a ·A_) (-distr c north ∙ cong -A (rUnitA c))
@@ -518,11 +536,14 @@ module joinHSpace {ℓ : Level} (A : Type ℓ) (e' : isAssocImaginaroid A) (invo
 
   g-big : (a b c d : _) → g a b c d ((c *) ·A ((a *) ·A (d ·A (b *)))) ≡ ((a *) ·A d)
   g-big a b c d =
-       {!diamondSol!}
-    ∙∙ {!!}
-    ∙∙ {!!}
-    ∙∙ {!!}
-    ∙∙ {!!}
+       assocA c ((c *) ·A ((a *) ·A (d ·A (b *)))) b
+    ∙∙ cong (_·A b) (assocA c (c *) ((a *) ·A (d ·A (b *)))
+                    ∙∙ cong (_·A ((a *) ·A (d ·A (b *)))) (*unit c)
+                    ∙∙ lUnitA ((a *) ·A (d ·A (b *))))
+    ∙∙ sym (assocA (a *) (d ·A (b *)) b)
+     ∙ cong ((a *) ·A_) (sym (assocA d (b *) b)
+          ∙∙ cong (d ·A_) (unit*l b)
+          ∙∙ rUnitA d)
 
   n-fill : (x y : Susp A) → I → I → I → join (Susp A) (Susp A)
   n-fill x y i j k =
@@ -585,6 +606,31 @@ module joinHSpace {ℓ : Level} (A : Type ℓ) (e' : isAssocImaginaroid A) (invo
     lel : (y : Susp A) (p : north ≡ y) → lelTyp y p
     lel y = J (λ y p → lelTyp y p) lel-refl
 
+  massive : (a b c d : Susp A) → Susp A
+  massive a b c d = (c *) ·A ((a *) ·A (d ·A (b *)))
+
+  massivelem : (a b : Susp A) → massive a b a b ≡ (a ·A a) * 
+  massivelem a b =
+       cong ((a *) ·A_) (cong ((a *) ·A_) (*unit b) ∙ rUnitA (a *))
+     ∙ sym (*distr a a)
+
+  haha : (a b : Susp A) → mysquare (f a b a b) (g a b a b)
+              south (massive a b a b) (massive a b a b) north (coolDiamond (massive a b a b))
+              ≡ {!!}
+  haha = {!!}
+
+  ·joinSquare : (a b c d : Susp A) → I → I → I → SA*SA
+  ·joinSquare a b c d i j k =
+    hfill (λ k → λ { (i = i0) → push (f-1 a b c d k) (g-big a b c d k) j
+                      ; (i = i1) → push (f-big a b c d k) (g-1 a b c d k) (~ j)
+                      ; (j = i0) → push (f-1 a b c d k) (g-1 a b c d k) i
+                      ; (j = i1) → push (f-big a b c d k) (g-big a b c d k) (~ i)})
+            (inS (mysquare (f a b c d) (g a b c d)
+              south massive' massive' north (coolDiamond massive') i j))
+            k
+    where
+    massive' = massive a b c d
+
   _·join_ : SA*SA → SA*SA → SA*SA
   inl a ·join inl c = inl (a ·A c)
   inl a ·join inr d = inr ((a *) ·A d)
@@ -594,15 +640,7 @@ module joinHSpace {ℓ : Level} (A : Type ℓ) (e' : isAssocImaginaroid A) (invo
   inr b ·join push c d i = push (-A (d ·A (b *))) (c ·A b) (~ i)
   push a b i ·join inl x = push (a ·A x) (x ·A b) i
   push a b i ·join inr x = push (-A (x ·A (b *))) ((a *) ·A x) (~ i)
-  push a b i ·join push c d j =
-      hcomp (λ k → λ { (i = i0) → push (f-1 a b c d k) (g-big a b c d k) j
-                      ; (i = i1) → push (f-big a b c d k) (g-1 a b c d k) (~ j)
-                      ; (j = i0) → push (f-1 a b c d k) (g-1 a b c d k) i
-                      ; (j = i1) → push (f-big a b c d k) (g-big a b c d k) (~ i)})
-            (mysquare (f a b c d) (g a b c d)
-              south massive massive north (coolDiamond massive) i j)
-    where
-    massive = (c *) ·A ((a *) ·A (d ·A (b *)))
+  push a b i ·join push c d j = ·joinSquare a b c d i j i1
 
   1J : SA*SA
   1J = inl north
@@ -617,10 +655,102 @@ module joinHSpace {ℓ : Level} (A : Type ℓ) (e' : isAssocImaginaroid A) (invo
   ·j-rUnit (inr x) = cong inr (lUnitA x)
   ·j-rUnit (push a b i) j = push (rUnitA a j) (lUnitA b j) i
 
-  ·j-rCancel : {!merid !}
-  ·j-rCancel = {!!}
+  malem : ∀ {ℓ} {A : Type ℓ} {x y z w : A} (s : y ≡ z) (q : x ≡ w) (r : w ≡ z) (p : x ≡ y)
+        → (e : PathP (λ i → q i ≡ s i) p r) → (λ i → e i i) ≡ q ∙∙ refl ∙∙ r
+  malem {x = x} {y = y} {z = z} {w = w} s q r p e k i =
+    hcomp (λ l → λ {(i = i0) → q (~ l)
+                   ; (i = i1) → r l
+                   ; (k = i0) → e (i ∨ ~ l) (i ∧ l)})
+          w
+
+  malem8 : {!∀ {ℓ} {A : Type ℓ} {x y z w : A} (s : y ≡ z) (q : x ≡ w) (r : w ≡ z) (p : x ≡ y)
+        → (e : PathP (λ i → q i ≡ s i) p r) → (λ i → e i i) ≡ (p ∙∙ refl ∙∙ s)!}
+  malem8 = {!!}
+
+  malem2 : ∀ {ℓ} {A : Type ℓ} {x y z w : A} (s : y ≡ z) (q : x ≡ w) (r : w ≡ z) (p : x ≡ y)
+        → (e : PathP (λ i → q i ≡ s i) p r) → (λ i → e i i) ≡ (p ∙∙ refl ∙∙ s)
+  malem2 s q r p e k i =
+    hcomp (λ l → λ {(i = i0) → p (~ l)
+                   ; (i = i1) → s l
+                   ; (k = i0) → e (i ∧ l) (i ∨ ~ l)})
+          (p i1)
+
+  idLem : (a₀ : A) (x : SA*SA) → x ·join x ≡ inl north
+  idLem a₀ (inl a) = push (a ·A a) north ∙ sym (push north north) 
+  idLem a₀ (inr a) = push (-A (a ·A (a *))) north ∙ sym (push north north)
+  idLem a₀ (push a b i) j =
+    hcomp (λ k → λ {(i = i0) → (push (a ·A a) north ∙ sym (push north north)) j
+                   ; (i = i1) → (push (-A (b ·A (b *))) north ∙ sym (push north north)) j
+                   ; (j = i0) → wacka (~ k) i
+                   ; (j = i1) → inl north})
+          (lam j i)
+    where
+    gz : PathP (λ j → (push (a ·A a) (a ·A b) j) ≡ push (-A (b ·A (b *))) ((a *) ·A b) (~ j))
+               (λ i → push (a ·A a) ((a *) ·A b) i)
+               λ i → push (-A (b ·A (b *))) (a ·A b) (~ i)
+    gz i j = push a b i ·join push a b j
+
+    pushDistr : {!!}
+    pushDistr = {!!}
+
+
+    lemm : north ≡ -A (b ·A (b *))
+    lemm = {!!}
+
+
+    wacka : cong₂ _·join_ (push a b) (push a b) ≡ (push (a ·A a) (a ·A b) ∙∙ refl ∙∙ sym (push (-A (b ·A (b *))) (a ·A b)))
+    wacka = malem _ _ _ _ gz
+
+    wacka2 : (push (a ·A a) (a ·A b) ∙∙ refl ∙∙ sym (push (-A (b ·A (b *))) (a ·A b)))
+            ≡ push (a ·A a) ((a *) ·A b) ∙∙ refl ∙∙ sym (push (-A (b ·A (b *))) ((a *) ·A b))
+    wacka2 = sym wacka ∙ malem2 _ _ _ _ gz
+
+    FF : Susp A → Susp A
+    FF a = {!!}
+
+    GG : Susp A → Susp A
+    GG a = {!diamondType a (a *) b a!}
+
+    di2 : diamondType (a ·A a) north north ((a *) ·A b)
+    di2 = {!mysquare FF GG a (a *) a b!}
+
+    di : diamondType (a ·A a) north north (a ·A b)
+    di = {!mysquare FF GG a (a *) (a *) b !}
+
+    M' : Square (push (a ·A a) (a ·A b)) (sym (push north north)) ((push (a ·A a) north)) (sym (push north (a ·A b)))
+    M' i j = di j i
+
+    M : push (a ·A a) (a ·A b)
+      ∙ sym (push north (a ·A b))
+      ∙ push north north
+      ∙ sym (push (a ·A a) north)
+      ≡ refl 
+    M = {!refl {x = (a · a)!}
+
+    lam : PathP (λ j → (push (a ·A a) north ∙ sym (push north north)) j ≡ (push (-A (b ·A (b *))) north ∙ sym (push north north)) j)
+                        (push (a ·A a) (a ·A b) ∙∙ refl ∙∙ sym (push (-A (b ·A (b *))) (a ·A b)))
+                        refl
+    lam = compPathR→PathP∙∙
+      (transport (λ w → (push (a ·A a) (a ·A b) ∙∙ refl ∙∙
+       sym (push (lemm w) (a ·A b)))
+      ≡
+      ((λ i₁ → (push (a ·A a) north ∙ sym (push north north)) i₁) ∙∙ refl
+       ∙∙
+       sym ((push (lemm w) north ∙ sym (push north north)))))
+       {!!})
+
+  HSpace : Σ[ n ∈ SA*SA ] Σ[ _·*_ ∈ (SA*SA → SA*SA → SA*SA) ]
+           (isHSpace SA*SA n _·*_)
+  fst HSpace = 1J
+  fst (snd HSpace) = _·join_
+  isHSpace.μₗ (snd (snd HSpace)) = ·j-lUnit
+  isHSpace.μᵣ (snd (snd HSpace)) = ·j-rUnit
+
 open import Cubical.Data.Bool
 open import Cubical.Algebra.Group.Instances.Bool renaming (Bool to BoolGroup)
+
+
+
 
 joinIso : ∀ {ℓ ℓ' ℓ'' ℓ'''} → {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''} {D : Type ℓ'''}
         → Iso A B → Iso C D → Iso (join A C) (join B D)
@@ -683,12 +813,6 @@ grejt south = base
 grejt (merid false i) = loop i
 grejt (merid true i) = loop (~ i)
 
-kaha : (x : Susp Bool) → x ≡ S¹→SuspBool (grejt x)
-kaha north = refl
-kaha south = sym (merid true)
-kaha (merid false i) = {!!}
-kaha (merid true i) = {!!}
-
 SuspBoolWedge : ∀ {ℓ} {A : Susp Bool → Susp Bool → Type ℓ}
              → ((x y : _) → isSet (A x y))
              → (f : (x : _) → A x north)
@@ -712,25 +836,6 @@ SuspBoolWedge {A = A} hlev g f p (merid a i) y = help a y i
     → PathP (λ i → A (merid a i) y) (f y) (subst (λ x → A x y) (merid true) (f y))
   help a = suspToPropElim true (λ _ → isOfHLevelPathP' 1 (hlev _ _) _ _)
            (help-n a)
-
--Bool1 : (x y : _) → x +SB (A- Bool (λ x → x) _+SB_ y) ≡ A- Bool (λ x → x) (_+SB_) (x +SB y)
--Bool1 = SuspBoolWedge (λ _ _ → isGroupoidSuspBool _ _)
-         (λ { north → merid true
-            ; south → merid true
-            ; (merid false i) → {!A- Bool (λ x → x) _+SB_ (merid false i +SB north)!}
-            ; (merid true i) → {!(merid false i +SB A- Bool (λ x → x) _+SB_ north)!}})
-         (λ { north → merid true ; south → merid true ; (merid false i) → {!A- Bool (λ x → x) _+SB_ (north +SB merid false i)!} ; (merid true i) → {!!}})
-         {!!}
-
-ahah : (x : _) → susp- (λ x₁ → x₁) (S¹→SuspBool x) ≡ S¹→SuspBool (invLooper x)
-ahah base = sym (merid true)
-ahah (loop i) = {!!}
-
-minDistr : (x y : S¹) → invLooper (x * y) ≡ x * invLooper y
-minDistr = {!!}
-
-kala : (y : _) → SuspBool→S¹ (susp- (λ x₁ → x₁) y) ≡ invLooper (SuspBool→S¹ y )
-kala = {!!}
 
 rUnit* : (x : S¹) → x * base ≡ x
 rUnit* base = refl
@@ -759,6 +864,16 @@ multInvLooper base = refl
 multInvLooper (loop i) k =
   hcomp (λ r → λ {(i = i0) → base ; (i = i1) → base ; (k = i1) → base}) base
 
+assoc* : (x y z : S¹) → x * (y * z) ≡ (x * y) * z
+assoc* base y z = refl
+assoc* (loop i) y z k = help y z k i
+  where
+  help : (y z : S¹) → rotLoop (y * z) ≡ cong (λ x → x * z) (rotLoop y)
+  help = wedgeconFun 0 0 (λ _ _ → isOfHLevelPath 2 (isGroupoidS¹ _ _) _ _)
+                         (λ { base → refl ; (loop i) → refl})
+                         (λ { base → refl ; (loop i) → refl})
+                         refl
+
 assocImagBool : isAssocImaginaroid Bool
 fst (fst assocImagBool) = not
 fst (snd (fst assocImagBool)) = _+SB_
@@ -772,29 +887,185 @@ fst (snd (snd (fst assocImagBool))) =
     refl
 fst (snd (snd (snd (fst assocImagBool)))) x =
   (λ i → S¹→SuspBool (SuspBool→S¹ x * lemc x i)) ∙ cong S¹→SuspBool (multInvLooper (SuspBool→S¹ x))
-fst (snd (snd (snd (snd (fst assocImagBool))))) x y = {!!}
-snd (snd (snd (snd (snd (fst assocImagBool))))) = {!!}
-snd assocImagBool = {!!}
+fst (snd (snd (snd (snd (fst assocImagBool))))) = lem
+  where
+  ss123 : (x : S¹) → susp* not (S¹→SuspBool x) ≡ S¹→SuspBool (invLooper x)
+  ss123 base = refl
+  ss123 (loop i) k = h k i
+    where
+    h : cong (susp* not) (merid false ∙ sym (merid true)) ≡ sym (merid false ∙ sym (merid true))
+    h = cong-∙ (susp* not) (merid false) (sym (merid true)) ∙ sym (symDistr (merid false) (sym (merid true)))
+
+  invLooperPullOut : (x :  _) → SuspBool→S¹ (susp* not x) ≡ invLooper (SuspBool→S¹ x)
+  invLooperPullOut x = cong SuspBool→S¹ (cong (susp* not) (sym (SuspBool→S¹→SuspBool x))
+                     ∙ ss123 (SuspBool→S¹ x))
+                     ∙ S¹→SuspBool→S¹ (invLooper (SuspBool→S¹ x))
+
+  invLooperDistr : (x y : S¹) → invLooper (x * y) ≡ invLooper x * invLooper y
+  invLooperDistr = wedgeconFun 0 0 (λ _ _ → isGroupoidS¹ _ _)
+                 (λ _ → refl)
+                 (λ x → cong invLooper (rUnit* x) ∙ sym (rUnit* (invLooper x)))
+                 (sym (rUnit refl))
+
+  comm* : (x y : S¹) → x * y ≡ y * x
+  comm* = wedgeconFun 0 0 (λ _ _ → isGroupoidS¹ _ _)
+          (λ x → sym (rUnit* x))
+          (λ x → rUnit* x)
+          refl
+
+  gl : (x y : _) → (invLooper (SuspBool→S¹ x * SuspBool→S¹ y)) ≡ (SuspBool→S¹ (susp* not y) * SuspBool→S¹ (susp* not x))
+  gl x y = cong invLooper (comm* (SuspBool→S¹ x) (SuspBool→S¹ y))
+        ∙∙ invLooperDistr (SuspBool→S¹ y) (SuspBool→S¹ x)
+        ∙∙ sym (cong₂ _*_ (invLooperPullOut y) (invLooperPullOut x))
+
+  lem : (x y : _) → susp* not (S¹→SuspBool (SuspBool→S¹ x * SuspBool→S¹ y))
+                   ≡ S¹→SuspBool (SuspBool→S¹ (susp* not y) * SuspBool→S¹ (susp* not x))
+  lem x y = ss123 (SuspBool→S¹ x * SuspBool→S¹ y)
+         ∙ cong S¹→SuspBool
+           (gl x y)
+isHSpace.μₗ (snd (snd (snd (snd (snd (fst assocImagBool)))))) x = SuspBool→S¹→SuspBool x
+isHSpace.μᵣ (snd (snd (snd (snd (snd (fst assocImagBool)))))) x =
+    cong S¹→SuspBool (rUnit* (SuspBool→S¹ x))
+  ∙ SuspBool→S¹→SuspBool x
+snd assocImagBool x y z =
+     cong S¹→SuspBool (cong (SuspBool→S¹ x *_) (S¹→SuspBool→S¹ (SuspBool→S¹ y * SuspBool→S¹ z))
+                     ∙∙ assoc* (SuspBool→S¹ x) (SuspBool→S¹ y) (SuspBool→S¹ z)
+                     ∙∙ cong (_* SuspBool→S¹ z) (sym (S¹→SuspBool→S¹ (SuspBool→S¹ x * SuspBool→S¹ y))))
 
 module joinBoolSusp = joinHSpace Bool assocImagBool (funExt notnot)
 -SB = joinBoolSusp.-A
-checking : (x : S³') → x ≡ {!? +SB ? \!}
-checking (inl x) = {!inl x joinBoolSusp.·join inl x!} -- inl (x *' y)  = 0
-checking (inr x) = {!inr x joinBoolSusp.·join inr x!} -- inl (susp- not ?)
-checking (push a b i) = {!push a b i joinBoolSusp.·join push a b i!}
+*SB = joinBoolSusp._*
 
--- module joinBoolSusp = joinHSpace Bool assocImagBool (funExt notnot)
+t : (x : _) → SuspBool→S¹ (-SB (S¹→SuspBool x)) ≡ x
+t base = refl
+t (loop i) k = w k i
+  where
+  w : cong (SuspBool→S¹ ∘ -SB) (merid false ∙ sym (merid true)) ≡ loop
+  w = cong (cong (SuspBool→S¹)) (cong-∙ -SB (merid false) (sym (merid true)) ∙ sym (symDistr (sym (merid false)) ( (merid true))))
+           ∙∙ cong sym (cong-∙ SuspBool→S¹ (sym (merid false)) ((merid true)) ∙ sym (rUnit (sym loop)))
+           ∙∙ refl
+  l : cong (SuspBool→S¹ ∘ *SB) (merid false ∙ sym (merid true)) ≡ sym loop
+  l = cong (cong SuspBool→S¹) (cong-∙ *SB (merid false) (sym (merid true)))
+   ∙∙ cong-∙ SuspBool→S¹ (merid true) (sym (merid false))
+   ∙∙ (sym (lUnit (sym loop))
+   ∙ refl)
 
---   -- Imaginaroid→HSpace : isImaginaroid A
---   --                    → isHSpace (join (Susp A) (Susp A))
---   -- isHSpace.0h (Imaginaroid→HSpace A (invol , _·A_ , -distr , *Unit , *distr)) = inl north
---   -- isHSpace.μ (Imaginaroid→HSpace A (invol , _·A_ , -distr , *Unit , *distr)) = {!!}
---   --   where
---   --   h : join (Susp A) (Susp A) → join (Susp A) (Susp A) → join (Susp A) (Susp A)
---   --   h (inl x) (inl y) = inl (x ·A y)
---   --   h (inl x) (inr y) = inr ({!!} ·A y)
---   --   h (inl x) (push a b i) = {!!}
---   --   h (inr x) y = {!!}
---   --   h (push a b i) y = {!!}
---   -- isHSpace.μₗ (Imaginaroid→HSpace A (invol , _·A_ , -distr , *Unit , *distr)) = {!!}
---   -- isHSpace.μᵣ (Imaginaroid→HSpace A (invol , _·A_ , -distr , *Unit , *distr)) = {!!}
+_+S³_ : S₊ 3 → S₊ 3 → S₊ 3
+_+S³_ = {!joinBoolSusp.idLem true ?!}
+
+-- checking : (x : S³') → x ≡ {!? +SB ? \!}
+-- checking (inl x) = {!inl x joinBoolSusp.·join inl x!} -- inl (x *' y)  = 0
+-- checking (inr x) = {!inr x joinBoolSusp.·join inr x!} -- inl (susp- not ?)
+-- checking (push a b i) = {!push a b i joinBoolSusp.·join push a b i!}
+
+-- -- module joinBoolSusp = joinHSpace Bool assocImagBool (funExt notnot)
+
+-- --   -- Imaginaroid→HSpace : isImaginaroid A
+-- --   --                    → isHSpace (join (Susp A) (Susp A))
+-- --   -- isHSpace.0h (Imaginaroid→HSpace A (invol , _·A_ , -distr , *Unit , *distr)) = inl north
+-- --   -- isHSpace.μ (Imaginaroid→HSpace A (invol , _·A_ , -distr , *Unit , *distr)) = {!!}
+-- --   --   where
+-- --   --   h : join (Susp A) (Susp A) → join (Susp A) (Susp A) → join (Susp A) (Susp A)
+-- --   --   h (inl x) (inl y) = inl (x ·A y)
+-- --   --   h (inl x) (inr y) = inr ({!!} ·A y)
+-- --   --   h (inl x) (push a b i) = {!!}
+-- --   --   h (inr x) y = {!!}
+-- --   --   h (push a b i) y = {!!}
+-- --   -- isHSpace.μₗ (Imaginaroid→HSpace A (invol , _·A_ , -distr , *Unit , *distr)) = {!!}
+-- --   -- isHSpace.μᵣ (Imaginaroid→HSpace A (invol , _·A_ , -distr , *Unit , *distr)) = {!!}
+
+module hspace-test (_+S_ : S³ → S³ → S³) (rUnitS : ((x : S³) → x +S base ≡ x)) (lUnitS : ((x : S³) → base +S x ≡ x)) (hlem : lUnitS base ≡ rUnitS base)  where
+  malem : ∀ {ℓ} {A : Type ℓ} {x y z w : A} (s : y ≡ z) (q : x ≡ w) (r : w ≡ z) (p : x ≡ y)
+        → (e : PathP (λ i → q i ≡ s i) p r) → (λ i → e i i) ≡ q ∙∙ refl ∙∙ r
+  malem {x = x} {y = y} {z = z} {w = w} s q r p e k i =
+    hcomp (λ l → λ {(i = i0) → q (~ l)
+                   ; (i = i1) → r l
+                   ; (k = i0) → e (i ∨ ~ l) (i ∧ l)})
+          w
+
+  open import Cubical.Homotopy.Loopspace
+
+  l1 : S³
+  l1 = base +S base
+
+  l2 : l1 ≡ l1
+  l2 = refl
+
+  l3 : l2 ≡ l2
+  l3 = refl
+
+  l4 : l3 ≡ l3
+  l4 j2 i2 k2 = base +S surf j2 i2 k2
+
+  l5 : l4 ≡ l4
+  l5 = refl
+
+  l6 : l5 ≡ l5
+  l6 = refl
+
+  extractPathP : {B : I → I → I → I → I → I → Type}
+               → (p : (i j k i2 j2 k2 : I) → B i j k i2 j2 k2)
+               → PathP (λ i →
+                       PathP (λ j →
+                         PathP (λ k →
+                           PathP (λ i2 →
+                             PathP (λ j2 →
+                               PathP (λ k2 → B i j k i2 j2 k2)
+                                 (p i j k i2 j2 i0) (p i j k i2 j2 i1))
+                       (λ k2 → p i j k i2 i0 k2) λ k2 → p i j k i2 i1 k2)
+                       (λ j2 k2 → p i j k i0 j2 k2) λ j2 k2 → p i j k i1 j2 k2)
+                       (λ i2 j2 k2 → p i j i0 i2 j2 k2) λ i2 j2 k2 → p i j i1 i2 j2 k2)
+                       (λ k i2 j2 k2 → p i i0 k i2 j2 k2) λ k i2 j2 k2 → p i i1 k i2 j2 k2)
+                       (λ j k i2 j2 k2 → p i0 j k i2 j2 k2) λ j k i2 j2 k2 → p i1 j k i2 j2 k2
+  extractPathP p i j k i2 j2 k2 = p i j k i2 j2 k2
+
+  the6path = (extractPathP {B = λ _ _ _ _ _ _ → S³} (λ j j2 i i2 k k2 → surf j i k +S surf j2 i2 k2))
+
+  lem2 : lUnitS base ≡ rUnitS base
+  lem2 = {!hlem!}
+
+  grr : PathP (λ i → {!!} ≡ {!sym hlem i!}) (sym hlem) (sym hlem)
+  grr = {!!}
+
+  lem7 : PathP (λ r → PathP (λ k → lUnitS base ≡ rUnitS base)
+               hlem hlem) refl refl
+  lem7 = {!!}
+
+  testi : (x : _) → x +S x ≡ base
+  testi base = lUnitS base
+  testi (surf j i k) w =
+    hcomp (λ r → λ {(j = i0) → lUnitS base w ; (j = i1) → hlem (~ r ∧ i ∧ k) w
+                   ; (i = i0) → lUnitS base w ; (i = i1) → hlem (~ r ∧ j ∧ k) w
+                   ; (k = i0) → lUnitS base w ; (k = i1) → hlem (~ r ∧ i ∧ j) w
+                   ; (w = i0) → surf j i k +S surf j i k
+                   ; (w = i1) → base})
+          (hcomp (λ r → λ {(j = i0) → lUnitS (surf (~ r) (i ∨ ~ r) (k ∨ ~ r)) w ; (j = i1) → hlem ((i ∧ k)) w
+                   ; (i = i0) → lUnitS (surf (j ∨ ~ r) (~ r) (k ∨ ~ r)) w ; (i = i1) → hlem ((j ∧ k)) w
+                   ; (k = i0) → lUnitS (surf (j ∨ ~ r) (i ∨ ~ r) (~ r)) w ; (k = i1) → hlem ((i ∧ j)) w
+                   ; (w = i0) → surf j i k +S surf (j ∨ ~ r) (i ∨ ~ r) (k ∨ ~ r)
+                   ; (w = i1) → {!(surf (j ∨ ~ r) (i ∨ ~ r) (~ r ∨ k))!}})
+                   {!!})
+  {-
+    hcomp (λ r → λ {(j = i0) → {!!} ; (j = i1) → {!!}
+                   ; (i = i0) → {!!} ; (i = i1) → {!!}
+                   ; (k = i0) → {!!} ; (k = i1) → {!!}
+                   ; (w = i0) → surf (j ∧ r) (i ∧ r) (k ∧ r) +S surf (j ∨ ~ r) (i ∨ ~ r) (k ∨ ~ r)
+                              ; (w = i1) → {!!}})
+          {!!} -}
+    where
+    k123 :
+      {!j = i0 ⊢ lUnitS base w
+j = i1 ⊢ lUnitS base w
+i = i0 ⊢ lUnitS base w
+i = i1 ⊢ lUnitS base w
+k = i0 ⊢ lUnitS base w
+k = i1 ⊢ lUnitS base w
+w = i0 ⊢ surf j i k +S surf j i k
+w = i1 ⊢ base!}
+    k123 =
+      malem {A = {!!}}
+            (λ j i i2 k k2 → surf j i k +S base)
+            (λ j2 i i2 k k2 → base +S surf j2 i2 k2)
+            (λ j i i2 k k2 → surf j i k +S base)
+            (λ j2 i i2 k k2 → base +S surf j2 i2 k2)
+            (λ j j2 i i2 k k2 → surf j i k +S surf j2 i2 k2)
