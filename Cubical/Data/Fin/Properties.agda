@@ -596,6 +596,9 @@ Fin+≡Fin⊎Fin m n = isoToPath (Fin+≅Fin⊎Fin m n)
 
 -- Equivalence between FinData and Fin
 
+Fin↪sucFin : {N : ℕ} → Fin N → Fin (suc N)
+Fin↪sucFin {N = N} (k , n , p) = k , suc n , cong suc p
+
 sucFin : {N : ℕ} → Fin N → Fin (suc N)
 sucFin (k , n , p) = suc k , n , (+-suc _ _ ∙ cong suc p)
 

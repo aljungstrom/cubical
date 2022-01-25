@@ -33,6 +33,9 @@ private
 fzero : Fin (suc k)
 fzero = (0 , suc-≤-suc zero-≤)
 
+fmax : Fin (suc k)
+fmax {k = k} = k , 0 , refl
+
 -- It is easy, using this representation, to take the successor of a
 -- number as a number in the next largest finite type.
 fsuc : Fin k → Fin (suc k)
