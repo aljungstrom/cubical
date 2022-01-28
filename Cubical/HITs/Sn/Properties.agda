@@ -342,6 +342,45 @@ IsoSphereJoin (suc n) m =
                   (IsoSphereJoin n (suc m))
                     (pathToIso λ i → S₊ (suc (+-suc n m i))))))
 
+IsoSphereJoinPres∙' : (n m : ℕ)
+  → Iso.fun (IsoSphereJoin n m) (inl (ptSn n)) ≡ ptSn (suc (n + m))
+IsoSphereJoinPres∙' zero zero = refl
+IsoSphereJoinPres∙' zero (suc m) = refl
+IsoSphereJoinPres∙' (suc n) m =
+  cong (transport (λ i → S₊ (suc (+-suc n m i))))
+    (cong (Iso.fun (IsoSphereJoin n (suc m)))
+      (cong (join→ (idfun (S₊ n))
+      (λ x →
+         Iso.inv (IsoSucSphereSusp m)
+         (Iso.inv Susp-iso-joinBool (join-commFun x))))
+         (cong (joinAssocDirect {C = S₊ m} .fst)
+           (cong (inl ∘ (Iso.inv (IsoSphereJoin n 0)))
+             (transportS∙ (suc n) _ (cong suc (+-comm 0 n)))
+           ∙ cong inl (sym (cong (Iso.inv (IsoSphereJoin n 0))
+                           (IsoSphereJoinPres∙' n 0))
+                    ∙ Iso.leftInv (IsoSphereJoin n 0) (inl (ptSn _))))))
+    ∙ IsoSphereJoinPres∙' n (suc m))
+    ∙ transportS∙ _ _ (cong suc (+-suc n m))
+  where
+  transportS∙ : (n m : ℕ) (p : n ≡ m) → transport (λ i → S₊ (p i)) (ptSn n)
+              ≡ ptSn _
+  transportS∙ zero m =
+    J (λ m p → transport (λ i → S₊ (p i)) true ≡ ptSn m) refl
+  transportS∙ (suc zero) m =
+    J (λ m p → transport (λ i → S₊ (p i)) base ≡ ptSn m) refl
+  transportS∙ (suc (suc n)) m =
+    J (λ m p → transport (λ i → S₊ (p i)) north ≡ ptSn m) refl
+
+IsoSphereJoinPres∙ : (n m : ℕ)
+  → Iso.fun (IsoSphereJoin n m) (inl (ptSn n)) ≡ ptSn (suc (n + m))
+IsoSphereJoinPres∙ zero zero = refl
+IsoSphereJoinPres∙ zero (suc m) = refl
+IsoSphereJoinPres∙ (suc n) zero = IsoSphereJoinPres∙' (suc n) zero
+IsoSphereJoinPres∙ (suc zero) (suc zero) = refl
+IsoSphereJoinPres∙ (suc zero) (suc (suc m)) = IsoSphereJoinPres∙' (suc zero) (suc (suc m))
+IsoSphereJoinPres∙ (suc (suc n)) (suc m) = IsoSphereJoinPres∙' (suc (suc n)) (suc m)
+
+{-
 IsoSphereJoinPres∙ : (n m : ℕ)
   → Iso.fun (IsoSphereJoin n m) (inl (ptSn n)) ≡ ptSn (suc (n + m))
 IsoSphereJoinPres∙ zero zero = refl
@@ -370,6 +409,7 @@ IsoSphereJoinPres∙ (suc n) m =
     J (λ m p → transport (λ i → S₊ (p i)) base ≡ ptSn m) refl
   transportS∙ (suc (suc n)) m =
     J (λ m p → transport (λ i → S₊ (p i)) north ≡ ptSn m) refl
+-}
 
 IsoSphereJoin⁻Pres∙ : (n m : ℕ)
   → Iso.inv (IsoSphereJoin n m) (ptSn (suc (n + m))) ≡ inl (ptSn n)
