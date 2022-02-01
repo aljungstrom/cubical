@@ -92,7 +92,6 @@ module π₄S³
   π₄S³≡ℤ = π₄S³≡ℤ/whitehead ∙ cong (ℤ/_) remAbs₂
 
 -- In order to instantiate the module, we need the four following lemmas:
--- Proved: 4/4
 
 {- Lemma 1 -}
 Lemma₁ : GroupEquiv ℤ (π'Gr 2 (S₊∙ 2))
@@ -101,7 +100,6 @@ Lemma₁ = invGroupEquiv π₃S²≅ℤ
 {- Lemma 2 -}
 Lemma₂ : gen₁-by (π 3 𝕊²) ∣ HopfMap ∣₂
 Lemma₂ = π₂S³-gen-by-HopfMap
-
 
 {- Lemma 3 -}
 {-

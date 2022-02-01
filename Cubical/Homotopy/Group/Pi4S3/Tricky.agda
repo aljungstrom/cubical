@@ -120,7 +120,7 @@ leftInv fibreinr' _ = refl
 
 TotalPushoutPath×∙ : Pointed ℓ-zero
 fst TotalPushoutPath×∙ = Σ (Unit × S₊ 2) PushoutPath×
-snd TotalPushoutPath×∙ = (tt , north) , push north 
+snd TotalPushoutPath×∙ = (tt , north) , push north
 
 P : Pointed₀
 P = (fiber inr' (inl tt) , north , (sym (push north)))
@@ -287,8 +287,8 @@ transportExact G G₂ H H₂ L L₂ R R₂ =
           (J (λ w r → (s : x₄ ≡ u) → B x x₂ w u refl refl r s)
             (J (λ u s → B x x₂ x₃ u refl refl refl s) b)))
 
-ΣP→S²→Pushout' : 
-  Σ[ F ∈ GroupHom (π'Gr 2 thePushout∙) (π'Gr 1 P) ] 
+ΣP→S²→Pushout' :
+  Σ[ F ∈ GroupHom (π'Gr 2 thePushout∙) (π'Gr 1 P) ]
   (exact (π'Gr 2 P) (π'Gr 2 (S₊∙ 2)) (π'Gr 2 thePushout∙) (π'Gr 1 P)
          (π'∘∙Hom 2 (fst , refl))
          (π'∘∙Hom 2 inr∙)
@@ -310,7 +310,7 @@ abstract
   π₂thePushout→π₁P : GroupHom (π'Gr 2 thePushout∙) (π'Gr 1 P)
   π₂thePushout→π₁P = fst ΣP→S²→Pushout'
 
-  P→S²→Pushout→P' : 
+  P→S²→Pushout→P' :
     exact (π'Gr 2 P) (π'Gr 2 (S₊∙ 2)) (π'Gr 2 thePushout∙) (π'Gr 1 P)
           (π'∘∙Hom 2 (fst , refl))
           (π'∘∙Hom 2 inr∙)
@@ -389,13 +389,13 @@ isSurjective-π₃S³→π₃P' =
          , cong ∣_∣₂ (ΣPathP (refl , sym (rUnit p))) ∣})
 
 -- π₃P → π₃S² → π₃ Pushout → Unit
-P→S²→Pushout→Unit : 
+P→S²→Pushout→Unit :
   exact (π'Gr 2 P) (π'Gr 2 (S₊∙ 2)) (π'Gr 2 thePushout∙) UnitGr
         (π'∘∙Hom 2 (fst , refl))
         (π'∘∙Hom 2 inr∙)
         (→UnitHom (π'Gr 2 thePushout∙))
 P→S²→Pushout→Unit =
-  transport (λ i → 
+  transport (λ i →
     exact (π'Gr 2 P) (π'Gr 2 (S₊∙ 2)) (π'Gr 2 thePushout∙)
           (GroupPath _ _ .fst
             (compGroupEquiv (GroupIso→GroupEquiv (π'Gr≅πGr 1 P)) π₂P≅0) i)
@@ -472,7 +472,7 @@ tripleComp≡ =
      (λ j → cong fst (rUnit (cong (fst TotalPushoutPath×∙→P)
                (rUnit (cong Grr (snd f)) (~ j))) (~ j))))))))
 
-S³→S²→Pushout→Unit : 
+S³→S²→Pushout→Unit :
   exact (π'Gr 2 (S₊∙ 3)) (π'Gr 2 (S₊∙ 2)) (π'Gr 2 thePushout∙) UnitGr
         (π'∘∙Hom 2 (fold∘W , refl))
         (π'∘∙Hom 2 inr∙)
@@ -624,7 +624,7 @@ module exact→BoolIso (G : Group₀) (F : GroupHom ℤ ℤ) (H : GroupHom ℤ G
 
   Bool≅G : GroupIso BoolGr G
   Bool≅G = BijectionIso→GroupIso BijectionIsoBoolG
-  
+
 open import Cubical.Data.Sum
 exact→Bool≅G± : (G : Group₀) (F : GroupHom ℤ ℤ) (H : GroupHom ℤ G)
          (P : (fst F 1 ≡ 2) ⊎ (fst F 1 ≡ - 2))
@@ -665,7 +665,7 @@ exact→Bool≅G± G F H (inr x) ex =
   KerL→R⊂ImH→L exact' = KerL→R⊂ImH→L ex
 
 
-exact→boolIsoGenPre : 
+exact→boolIsoGenPre :
   (G H L : Group₀) (Z≅G : GroupEquiv ℤ G) (Z≅H : GroupEquiv ℤ H)
   → (G→H : GroupHom G H) (H→L : GroupHom H L)
   → ((invEq (fst Z≅H) (fst G→H (fst (fst Z≅G) 1)) ≡ 2)
@@ -680,7 +680,7 @@ exact→boolIsoGenPre G H L =
     ⊎ (invEq (fst Z≅H) (fst G→H (fst (fst Z≅G) 1)) ≡ - 2))
     → exact G H L UnitGr G→H H→L (→UnitHom L)
     → GroupIso BoolGr L)
-   (GroupEquivJ (λ H Z≅H → 
+   (GroupEquivJ (λ H Z≅H →
       (G→H : GroupHom ℤ H)
       (H→L : GroupHom H L) →
       (invEq (fst Z≅H) (fst G→H (idfun (typ ℤ) (pos 1))) ≡ pos 2) ⊎
