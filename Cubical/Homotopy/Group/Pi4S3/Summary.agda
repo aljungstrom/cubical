@@ -23,10 +23,13 @@ open import Cubical.Homotopy.Group.Base hiding (π)
 open import Cubical.Homotopy.HopfInvariant.Base
 open import Cubical.Homotopy.HopfInvariant.Homomorphism
 open import Cubical.Homotopy.HopfInvariant.HopfMap
+open import Cubical.Homotopy.HopfInvariant.Whitehead
 open import Cubical.Homotopy.Whitehead
 open import Cubical.Homotopy.Group.Pi3S2
+open import Cubical.Homotopy.Group.Pi4S3.Tricky hiding (hopfInvariantEquiv)
 
 open import Cubical.Algebra.Group.Base
+open import Cubical.Algebra.Group.Instances.Bool
 open import Cubical.Algebra.Group.Morphisms
 open import Cubical.Algebra.Group.MorphismProperties
 open import Cubical.Algebra.Group.Instances.Int
@@ -55,7 +58,8 @@ private
 π₄S³≡ℤ/something eq =
   π 4 𝕊³ ≡ ℤ/ abs (eq .fst .fst [ ∣ idfun∙ _ ∣₂ , ∣ idfun∙ _ ∣₂ ]×)
 
--- Summary of the last steps of the proof
+
+-- The intended proof:
 module π₄S³
   (π₃S²≃ℤ           : GroupEquiv (π 3 𝕊²) ℤ)
   (gen-by-HopfMap   : gen₁-by (π 3 𝕊²) ∣ HopfMap ∣₂)
@@ -88,7 +92,7 @@ module π₄S³
   π₄S³≡ℤ = π₄S³≡ℤ/whitehead ∙ cong (ℤ/_) remAbs₂
 
 -- In order to instantiate the module, we need the four following lemmas:
--- Proved: 2/4
+-- Proved: 4/4
 
 {- Lemma 1 -}
 Lemma₁ : GroupEquiv ℤ (π'Gr 2 (S₊∙ 2))
@@ -98,14 +102,34 @@ Lemma₁ = invGroupEquiv π₃S²≅ℤ
 Lemma₂ : gen₁-by (π 3 𝕊²) ∣ HopfMap ∣₂
 Lemma₂ = π₂S³-gen-by-HopfMap
 
-{- Lemma 3 (WIP) -}
+
+{- Lemma 3 -}
 {-
-Lemma₃ : π₄S³≡ℤ/something (invGroupEquiv π₃S²≅ℤ)
-Lemma₃ = ?
+Lemma₃ : π₄S³≡ℤ/something π₃S²≅ℤ
+Lemma₃ = {!!}
+
 -}
 
-{- Lemma 4 (WIP) -}
-{-
-Lemma₄ : abs (HopfInvariant-π' 0 ([ (∣ idfun∙ _ ∣₂ , ∣ idfun∙ _ ∣₂) ]×)) ≡ 2)
-Lemma₄ = ?
--}
+
+
+{- Lemma 4 -}
+Lemma₄ : abs (HopfInvariant-π' 0 ([ (∣ idfun∙ _ ∣₂ , ∣ idfun∙ _ ∣₂) ]×)) ≡ 2
+Lemma₄ = HopfInvariantWhitehead
+
+-- However, we when trying to prove it, it turned out to be easier to diverge
+-- from the above a bit, since we do not have enough theory about exact sequences
+-- in the library instead of proving (π₄S³≡ℤ/something π₃S²≅ℤ), we have first proved
+-- abs (HopfInvariant-π' 0 ([ (∣ idfun∙ _ ∣₂ , ∣ idfun∙ _ ∣₂) ]×)) ≡ 2) → π₄S³≅ℤ/2
+
+hopfWhitehead→π₄S³≅ℤ/2 :
+  abs (HopfInvariant-π' 0 ([ (∣ idfun∙ _ ∣₂ , ∣ idfun∙ _ ∣₂) ]×)) ≡ 2
+  → GroupEquiv (π 4 𝕊³) (ℤ/ 2)
+hopfWhitehead→π₄S³≅ℤ/2 p =
+  compGroupEquiv
+    (compGroupEquiv (GroupIso→GroupEquiv (π'Gr≅πGr 3 𝕊³))
+                 (∣HopfWhitehead∣≡2→π₄S³≅Bool p))
+     (GroupIso→GroupEquiv Bool≅ℤ/2)
+
+-- And so we get the Iso
+π₄S³≅ℤ/2 : GroupEquiv (π 4 𝕊³) (ℤ/ 2)
+π₄S³≅ℤ/2 = hopfWhitehead→π₄S³≅ℤ/2 Lemma₄

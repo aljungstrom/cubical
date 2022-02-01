@@ -394,6 +394,39 @@ module _ (ϕ : GroupEquiv ℤGroup ℤGroup) where
           (λ h → sym (abs- _) ∙ sym (cong abs h))
           (ℤEquivIsIdOr- g)
 
+-Equivℤ : GroupEquiv ℤGroup ℤGroup
+fst -Equivℤ =
+  isoToEquiv (iso (GroupStr.inv (snd ℤGroup))
+                  (GroupStr.inv (snd ℤGroup))
+                  (GroupTheory.invInv ℤGroup)
+                  (GroupTheory.invInv ℤGroup))
+snd -Equivℤ =
+  makeIsGroupHom λ x y
+    → +Comm (pos 0) (- (x +ℤ y))
+    ∙ -Dist+ _ _
+    ∙ cong₂ _+ℤ_ (+Comm (- x) (pos 0)) (+Comm (- y) (pos 0))
+
+characℤ≅ℤ : (e : GroupEquiv ℤGroup ℤGroup)
+          → (e ≡ idGroupEquiv)
+           ⊎ (e ≡ -Equivℤ)
+characℤ≅ℤ e =
+  ⊎-rec
+    (λ p → inl (Σ≡Prop (λ _ → isPropIsGroupHom _ _)
+                 (Σ≡Prop (λ _ → isPropIsEquiv _)
+                   (funExt λ x →
+                     cong (e .fst .fst) (·Comm 1 x)
+                   ∙ GroupHomℤ→ℤPres· (fst (fst e) , snd e) x 1
+                   ∙ cong (x *_) p
+                   ∙ ·Comm x 1))))
+    (λ p → inr (Σ≡Prop (λ _ → isPropIsGroupHom _ _)
+                 (Σ≡Prop (λ _ → isPropIsEquiv _)
+                   (funExt λ x →
+                     cong (e .fst .fst) (·Comm 1 x)
+                  ∙∙ GroupHomℤ→ℤPres· (fst (fst e) , snd e) x 1
+                   ∙ cong (x *_) p
+                   ∙ ·Comm x -1
+                  ∙∙ +Comm (- x) 0))))
+    (ℤEquiv1 e)
 
 -- A few consequences of the above lemmas
 

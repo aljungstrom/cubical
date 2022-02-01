@@ -731,19 +731,24 @@ snd hopfInvariantEquiv = snd (GroupHom-HopfInvariant-π' 0)
 open import Cubical.Homotopy.Group.Pi4S3.S3PushoutIso2
 open import Cubical.Homotopy.Group.Pi4S3.S3PushoutIso
 
-∣HopfWhitehead∣≡2→π₃S⁴≅Bool :
+∣HopfWhitehead∣≡2→π₄S³≅Bool :
   abs (HopfInvariant-π' 0 [ ∣ idfun∙ (S₊∙ 2) ∣₂ ∣ ∣ idfun∙ (S₊∙ 2) ∣₂ ]π') ≡ 2
   → GroupEquiv (πGr 3 (S₊∙ 3)) BoolGr
-∣HopfWhitehead∣≡2→π₃S⁴≅Bool p =
+∣HopfWhitehead∣≡2→π₄S³≅Bool p =
   compGroupEquiv
     (compGroupEquiv
       (GroupIso→GroupEquiv
         (compGroupIso π₄S³≅π₃PushS²
           (invGroupIso (π'Gr≅πGr 2 (Pushout⋁↪fold⋁∙ (S₊∙ 2))))))
       (compGroupEquiv (invGroupEquiv (π'Iso 2 lem∙))
-        {!π'Iso 2 lem∙!}))
+        (π'Iso 2 (lem₂ , sym (push north)))))
     (invGroupEquiv (GroupIso→GroupEquiv (π₃PushoutCharac p)))
   where
+  lem₂ : Pushout {B = (Pushout W (λ _ → tt))} inl fold⋁ ≃ fst thePushout∙
+  lem₂ = compEquiv
+          (compEquiv pushoutSwitchEquiv (isoToEquiv (PushoutDistr.PushoutDistrIso fold⋁ W λ _ → tt)))
+          pushoutSwitchEquiv
+
   lem₁ : Pushout W (λ _ → tt) ≃ cofibW S¹ S¹ base base
   lem₁ = pushoutEquiv W (λ _ → tt) joinTo⋁ (λ _ → tt)
            (isoToEquiv (invIso (IsoSphereJoin 1 1)))
