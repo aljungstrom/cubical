@@ -34,7 +34,7 @@ defined in Cubical.HITs.Sphere.Properties, kills off a good deal of
 4. Conclude that π₄(S³) ≅ ℤ/2ℤ.
 
 -}
-{-# OPTIONS --safe --experimental-lossy-unification #-}
+{-# OPTIONS --allow-unsolved-metas --experimental-lossy-unification #-}
 module Cubical.Homotopy.Group.Pi4S3.QuickProof where
 
 open import Cubical.Homotopy.Loopspace
@@ -652,6 +652,9 @@ abstract
   π₃'S³≅ℤ-abs : (n : ℕ) → GroupEquiv (π'Gr n (S₊∙ (suc n))) ℤ
   π₃'S³≅ℤ-abs n = GroupIso→GroupEquiv (πₙ'Sⁿ≅ℤ n)
 
+  π₃S²≅π₃*S²-abs≡ : π₃S²≅π₃*S²-abs ≡ π₃S²→π₃*S²
+  π₃S²≅π₃*S²-abs≡ = refl
+
   η↦η₁-abs : fst (fst π₃S²≅π₃*S²-abs) η ≡ η₁
   η↦η₁-abs = η↦η₁
 
@@ -729,3 +732,478 @@ BrunerieIso =
                     ∙ retEq (fst (π₃'S³≅ℤ-abs 2)) ∣ idfun∙ (S₊∙ 3) ∣₂))
            ∙ cong abs η↦-2))))
            (abstractℤ/≅ℤ 2)
+
+
+π₄*S³ : Type₀
+π₄*S³ = ∥ Susp∙ (join S¹ S¹) →∙ S₊∙ 3 ∥₂
+
+underl : (join S¹ S¹ , inl base) →∙ S₊∙ 2
+      → Susp∙ (join S¹ S¹) →∙ S₊∙ 3
+fst (underl f) north = north
+fst (underl f) south = north
+fst (underl f) (merid a i) = σ₂ (fst f a) i
+snd (underl f) = refl
+
+π₃*S²→π₄*S³ : fst π₃*S² → π₄*S³
+π₃*S²→π₄*S³ = sMap underl
+
+open import Cubical.Homotopy.Group.SuspensionMap
+
+π₃S²→π₄S³ : GroupHom (π'Gr 2 (S₊∙ 2)) (π'Gr 3 (S₊∙ 3))
+π₃S²→π₄S³ = suspMapπ'Hom 2
+
+s' : Iso ((Susp (join S¹ S¹) → S₊ 3)) (S₊ 4 → S₊ 3)
+s' = domIso (IsoType→IsoSusp (IsoSphereJoin 1 1))
+
+mapi : π₄*S³ → π' 4 (S₊∙ 3)
+mapi = sMap λ f → fun s' (fst f) , snd f
+
+π₃S²→π₄S³' : fst π₃S² → π' 4 (S₊∙ 3)
+π₃S²→π₄S³' = mapi ∘ π₃*S²→π₄*S³ ∘ fst (fst (π₃S²→π₃*S²))
+
+test : (x : _) → fst π₃S²→π₄S³ x ≡ π₃S²→π₄S³' x
+test =
+  sElim (λ _ → isSetPathImplicit)
+    λ f → cong ∣_∣₂ (ΣPathP (funExt (λ { north → refl
+                                      ; south → refl
+                                      ; (merid a i) j → σ (S₊∙ 2) (fst f (rightInv (IsoSphereJoin 1 1) a (~ j))) i})
+                  , refl))
+
+π₃*S²→π₄*S³-η₁ : π₃*S²→π₄*S³ η₁ ≡ ∣ (λ _ → north) , refl ∣₂
+π₃*S²→π₄*S³-η₁ =
+  cong ∣_∣₂ (ΣPathP ((funExt (λ { north → refl
+                               ; south → refl
+                               ; (merid (inl x) i) j → l-fill i1 j i x
+                               ; (merid (inr x) i) j → r-fill i1 j i x
+                               ; (merid (push a b i) j) k → lem a b k i j}))
+                  , refl))
+  where
+  S¹→Ω²S³ : S¹ → typ ((Ω^ 2) (S₊∙ 3))
+  S¹→Ω²S³ x =
+       (sym (rCancel (merid north))
+    ∙∙ (cong σ₂ (σ₁ x))
+    ∙∙ rCancel (merid north))
+
+  S¹→Ω²S³-fill : (x : S¹) (k : I)
+    → rCancel (merid north) k ≡ rCancel (merid north) k
+  S¹→Ω²S³-fill x k i j =
+    doubleCompPath-filler
+      (sym (rCancel (merid north)))
+      (cong σ₂ (σ₁ x))
+      (rCancel (merid north)) k i j
+
+  filler : (x : typ ((Ω^ 2) (S₊∙ 3))) (k i j : I) → S₊ 3
+  filler x k i j =
+    hfill (λ k → λ {(i = i0) → rCancel (merid north) (~ k) j
+                  ; (i = i1) → north
+                  ; (j = i0) → north
+                  ; (j = i1) → north})
+          (inS (x i j))
+          k
+
+  l-fill : (k i j : I) → (x : S₊ 1) → S₊ 3
+  l-fill k i j x = filler (S¹→Ω²S³ x) k i j
+
+  r-fill : (k i j : I) → (x : S₊ 1) → S₊ 3
+  r-fill k i j x = filler (sym (S¹→Ω²S³ x)) k i j
+
+  lem : (a b : S¹) →
+        Cube (cong σ₂ ((σ₁ b) ∙ (σ₁ a))) (λ _ _ → north)
+             (λ k j → l-fill i1 k j a) (λ k j → r-fill i1 k j b)
+             (λ _ _ → north) λ _ _ → north
+  lem a b =
+      (cong-∙ σ₂ (σ₁ b) (σ₁ a))
+    ◁ λ k i j
+    → hcomp (λ r → λ {(i = i0) → l-fill r k j a
+                   ; (i = i1) → r-fill r k j b
+                   ; (j = i0) → north
+                   ; (j = i1) → north
+                   ; (k = i0) → (S¹→Ω²S³-fill b (~ r) ∙ S¹→Ω²S³-fill a (~ r)) i j
+                   ; (k = i1) → north})
+        (hcomp (λ r → λ {(i = i0) → S¹→Ω²S³ a k j
+                   ; (i = i1) → S¹→Ω²S³ b (~ k) j
+                   ; (j = i0) → north
+                   ; (j = i1) → north
+                   ; (k = i0) → EH 0 (S¹→Ω²S³ a) (S¹→Ω²S³ b) r i j
+                   ; (k = i1) → north})
+               (hcomp (λ r → λ {(i = i0) → S¹→Ω²S³ a k j
+                   ; (i = i1) → S¹→Ω²S³ b (~ k ∧ r) j
+                   ; (j = i0) → north
+                   ; (j = i1) → north
+                   ; (k = i0) → compPath-filler (S¹→Ω²S³ a) (S¹→Ω²S³ b) r i j
+                   ; (k = i1) → north})
+                (S¹→Ω²S³ a (k ∨ i) j)))
+
+π₃S²→π₄S³-η↦0 : fst π₃S²→π₄S³ η ≡ 1π' 4
+π₃S²→π₄S³-η↦0 = test η
+               ∙ cong (mapi ∘ π₃*S²→π₄*S³)
+                      (sym (funExt⁻ (cong (fst ∘ fst) π₃S²≅π₃*S²-abs≡) η)
+                      ∙ η↦η₁-abs)
+               ∙ cong mapi π₃*S²→π₄*S³-η₁
+
+
+<ℤ : (x y : fst ℤ) → Type
+<ℤ (pos n) (pos n₁) = {!!}
+<ℤ (pos n) (negsuc n₁) = {!!}
+<ℤ (negsuc n) y = {!!}
+
+ℤ-min : ∀ {ℓ} (P : fst ℤ → Type ℓ)
+        → Type ℓ
+ℤ-min P =
+  Σ[ x ∈ fst ℤ ]
+    (P x) × ((y : fst ℤ) → P y → <ℤ x y)
+
+{-
+S⁴ → S³
+↓     ↓
+S³ → P
+
+
+P → S³ × S³ → H³(S⁴)
+H⁴(P) → S³ × S³ → S⁴
+-}
+
+open import Cubical.ZCohomology.Base
+open import Cubical.ZCohomology.Properties
+open import Cubical.ZCohomology.GroupStructure
+
+0map : Susp (join S¹ S¹) → S₊ 3
+0map _ = north
+
+1map : Susp (join S¹ S¹) → S₊ 3
+1map = suspFun Hopfσ
+
+D : Type
+D = Pushout 0map 1map
+
+open import Cubical.HITs.PropositionalTruncation
+  renaming (rec to pRec ; elim to pElim)
+
+dad : 0map ≡ 1map → ∥ Hopfσ ≡ (λ _ → north) ∥
+dad p = trRec squash
+         (λ nid → trRec
+           squash
+           (λ sid →
+            ∣ funExt (λ x → {!(sym nid ◁ cong (funExt⁻ p) (merid x) ▷ sid)!}) ∣)
+           (h (funExt⁻ p south) (merid north)))
+        (h (funExt⁻ p north) refl)
+  where
+  h : {x y : S₊ 3} (p q : x ≡ y) → hLevelTrunc 1 (p ≡ q)
+  h p q = (Iso.fun (PathIdTruncIso _)
+          ((isContr→isProp (isConnectedPath 2 ((isConnectedSubtr 3 1 (sphereConnected 3)))
+            _ _))
+            (∣ p ∣ₕ) ∣ q ∣ₕ))
+
+D→K4 : Iso (D → coHomK 3)
+            (Σ[ f ∈ (S₊ 3 → coHomK 3) ]
+                Σ[ g ∈ (S₊ 3 → coHomK 3) ]
+                  ((x : Susp (join S¹ S¹))
+                    → f north ≡ g (1map x)))
+D→K4 = {!!}
+
+joinS¹S¹→gpd : ∀ {ℓ} {P : (join S¹ S¹) → Type ℓ}
+           → isOfHLevel 3 (P (inl base))
+           → P (inl base)
+           → (x : _) → P x
+joinS¹S¹→gpd {P = P} hlev b x =
+  subst P (leftInv (IsoSphereJoin 1 1) x)
+    (sphereElim 2 {A = λ x → P (Iso.inv (IsoSphereJoin 1 1) x)}
+      (sphereElim 2 (λ _ → isProp→isOfHLevelSuc 2 (isPropIsOfHLevel _)) hlev)
+      b
+      (fun (IsoSphereJoin 1 1) x))
+
+Susp*→2Gpd : ∀ {ℓ} {P : Susp (join S¹ S¹) → Type ℓ}
+           → isOfHLevel 4 (P north)
+           → P north
+           → (x : _) → P x
+Susp*→2Gpd hlev b north = b
+Susp*→2Gpd {P = P} hlev b south = subst P (merid (inl base)) b
+Susp*→2Gpd {P = P} hlev b (merid a i) = help a i
+  where
+  help : (a : _) → PathP (λ i → P (merid a i)) b (subst P (merid (inl base)) b)
+  help = joinS¹S¹→gpd (isOfHLevelPathP' 3 (subst (isOfHLevel 4) (cong P (merid (inl base))) hlev) _ _)
+                       λ i → transp (λ j → P (merid (inl base) (i ∧ j))) (~ i) b
+
+Iso2 : Iso (Σ[ f ∈ (S₊ 3 → coHomK 3) ]
+                Σ[ g ∈ (S₊ 3 → coHomK 3) ]
+                  ((x : Susp (join S¹ S¹))
+                    → f north ≡ g (1map x)))
+            ((Σ[ f ∈ (S₊ 3 → coHomK 3) ]
+                Σ[ g ∈ (S₊ 3 → coHomK 3) ]
+                  (f north ≡ g north)))
+fun Iso2 (f , g , p) = f , g , p north
+inv Iso2 (f , g , p) = f , g , Susp*→2Gpd (isOfHLevelTrunc 5 _ _) p
+rightInv Iso2 (f , g , p) = ΣPathP (refl , (ΣPathP (refl , refl)))
+leftInv Iso2 (f , g , p) =
+  ΣPathP (refl , (ΣPathP (refl ,
+    funExt (Susp*→2Gpd (isOfHLevelPath 4 (isOfHLevelTrunc 5 _ _) _ _) refl))))
+
+
+open import Cubical.HITs.Truncation as Trunc
+module _ (c : isContr (typ ((Ω^ 4) (hLevelTrunc∙ 6 (S₊∙ 2))))) where
+  wo : isOfHLevel 5 (hLevelTrunc 6 (S₊ 2))
+  wo = Trunc.elim (λ _ → isProp→isOfHLevelSuc 5 (isPropΠ λ _ → isPropIsOfHLevel 4))
+        (sphereElim 1 (λ _ → isProp→isOfHLevelSuc 1 (isPropΠ λ _ → isPropIsOfHLevel 4))
+          λ y → J (λ y p → (q : ∣ ptSn 2 ∣ₕ ≡ y) → isOfHLevel 3 (p ≡ q))
+            λ q → J (λ q r → (s : refl ≡ q) → isOfHLevel 2 (r ≡ s))
+              λ s → J (λ s t → (m : refl ≡ s) → isOfHLevel 1 (t ≡ m))
+                λ m → J (λ m n → (o : refl ≡ m) → n ≡ o)
+                  λ o → isContr→isProp c refl o)
+
+  ka : hLevelTrunc 5 (S₊ 2) → TypeOfHLevel ℓ-zero 4
+  ka = Trunc.rec (isOfHLevelTypeOfHLevel 4) {!!}
+
+tliv : S₊ 4 → S₊ 3
+tliv x = north
+
+
+{-
+S² ∨ S² → S²
+   ↓       ↓
+S² × S² → P
+
+
+
+H²  → H²(S² ∨ S²) → H³(P) → 0
+
+
+S² ∨ S² → ?
+-}
+
+
+
+tlivIso : Iso (hLevelTrunc 5 (fiber 1map north))
+                (hLevelTrunc 5 (Σ[ x ∈ join S¹ S¹ ]
+                  (cong 1map (merid x) ≡ cong 1map (merid (inl base)))))
+fun tlivIso = Trunc.rec {!!} {!!}
+inv tlivIso = {!uncurry ?!}
+rightInv tlivIso = {!!}
+leftInv tlivIso = {!!}
+
+open import Cubical.ZCohomology.MayerVietorisUnreduced
+
+module m = MV _ _ _ (λ _ → tt) 1map
+
+
+cohompush : Iso (coHom 4 (cofib 1map))
+                ∥ (Σ[ a ∈ (S₊ 3 → coHomK 4) ] (((x : Susp (join S¹ S¹)) → a (1map x) ≡ 0ₖ 4))) ∥₂
+cohompush = {!!}
+  where
+  clem : (a : (S₊ 3 → coHomK 3))
+       → isContr ((((x : Susp (join S¹ S¹)) → a (1map x) ≡ 0ₖ 3)))
+  fst (clem a) = Susp*→2Gpd (isOfHLevelTrunc 5 _ _) {!a ∘ ?!}
+  snd (clem a) = {!!}
+
+testcf : (1m : 1map ≡ 0map) → cofib 1map → cofib 0map
+testcf p (inl x) = inl x
+testcf p (inr x) = inr x
+testcf p (push a i) = (push a ∙ λ j → inr (p (~ j) a)) i
+
+module _ (1m : 1map ≡ 0map) where
+  TT = cofib (testcf 1m)
+
+  isContrTT : isContr TT
+  isContrTT = {!!}
+
+suspFib : ∀ {ℓ} {A B : Type ℓ} (f : A → B) (a₀ : A) (b₀ : B) → f a₀ ≡ b₀ → Iso (Susp (fiber f b₀)) (fiber (suspFun f) north)
+fun (suspFib f a₀ b₀ p) north = north , refl
+fun (suspFib f a₀ b₀ p) south = north , refl
+fun (suspFib f a₀ b₀ p) (merid (a , q) i) = σ (_ , a₀) a i , {!q!}
+inv (suspFib f a₀ b₀ p) x = {!!}
+rightInv (suspFib f a₀ b₀ p) x = {!!}
+leftInv (suspFib f a₀ b₀ p) x = {!!}
+
+
+{-
+S⁴ -ʰ→ S³
+↓       ↓  
+1 --→ S  
+-}
+
+s : S¹ → join S¹ S¹ → join S¹ S¹ 
+s x (inl x₁) = inl x₁
+s x (inr x₁) = inr (invLooper x * x₁)
+s x (push a b i) = push a (invLooper x * b) i
+
+s0 : (x : _) → s base x ≡ x
+s0 (inl x) = refl
+s0 (inr x) = refl
+s0 (push a b i) = refl
+
+isEq-s : (x : S¹) → isEquiv (s x)
+isEq-s = sphereElim 0 (λ _ → isPropIsEquiv _) (subst isEquiv (sym (funExt s0)) (idIsEquiv _))
+
+open import Cubical.Foundations.Univalence
+altMap : S¹ × S¹ → Type
+altMap (base , y) = join S¹ S¹
+altMap (loop i , y) = ua (s y , isEq-s y) i
+
+Total→SuspS¹S¹ : Σ[ x ∈ S¹ × S¹ ] (altMap x) → Susp (join S¹ S¹)
+Total→SuspS¹S¹ ((base , base) , y) = north
+Total→SuspS¹S¹ ((base , loop i) , y) = {!σ (join S¹ S¹ , inl base) y i!}
+Total→SuspS¹S¹ ((loop i , snd₁) , y) = {!!}
+
+
+module _ {X Y : Type} {y₀ : Y} {x₀ : X} (f : X → Y) where
+  FF : Iso (fiber (suspFun f) north) {!!} -- (typ (Ω ( (fiber f y₀)))) -- (Susp (fiber f y₀))
+  fun FF (north , y) i = {!y , ?!} -- north
+  fun FF (south , y) i = {!!} -- south
+  fun FF (merid a i , y) = {!!} -- merid (a , {!!}) i
+  inv FF = {!!}
+  rightInv FF = {!!}
+  leftInv FF = {!!}
+
+  elim123 : (f : S₊∙ 3 →∙ S₊∙ 2) {P : cofib (fst f) → Type} → ((x : S₊ 2) → P (inr x)) → ((x : _) → isOfHLevel 4 (P x)) → (x : _) → P x 
+  elim123 f {P = P} b hlev (inl x) = subst P ((λ i → inr (snd f (~ i))) ∙ sym (push north)) (b north)
+  elim123 f {P = P} b hlev (inr x) = b x
+  elim123 f {P = P} b hlev (push a i) = {!!}
+    where
+    help : (a : S₊ 3) → PathP (λ i → P (push a i)) (subst P ((λ i → inr (snd f (~ i))) ∙ sym (push north)) (b north)) (b (fst f a))
+    help = sphereElim 2 (λ _ → isOfHLevelPathP' 3 (hlev _) _ _) {!!}
+
+  test123 : (f : S₊ 3 → S₊ 2) → isContr (hLevelTrunc 4 {!!})
+  test123 = {!!}
+  
+{-
+
+   _ _ 
+ |      \
+ |  \     \
+  \  S⁴ → S³
+   \ ↓     ↓
+     1  → cf f
+-}
+
+  cofib-s :  (fiber 1map north → X)
+            →    (Σ[ f ∈ (typ (Ω (S₊∙ 3)) → X) ]
+                  Σ[ g ∈ (Path (S₊ 3) south north → X) ]
+                   ((a : join S¹ S¹) (b : Path (S₊ 3) south north)
+                   → f (merid (Hopfσ a) ∙ b) ≡ g b))
+  cofib-s F = (curry F north)
+            , curry F south
+            , λ a b → cong (curry F north)
+            (λ i → transp (λ j → 1map (merid a (~ j ∧ i)) ≡ north)
+                          (~ i)
+                          (compPath-filler' (merid (Hopfσ a)) b (~ i)) )
+                          ∙∙ sym (transportRefl _)
+                          ∙∙ funExt⁻ (fromPathP (cong (curry F) (merid a))) b
+
+  cofib-seq : Iso (Susp (cofib f)) (cofib (suspFun f))
+  fun cofib-seq north = inr north
+  fun cofib-seq south = inr south
+  fun cofib-seq (merid (inl x) i) = inr (merid y₀ i) -- inr (merid {!!} i)
+  fun cofib-seq (merid (inr x) i) = inr (merid x i)
+  fun cofib-seq (merid (push a i) j) = {!!}
+  inv cofib-seq x = {!!}
+  rightInv cofib-seq = {!!}
+  leftInv cofib-seq = {!!}
+
+{-
+
+S³ → S² → cf f → S⁴ → S³ → cf (Σ f) → S⁵ → S⁴
+
+π₄(S³)
+
+
+-}
+
+open import Cubical.ZCohomology.Groups.Torus
+open import Cubical.ZCohomology.Groups.SphereProduct
+
+ηc : coHomRed 3 (join S¹ S¹ , inl base)
+ηc = ∣ ∣_∣ₕ ∘ fst η₃-raw , refl ∣₂
+
+Joinfun : coHomRed 3 (join S¹ S¹ , inl base) → coHom 2 (S¹ × S¹)
+Joinfun = sMap λ f
+  → λ { (x , y) → ΩKn+1→Kn 2
+                     (sym (snd f) ∙∙ cong (fst f) (push base base ∙ sym (push x base) ∙∙ push x y ∙∙ sym (push base y)) ∙∙ snd f)}
+
+c→Z : coHomRed 3 (join S¹ S¹ , inl base) → fst ℤ
+c→Z = fun (fst H²-T²≅ℤ) ∘ Joinfun
+
+test1234 : c→Z ηc ≡ -2
+test1234 = {!refl!}
+
+η₃-raw' : (join S¹ S¹ , inl base) →∙ S₊∙ 3
+fst η₃-raw' (inl x) = north
+fst η₃-raw' (inr x) = north
+fst η₃-raw' (push a b i) =
+  (sym (σ₂ (S¹×S¹→S² a b)) ∙∙ refl ∙∙ sym (σ₂ (S¹×S¹→S² a b))) i
+snd η₃-raw' = refl
+
+3cell : (r i j k : I) → S₊ 3
+3cell r i j k =
+  hfill (λ r → λ {(i = i0) → merid (merid base j) (k ∧ ~ r)
+                 ; (i = i1) → merid (merid base j) (k ∧ ~ r)
+                 ; (j = i0) → merid north (k ∧ ~ r)
+                 ; (j = i1) → merid south (k ∧ ~ r)
+                 ; (k = i0) → north
+                 ; (k = i1) → merid (merid base j) (~ r)})
+        (inS (merid (merid (loop i) j) k))
+        r
+
+η₃-raw'' : (join S¹ S¹) → S₊ 3
+η₃-raw'' (inl x) = south
+η₃-raw'' (inr x) = north
+η₃-raw'' (push a b i) = {!!}
+{-
+  (merid (S¹×S¹→S²' a b)) (~ i)
+-}
+
+haha : coHomK 1 → Path (coHomK 2) (0ₖ 2) _
+haha = trRec (isOfHLevelTrunc 4 _ _) λ x i → ∣ merid x i ∣ₕ
+
+
+superSimpl : Z
+superSimpl = ΩKn+1→Kn 0 (λ i → (ΩKn+1→Kn 1 (λ j → ((sym (rCancel (cong ∣_∣ₕ (merid base))) ∙' (λ i → (λ i₁ → ∣ merid (loop i) i₁ ∣) ∙ (λ i₁ → ∣ merid base i₁ ∣) ⁻¹)) ∙ rCancel (cong ∣_∣ₕ (merid base))) i j ))) -- ΩKn+1→Kn 2 (λ k → (∣ 3cell i1 i k j ∣ₕ)))))
+
+test12345 : superSimpl ≡ 1
+test12345 = {!superSimpl!} -- refl
+
+open import Cubical.HITs.Join renaming (joinS¹S¹→S³ to joinS¹S¹→S3)
+open import Cubical.Experiments.Brunerie
+
+ss : Ω³ S³∙ .fst
+ss = λ i j k → joinS¹S¹→S3 (push (loop i) (loop j) k)
+
+f11 : π₃*S³ .fst → ∥ Ω³ S³∙ . fst ∥₂
+f11 = π'Gr≅πGr 2 S³∙ .fst .fun
+ ∘ π'∘∙Hom 2 (joinS¹S¹→S3 ∘ Iso.inv (IsoSphereJoin 1 1) , refl) .fst
+ ∘ invEq (fst π₃S³≅π₃*S³)
+
+asd : ∥ Ω³ S³∙ . fst ∥₂ → Z
+asd = Cubical.HITs.SetTruncation.rec isSetℤ (λ ss → g10 (g9 (g8 (f7 ss))))
+
+
+open import Cubical.HITs.S2
+
+S2→S² : S₊ 2 → S²
+S2→S² north = base
+S2→S² south = base
+S2→S² (merid base i) = base
+S2→S² (merid (loop i₁) i) = surf i₁ i
+
+S¹×S¹→S²' : S¹ → S¹ → S²
+S¹×S¹→S²' base y = base
+S¹×S¹→S²' (loop i) base = base
+S¹×S¹→S²' (loop i) (loop j) = surf i j
+
+η₃-raw1 : (join S¹ S¹ , inl base) →∙ (Susp S² , north)
+fst η₃-raw1 (inl x) = north
+fst η₃-raw1 (inr x) = north
+fst η₃-raw1 (push a b i) =
+  (merid (S¹×S¹→S²' a b) ∙ sym (merid (S¹×S¹→S²' (invLooper a) b))) i
+snd η₃-raw1 = refl
+
+
+
+
+ηs : typ ((Ω^ 3) (coHomK-ptd 3))
+ηs = Iso.fun (IsoSphereMapΩ 3) ((λ x → ∣ x ∣ₕ) , refl)
+
+hahaha : Z
+hahaha = g10 (g9 (g8 λ i j → f7' λ k → ∣ η₃-raw1 .fst (push (loop i) (loop j) k) ∣ₕ)) -- (Ω^→ 2 (f7' , ?) ? .fst))) -- Ω→ (Trunc.map (suspFun S2→S²) , refl) .fst , refl) .fst ηs)))
+
+hahahaha : abs (asd (f11 η₃)) ≡ 2
+hahahaha = {!hahaha!}
+

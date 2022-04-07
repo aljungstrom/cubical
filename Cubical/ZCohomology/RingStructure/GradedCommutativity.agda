@@ -100,6 +100,8 @@ private
 -ₖ^_·_ {k = k} n m = -ₖ-gen n m (evenOrOdd n) (evenOrOdd m)
 
 -- cohomology version
+
+
 -ₕ^_·_ : {k : ℕ} {A : Type ℓ} (n m : ℕ) → coHom k A → coHom k A
 -ₕ^_·_ n m = sMap λ f x → (-ₖ^ n · m) (f x)
 
