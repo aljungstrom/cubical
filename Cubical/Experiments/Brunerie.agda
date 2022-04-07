@@ -200,6 +200,121 @@ tHopf³ (surf i j k) =
 π₃S³ : Ω³ S³∙ .fst → Ω² ∥ S²∙ ∥₄∙ .fst
 π₃S³ p i j = transp (λ k → tHopf³ (p j k i)) i0 ∣ base ∣₄
 
+K₂ = ∥ S² ∥₄
+
+4TruncElim : ∀ {ℓ}{A : Type ℓ} {P : ∥ A ∥₄ → Type} → ((x : _) → isOfHLevel 4 (P x))
+  → ((x : _) → P ∣ x ∣₄)
+  → (x : _) → P x
+4TruncElim {P = P} hlev b ∣ x ∣₄ = b x
+4TruncElim {P = P} hlev b (squash₄ x y p q r s t u i j k l) = help i j k l
+  where
+  help : PathP (λ i → PathP (λ j → PathP (λ k → PathP (λ l → P (squash₄ x y p q r s t u i j k l))
+               (4TruncElim hlev b x) (4TruncElim hlev b y))
+               (λ l → 4TruncElim hlev b (p l))
+               λ l → 4TruncElim hlev b (q l))
+               (λ k l → 4TruncElim hlev b (r k l)) λ k l → 4TruncElim hlev b (s k l))
+               (λ j k l → 4TruncElim hlev b (t j k l)) λ j k l → 4TruncElim hlev b (u j k l)
+  help = toPathP (isOfHLevelPathP' 1 (isOfHLevelPathP' 2 (isOfHLevelPathP' 3 (hlev _) _ _) _ _) _ _ _ _)
+
+_+₂_ : K₂ → K₂ → K₂
+_+₂_ = 4TruncElim (λ _ → isOfHLevelΠ 4 λ _ → squash₄)
+               λ x → 4TruncElim (λ _ → squash₄)
+                 λ y → wedgeconFunS² (λ _ _ → squash₄) ∣_∣₄ ∣_∣₄ refl x y
+
+
+private
+  sillyfill : I → I → I → K₂
+  sillyfill k i j =
+    hfill (λ k → λ { (i = i0) → ∣ base ∣₄
+                     ; (i = i1) → ∣ base ∣₄
+                     ; (j = i0) → ∣ base ∣₄
+                     ; (j = i1) → ∣ base ∣₄})
+           (inS (∣ surf i j ∣₄)) k
+
++₂-comm : (x y : K₂) → (x +₂ y) ≡ (y +₂ x)
++₂-comm = 4TruncElim (λ _ → isOfHLevelΠ 4 λ _ → isOfHLevelPath 4 squash₄ _ _)
+          λ x → 4TruncElim ( λ _ → isOfHLevelPath 4 squash₄ _ _)
+            λ y → main x y
+  where
+  main : (x y : S²) → (∣ x ∣₄ +₂ ∣ y ∣₄) ≡ (∣ y ∣₄ +₂ ∣ x ∣₄)
+  main = wedgeconFunS² (λ _ _ → isOfHLevelPath 4 squash₄ _ _ )
+           (λ { base → refl ; (surf i i₁) k → sillyfill (~ k) i i₁})
+           (λ { base → refl ; (surf i i₁) k → sillyfill k i i₁})
+           refl
+
+0₂ : K₂
+0₂ = ∣ base ∣₄
+
+-₂ : K₂ → K₂
+-₂ = 4TruncElim (λ _ → squash₄) λ { base → ∣ base ∣₄ ; (surf i i₁) → ∣ surf (~ i) i₁ ∣₄}
+
+rCancel₂ : (x : K₂) → (x +₂ -₂ x) ≡ 0₂
+rCancel₂ = 4TruncElim (λ _ → isOfHLevelPath 4 squash₄ _ _)
+           λ { base → refl
+             ; (surf i i₁) k → help k i i₁}
+  where
+  help : cong₂ {A = Path S² base base} {B = λ  _ → Path S² base base}
+               (λ x y → cong₂ _+₂_ (cong ∣_∣₄ x) (cong -₂ (cong {A = S²} ∣_∣₄ y))) surf surf
+               ≡ refl
+  help = cong₂Funct (λ x y → cong₂ _+₂_ (cong ∣_∣₄ x) (cong -₂ (cong {A = S²} ∣_∣₄ y))) surf surf
+      ∙∙ (λ k → (λ i j → +₂-comm ∣ surf i j ∣₄ ∣ base ∣₄ k)
+                ∙ λ i j → ∣ surf (~ i) j ∣₄)
+      ∙∙ rCancel _
+
+lCancel₂ : (x : K₂) → ((-₂ x) +₂ x) ≡ 0₂
+lCancel₂ x = +₂-comm (-₂ x) x ∙' rCancel₂ x
+
+rUnit₂ : (x : K₂) → x +₂ 0₂ ≡ x
+rUnit₂ = 4TruncElim (λ _ → isOfHLevelPath 4 squash₄ _ _)
+         λ { base → refl ; (surf i i₁) k → sillyfill (~ k) i i₁}
+
+lUnit₂ : (x : K₂) → 0₂ +₂ x ≡ x
+lUnit₂ = 4TruncElim (λ _ → isOfHLevelPath 4 squash₄ _ _) λ _ → refl
+
+assoc₂ : (x y z : K₂) → (x +₂ (y +₂ z)) ≡ ((x +₂ y) +₂ z)
+assoc₂ =
+  4TruncElim (λ _ → isOfHLevelΠ 4 λ _ → isOfHLevelΠ 4 λ _ → isOfHLevelPath 4 squash₄ _ _)
+    λ x → 4TruncElim (λ _ → isOfHLevelΠ 4 λ _ → isOfHLevelPath 4 squash₄ _ _)
+      λ y → 4TruncElim (λ _ → isOfHLevelPath 4 squash₄ _ _)
+        λ z → main x y z
+  where
+  main : (x y z : S²) → (∣ x ∣₄ +₂ (∣ y ∣₄ +₂ ∣ z ∣₄)) ≡  ((∣ x ∣₄ +₂ ∣ y ∣₄) +₂ ∣ z ∣₄)
+  main = wedgeconFunS² (λ _ _ → isOfHLevelΠ 4 (λ _ → isOfHLevelPath 4 squash₄ _ _ ))
+         (λ x z → λ i → ((rUnit₂ ∣ x ∣₄ (~ i)) +₂ ∣ z ∣₄))
+         (λ x z → lUnit₂ (∣ x ∣₄ +₂ ∣ z ∣₄))
+         refl
+
+S¹×S¹→S² : S¹ → S¹ → S²
+S¹×S¹→S² base y = base
+S¹×S¹→S² (loop i) base = base
+S¹×S¹→S² (loop i) (loop i₁) = surf i i₁
+
+IsoK₂ : (x : S²) → Iso K₂ K₂
+Iso.fun (IsoK₂ x) z = z +₂ ∣ x ∣₄
+Iso.inv (IsoK₂ x) = _+₂ -₂ ∣ x ∣₄
+Iso.rightInv (IsoK₂ x) z = sym (assoc₂ z (-₂ ∣ x ∣₄) ∣ x ∣₄) ∙∙ cong (z +₂_) (lCancel₂ ∣ x ∣₄) ∙∙ rUnit₂ z
+Iso.leftInv (IsoK₂ x) z = sym (assoc₂ z ∣ x ∣₄ (-₂ ∣ x ∣₄)) ∙∙ cong (z +₂_) (rCancel₂ ∣ x ∣₄) ∙∙ rUnit₂ z
+
+
+open import Cubical.HITs.Susp
+open import Cubical.HITs.Truncation as Trunc
+Code-raw : Susp S² → Type ℓ-zero
+Code-raw north = K₂
+Code-raw south = K₂
+Code-raw (merid a i) = isoToPath (IsoK₂ a) i
+
+is4C : (x : Susp S²) → isOfHLevel 4 (Code-raw x)
+is4C = suspToPropElim base (λ _ → isPropIsOfHLevel 4) squash₄
+
+CODE : hLevelTrunc 5 (Susp S²) → Type ℓ-zero
+CODE x = (Trunc.rec (isOfHLevelTypeOfHLevel 4) λ x → (Code-raw x) , (is4C x)) x .fst
+
+encode' : (x : hLevelTrunc 5 (Susp S²)) →  ∣ north ∣ₕ ≡ x → CODE x
+encode' x = J (λ x p → CODE x) ∣ base ∣₄
+
+f7' : typ (Ω ((hLevelTrunc 5 (Susp S²)) , ∣ north ∣ₕ)) → K₂
+f7' = encode' ∣ north ∣ₕ
+
 codeS² : S² → hGroupoid _
 codeS² s = ∥ HopfS² s ∥₃ , squash₃
 
@@ -230,6 +345,12 @@ f4 = mapΩ³refl alpha
 f5 : Ω³ S²∙ .fst → Ω³ (join∙ S¹∙ S¹) .fst
 f5 = h
 
+f6' : Ω³ (join∙ S¹∙ S¹) .fst → Ω³ (Susp S² , north) .fst
+f6' = mapΩ³refl λ { (inl x) → north ; (inr x) → south ; (push a b i) → merid (S¹×S¹→S² a b) i}
+
+f7'' : Ω³ (Susp S² , north) .fst → Ω² ∥ S²∙ ∥₄∙ .fst
+f7'' = mapΩ²refl f7' ∘ mapΩ²refl (cong ∣_∣ₕ)
+
 f6 : Ω³ (join∙ S¹∙ S¹) .fst → Ω³ S³∙ .fst
 f6 = mapΩ³refl joinS¹S¹→S³
 
@@ -248,6 +369,10 @@ g10 = SetTrunc.rec isSetℤ (idfun ℤ)
 -- don't run me
 brunerie : ℤ
 brunerie = g10 (g9 (g8 (f7 (f6 (f5 (f4 (f3 (λ i j k → surf i j k))))))))
+
+brunerie' : ℤ
+brunerie' = g10 (g9 (g8 (f7'' (f6' (f5 (f4 (f3 (λ i j k → surf i j k))))))))
+
 
 -- simpler tests
 
