@@ -197,6 +197,33 @@ tHopf³ (surf i j k) =
        ; (k = i1) → (∥ S² ∥₄ , idEquiv _)
        })
 
+open import Cubical.Foundations.HLevels
+open import Cubical.Data.Sigma
+
+tHopfS² : S² → Type₀
+tHopfS² base = Ω² S³∙ .fst
+tHopfS² (surf i j) =
+  Glue (Ω² S³∙ .fst)
+    (λ { (i = i0) → (Ω² S³∙ .fst , idEquiv _)
+       ; (i = i1) → (Ω² S³∙ .fst , idEquiv _)
+       ; (j = i0) → (Ω² S³∙ .fst , idEquiv _)
+       ; (j = i1) → (Ω² S³∙ .fst , lem1 i)
+       })
+  where
+  lem1 : Path (Ω² S³∙ .fst ≃ Ω² S³∙ .fst) (idEquiv _) (idEquiv _)
+  lem1 = Σ≡Prop (λ _ → isPropIsEquiv _) (funExt λ p → rUnit p ∙∙ cong (p ∙_) surf ∙∙ sym (rUnit p))
+
+
+cooli : Ω² S²∙ .fst → Ω³ S³∙ .fst
+cooli p i j k =
+  hcomp (λ r → λ {(i = i0) → transp (λ k → tHopfS² (p i k)) r refl j k
+                 ; (i = i1) → transp (λ k → tHopfS² (p i k)) r refl j k
+                 ; (j = i0) → base
+                 ; (j = i1) → base
+                 ; (k = i0) → base
+                 ; (k = i1) → base})
+        (transport (λ k → tHopfS² (p i k)) refl j k)
+
 π₃S³ : Ω³ S³∙ .fst → Ω² ∥ S²∙ ∥₄∙ .fst
 π₃S³ p i j = transp (λ k → tHopf³ (p j k i)) i0 ∣ base ∣₄
 
@@ -342,11 +369,180 @@ f3 = mapΩ³refl S³→joinS¹S¹
 f4 : Ω³ (join∙ S¹∙ S¹) .fst → Ω³ S²∙ .fst
 f4 = mapΩ³refl alpha
 
+open import Cubical.Data.Sigma
+
+tt123 : S¹ → typ (Ω S²∙) → typ (Ω S²∙)
+tt123 a p = p ∙ meridS² a
+
+tt1234 : S¹ → Iso (typ (Ω S²∙)) (typ (Ω S²∙))
+Iso.fun (tt1234 a) = _∙ meridS² a
+Iso.inv (tt1234 a) = _∙ sym (meridS² a)
+Iso.rightInv (tt1234 a) p = sym (assoc _ _ _) ∙ cong (p ∙_) (rCancel (sym (meridS² a))) ∙ sym (rUnit p)
+Iso.leftInv (tt1234 a) p = sym (assoc _ _ _) ∙ cong (p ∙_) (rCancel ( (meridS² a))) ∙ sym (rUnit p)
+
+open import Cubical.HITs.S1 renaming (_·_ to _*_)
+
+taha : S¹ → S¹ → join S¹ S¹ → join S¹ S¹
+taha a b (inl x) = inl (a * x)
+taha a b (inr x) = inr (b * x)
+taha a b (push a₁ b₁ i) = push (a * a₁) (b * b₁) i
+
+open import Cubical.HITs.Sn hiding (joinS¹S¹→S³) renaming (S¹×S¹→S² to _⌣₂_)
+tahaIso : S¹ → S¹ → Iso (join S¹ S¹) (join S¹ S¹)
+Iso.fun (tahaIso a b) = taha a b
+Iso.inv (tahaIso a b) x = taha (invLooper a) (invLooper b) x
+Iso.rightInv (tahaIso a b) (inl x) i = inl ((assocS¹ a (invLooper a) x ∙ cong (_* x) (sym (rCancelS¹ a))) i)
+Iso.rightInv (tahaIso a b) (inr x) i = inr ((assocS¹ b (invLooper b) x ∙ cong (_* x) (sym (rCancelS¹ b))) i)
+Iso.rightInv (tahaIso a b) (push x y i) j =
+  push ((assocS¹ a (invLooper a) x ∙ cong (_* x) (sym (rCancelS¹ a))) j)
+       ((assocS¹ b (invLooper b) y ∙ cong (_* y) (sym (rCancelS¹ b))) j) i
+Iso.leftInv (tahaIso a b) (inl x) i =
+  inl ((assocS¹ (invLooper a) a x ∙ cong (_* x) (sym (commS¹ a (invLooper a)) ∙ sym (rCancelS¹ a))) i)
+Iso.leftInv (tahaIso a b) (inr x) i =
+  inr ((assocS¹ (invLooper b) b x ∙ cong (_* x) (sym (commS¹ b (invLooper b)) ∙ sym (rCancelS¹ b))) i)
+Iso.leftInv (tahaIso a b) (push x y i) j =
+  push ((assocS¹ (invLooper a) a x ∙ cong (_* x) (sym (commS¹ a (invLooper a)) ∙ sym (rCancelS¹ a))) j)
+       ((assocS¹ (invLooper b) b y ∙ cong (_* y) (sym (commS¹ b (invLooper b)) ∙ sym (rCancelS¹ b))) j) i
+
+ΩJoin→Type : join S¹ S¹ → Type
+ΩJoin→Type (inl x) = join S¹ S¹
+ΩJoin→Type (inr x) = join S¹ S¹
+ΩJoin→Type (push a b i) = isoToPath (tahaIso base base) i
+
+tss : (x : join S¹ S¹) → inl base ≡ x → ΩJoin→Type x
+tss x = J (λ x p → ΩJoin→Type x) (inl base)
+
+t : Ω³ (join∙ S¹∙ S¹) .fst
+t = λ i j k → S³→joinS¹S¹ (surf i j k)
+
+Ω→base : Ω (join∙ S¹∙ S¹) .fst → join S¹ S¹
+Ω→base = tss (inl base)
+
+S²→ΩS¹*S¹ : S² → Ω (join∙ S¹∙ S¹) .fst
+S²→ΩS¹*S¹ base = refl
+S²→ΩS¹*S¹ (surf i j) k = S³→joinS¹S¹ (surf i j k)
+
+π₃ : ∀ {ℓ} (A : Type ℓ) (a : A) → Type ℓ
+π₃ A a = ∥ (join S¹ S¹ , inl base) →∙ (A , a) ∥₂
+
+π₂ : ∀ {ℓ} (A : Type ℓ) (a : A) → Type ℓ
+π₂ A a = ∥ (S²∙ →∙ (A , a)) ∥₂
+
+kasd : (a : S¹) → Iso (S₊ 2) (S₊ 2)
+Iso.fun (kasd a) = suspFun (a *_)
+Iso.inv (kasd a) = suspFun (invLooper a *_)
+Iso.rightInv (kasd a) north = refl
+Iso.rightInv (kasd a) south = refl
+Iso.rightInv (kasd a) (merid b i) j =
+  merid ((assocS¹ a (invLooper a) b ∙' cong (_* b) (sym (rCancelS¹ a))) j) i
+Iso.leftInv (kasd a) north = refl
+Iso.leftInv (kasd a) south = refl
+Iso.leftInv (kasd a) (merid b i) j =
+  merid ((assocS¹ (invLooper a) a b ∙' cong (_* b) (sym (commS¹ a (invLooper a)) ∙ sym (rCancelS¹ a))) j) i
+
+KALA : Susp S¹ → Type
+KALA north = Susp S¹
+KALA south = Susp S¹
+KALA (merid a i) = isoToPath (kasd a) i
+
+encodeKala : north ≡ north → S₊ 2
+encodeKala x = transport (λ i → KALA (x i)) north
+
+fib123 : (S₊∙ 2) .fst → Type₀
+fib123 north = Ω (join∙ S¹∙ S¹) .fst
+fib123 south = Ω (join∙ S¹∙ S¹) .fst
+fib123 (merid a i) = ua (_ , isEq-kewl a) i
+  where
+  kewlUnder : S¹ → join S¹ S¹ → join S¹ S¹
+  kewlUnder x (inl x₁) = inl x₁
+  kewlUnder x (inr x₁) = inr (x * x₁)
+  kewlUnder a (push a2 b i) = push a2 (a * b) i
+
+  kewl : S¹ → (Ω (join∙ S¹∙ S¹)) .fst → (Ω (join∙ S¹∙ S¹)) .fst
+  kewl a = mapΩrefl (kewlUnder a)
+
+
+  kewl-base≡id : (x : _) → kewlUnder base x ≡ x
+  kewl-base≡id (inl x) = refl
+  kewl-base≡id (inr x) = refl
+  kewl-base≡id (push a b i) = refl
+
+  kewl2 : kewl base ≡ idfun _
+  kewl2 = cong mapΩrefl (funExt kewl-base≡id)
+
+  isEq-kewl : (x : S¹) → isEquiv (kewl x)
+  isEq-kewl =
+    sphereElim 0 (λ _ → isPropIsEquiv _)
+            (subst isEquiv (sym kewl2) (idEquiv _ .snd))
+
+ΩS²→Ω²S³ : Ω³ (S₊∙ 2) .fst → (Ω³ (join∙ S¹∙ S¹)) .fst
+ΩS²→Ω²S³ p i j k =
+  hcomp (λ r → λ {(i = i0) → transportRefl (refl {x = inl base}) r k
+                 ; (i = i1) → transportRefl (refl {x = inl base}) r k
+                 ; (j = i0) → transportRefl (refl {x = inl base}) r k
+                 ; (j = i1) → transportRefl (refl {x = inl base}) r k
+                 ; (k = i0) → inl base
+                 ; (k = i1) → inl base})
+        (transport (cong fib123 (p i j)) refl k)
+
+
+
+
 f5 : Ω³ S²∙ .fst → Ω³ (join∙ S¹∙ S¹) .fst
 f5 = h
 
+h' : Ω³ S²∙ .fst
+h' i j k =
+  hcomp (λ r → λ {(i = i0) → surf j (k ∨ r)
+                 ; (i = i1) → surf j (k ∧ ~ r)
+                 ; (j = i0) → surf i (k ∨ r)
+                 ; (j = i1) → surf i (k ∧ ~ r)
+                 ; (k = i0) → surf (i ∨ j) r
+                 ; (k = i1) → surf (i ∧ j) (~ r)})
+        (meridS² ((loop i) * (loop j)) k)
+
+
+h'' : Ω³ S²∙ .fst
+h'' i j k =
+  hcomp (λ r → λ {(i = i0) → surf j r
+                 ; (i = i1) → surf (j ∧ k) r
+                 ; (j = i0) → surf i r
+                 ; (j = i1) → surf (i ∧ k) r
+                 ; (k = i0) → surf (i ∨ j) r
+                 ; (k = i1) → meridS² ((loop i) * (loop j)) r})
+        base
+
+S²→S2 : S² → S₊ 2
+S²→S2 base = north
+S²→S2 (surf i i₁) = (sym (rCancel (merid base)) ∙∙ cong (toSusp (S₊∙ 1)) loop ∙∙ rCancel (merid base)) i i₁
+
+S³→S² : {!!} → {!!}
+S³→S² = {!!}
+
+testMe : fst (Ω³ (join∙ S¹∙ S¹))
+testMe = ΩS²→Ω²S³ {!!} -- (mapΩ³refl S²→S2 h')
+
+h123 : Cube surf surf surf surf refl refl -- Ω³ S²∙ .fst
+h123 i j k = meridS² ((loop i) * (loop j)) k
+
+fMega : Ω³ S²∙ .fst → Ω² ∥ S²∙ ∥₄∙ .fst
+fMega p i j = ∣ mapΩ²refl (SuspS¹→S² ∘ encodeKala ∘ cong S²→SuspS¹) p i j ∣₄
+
+
+
+f5' : Ω³ S²∙ .fst → Ω³ (join∙ S¹∙ S¹) .fst
+f5' = mapΩ³refl (Ω→base ∘ S²→ΩS¹*S¹)
+
+S¹*S¹→SuspS² : join S¹ S¹ → Susp S²
+S¹*S¹→SuspS² (inl x) = north
+S¹*S¹→SuspS² (inr x) = south
+S¹*S¹→SuspS² (push a b i) = merid (S¹×S¹→S² a b) i
+
 f6' : Ω³ (join∙ S¹∙ S¹) .fst → Ω³ (Susp S² , north) .fst
 f6' = mapΩ³refl λ { (inl x) → north ; (inr x) → south ; (push a b i) → merid (S¹×S¹→S² a b) i}
+
+f6'' : Ω³ (join∙ S¹∙ S¹) .fst → Ω³ (Susp S² , north) .fst
+f6'' = mapΩ³refl λ { (inl x) → north ; (inr x) → north ; (push a b i) → (merid (S¹×S¹→S² a b) ∙' sym (merid base)) i}
 
 f7'' : Ω³ (Susp S² , north) .fst → Ω² ∥ S²∙ ∥₄∙ .fst
 f7'' = mapΩ²refl f7' ∘ mapΩ²refl (cong ∣_∣ₕ)
@@ -366,22 +562,9 @@ g9 = encodeTruncS¹
 g10 : ∥ ℤ ∥₂ → ℤ
 g10 = SetTrunc.rec isSetℤ (idfun ℤ)
 
--- don't run me
-brunerie : ℤ
-brunerie = g10 (g9 (g8 (f7 (f6 (f5 (f4 (f3 (λ i j k → surf i j k))))))))
 
-brunerie' : ℤ
-brunerie' = g10 (g9 (g8 (f7'' (f6' (f5 (f4 (f3 (λ i j k → surf i j k))))))))
-
-
--- simpler tests
-
-test63 : ℕ → ℤ
-test63 n = g10 (g9 (g8 (f7 (63n n))))
-  where
-  63n : ℕ → Ω³ S³∙ .fst
-  63n zero i j k = surf i j k
-  63n (suc n) = f6 (f3 (63n n))
+fun↦ : Cube {A = S²} surf surf surf surf refl refl → Ω³ S³∙ .fst
+fun↦ p i j k = {!encodeTruncS² (λ j → f7' (λ k → ∣ S¹*S¹→SuspS² ((Ω→base ∘ S²→ΩS¹*S¹) (p i j k)) ∣ₕ))!}
 
 foo : Ω³ S²∙ .fst
 foo i j k =
@@ -396,27 +579,49 @@ foo i j k =
       })
     base
 
-sorghum : Ω³ S²∙ .fst
-sorghum i j k =
-  hcomp
-    (λ l → λ
-      { (i = i0) → surf j l
-      ; (i = i1) → surf k (~ l)
-      ; (j = i0) → surf k (i ∧ ~ l)
-      ; (j = i1) → surf k (i ∧ ~ l)
-      ; (k = i0) → surf j (i ∨ l)
-      ; (k = i1) → surf j (i ∨ l)
-      })
-    (hcomp
-      (λ l → λ
-        { (i = i0) → base
-        ; (i = i1) → surf j l
-        ; (j = i0) → surf k i
-        ; (j = i1) → surf k i
-        ; (k = i0) → surf j (i ∧ l)
-        ; (k = i1) → surf j (i ∧ l)
-        })
-      (surf k i))
+-- don't run me
+brunerie : ℤ
+brunerie = g10 (g9 (g8 (f7 (f6 (f5 (f4 (f3 (λ i j k → surf i j k))))))))
 
-goo : Ω³ S²∙ .fst → ℤ
-goo x = g10 (g9 (g8 (f7 (f6 (f5 x)))))
+brunerie' : ℤ
+brunerie' = g10 (g9 (g8 (mapΩ²refl (f7' ∘ mapΩrefl (∣_∣ₕ ∘ S³→SuspS²)) (cooli surf))))
+
+
+brunerie'' : ℤ
+brunerie'' = g10 (g9 (g8 (fMega (sym (rCancel surf) ∙ (EH 0 surf (sym surf) ∙' lCancel surf)))))
+
+
+
+-- -- simpler tests
+
+-- test63 : ℕ → ℤ
+-- test63 n = g10 (g9 (g8 (f7 (63n n))))
+--   where
+--   63n : ℕ → Ω³ S³∙ .fst
+--   63n zero i j k = surf i j k
+--   63n (suc n) = f6 (f3 (63n n))
+
+-- sorghum : Ω³ S²∙ .fst
+-- sorghum i j k =
+--   hcomp
+--     (λ l → λ
+--       { (i = i0) → surf j l
+--       ; (i = i1) → surf k (~ l)
+--       ; (j = i0) → surf k (i ∧ ~ l)
+--       ; (j = i1) → surf k (i ∧ ~ l)
+--       ; (k = i0) → surf j (i ∨ l)
+--       ; (k = i1) → surf j (i ∨ l)
+--       })
+--     (hcomp
+--       (λ l → λ
+--         { (i = i0) → base
+--         ; (i = i1) → surf j l
+--         ; (j = i0) → surf k i
+--         ; (j = i1) → surf k i
+--         ; (k = i0) → surf j (i ∧ l)
+--         ; (k = i1) → surf j (i ∧ l)
+--         })
+--       (surf k i))
+
+-- goo : Ω³ S²∙ .fst → ℤ
+-- goo x = g10 (g9 (g8 (f7 (f6 (f5 x)))))

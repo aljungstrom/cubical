@@ -1192,17 +1192,15 @@ S¹×S¹→S²' (loop i) (loop j) = surf i j
 fst η₃-raw1 (inl x) = north
 fst η₃-raw1 (inr x) = north
 fst η₃-raw1 (push a b i) =
-  (merid (S¹×S¹→S²' a b) ∙ sym (merid (S¹×S¹→S²' (invLooper a) b))) i
+  (σ (S² , base) (S¹×S¹→S²' a b) ∙ σ (S² , base) (S¹×S¹→S²' a b)) i -- (merid (S¹×S¹→S²' a b) ∙ sym (merid (S¹×S¹→S²' (invLooper a) b))) i
 snd η₃-raw1 = refl
-
-
 
 
 ηs : typ ((Ω^ 3) (coHomK-ptd 3))
 ηs = Iso.fun (IsoSphereMapΩ 3) ((λ x → ∣ x ∣ₕ) , refl)
 
 hahaha : Z
-hahaha = g10 (g9 (g8 λ i j → f7' λ k → ∣ η₃-raw1 .fst (push (loop i) (loop j) k) ∣ₕ)) -- (Ω^→ 2 (f7' , ?) ? .fst))) -- Ω→ (Trunc.map (suspFun S2→S²) , refl) .fst , refl) .fst ηs)))
+hahaha = g10 (g9 (g8 λ i j → f7' λ k → ∣ η₃-raw1 .fst (push (loop i) (loop j) k) ∣ₕ))
 
 hahahaha : abs (asd (f11 η₃)) ≡ 2
 hahahaha = {!hahaha!}
