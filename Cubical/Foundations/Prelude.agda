@@ -151,6 +151,13 @@ compPath'-filler : (p : x ≡ y) (q : y ≡ z) → PathP (λ j → p (~ j) ≡ z
 compPath'-filler p q = doubleCompPath-filler p q refl
 
 -- It's easy to show that `p ∙ q` also has such a filler:
+compPath-filler'-filler : (p : x ≡ y) (q : y ≡ z)  → I → I → I → _
+compPath-filler'-filler p q j i r =
+  hfill (λ k → λ { (i = i0) → p (~ j)
+                 ; (i = i1) → q k
+                 ; (j = i0) → q (i ∧ k) })
+        (inS (p (i ∨ ~ j)))
+        r
 compPath-filler' : (p : x ≡ y) (q : y ≡ z) → PathP (λ j → p (~ j) ≡ z) q (p ∙ q)
 compPath-filler' {z = z} p q j i =
   hcomp (λ k → λ { (i = i0) → p (~ j)
