@@ -37,6 +37,78 @@ open import Cubical.Algebra.Group.Morphisms
 open import Cubical.Algebra.Group.MorphismProperties
 open import Cubical.Algebra.Group.GroupPath
 
+
+module _ {ℓ ℓ' ℓ'' : Level} {A : Pointed ℓ} {B : Pointed ℓ'} {C : Pointed ℓ''} (f : A →∙ B) (g : B →∙ C) where
+  fibMap : fiber (fst g ∘ fst f) (pt C) → fiber (fst g) (pt C)
+  fibMap (x , y) = (fst f x) , y
+
+  ∘fibSeq : Iso (fiber (fibMap) ((pt B) , (snd g))) (fiber (fst f) (pt B))
+  fun ∘fibSeq
+    ((x , y) , z) = x , cong fst z
+  inv ∘fibSeq (x , y) =
+    (x , (cong (fst g) y ∙ snd g)) , ΣPathP (y , λ i j → compPath-filler' (cong (fst g) y) (snd g) (~ i) j)
+  rightInv ∘fibSeq (x , y) = refl
+  leftInv ∘fibSeq ((x , y) , z) = ΣPathP ((ΣPathP (refl , help'))
+                                , λ i j → (fst (z j)) , help2 i j)
+    where
+    help'-filler : I → I → I → fst C
+    help'-filler i j k =
+      hfill (λ k → λ {(i = i0) → compPath-filler' (cong (fst g) (cong fst z)) (snd g) k j
+                     ; (i = i1) → y j
+                     ; (j = i0) → fst g (fst (z (~ k ∧ ~ i)))
+                     ; (j = i1) → snd C})
+           (inS (snd (z (~ i)) j))
+           k
+ 
+
+    help' : (λ i → fst g (fst (z i))) ∙ snd g ≡ y
+    help' i j = help'-filler i j i1
+ 
+    help : (λ i → fst g (fst (z i))) ∙ snd g ≡ y
+    help i j =
+      hcomp (λ k → λ {(i = i0) → compPath-filler (cong (fst g) (cong fst z)) (snd g) k j
+                     ; (i = i1) → y (j ∧ k)
+                     ; (j = i0) → fst g (fst f x)
+                     ; (j = i1) → snd (z (~ i)) k})
+           (fst g (fst (z (j ∧ ~ i))))
+
+    
+
+    help2 : PathP (λ i → PathP (λ j → fst g (fst (z j)) ≡ pt C) (help' i) (snd g))
+                  (λ i j → compPath-filler' (cong (fst g) (cong fst z)) (snd g) (~ i) j)
+                  (cong snd z)
+    help2 i j k =
+      hcomp (λ r → λ {(i = i0) → compPath-filler' (cong (fst g) (cong fst z)) (snd g) (~ j ∧ r) k
+                     ; (i = i1) → cong snd z (j ∨ ~ r) k
+                     ; (j = i0) → h r i k
+                     ; (j = i1) → snd g k
+                     ; (k = i0) → fst g (fst (z (j ∨ ~ r)))
+                     ; (k = i1) → pt C})
+            (snd g k)
+
+      where
+      gener : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y)
+            → Cube (λ r i → p (~ r ∨ ~ i)) (λ r i → p (~ r))
+                    refl (λ j i → p (~ j ∧ ~ i))
+                    (λ j r → p (~ r ∨ ~ j)) λ j r → p (~ r)
+      gener {x = x} =
+        J (λ y p → Cube (λ r i → p (~ r ∨ ~ i)) (λ r i → p (~ r))
+                    refl (λ j i → p (~ j ∧ ~ i))
+                    (λ j r → p (~ r ∨ ~ j)) λ j r → p (~ r))
+          refl
+
+      h : Cube (λ i k → snd g k) help'
+               (compPath-filler' (cong (fst g) (cong fst z)) (snd g)) (λ r k → cong snd z (~ r) k)
+               (λ r i → fst g (fst (z (~ r)))) λ _ _ → pt C
+      h r i k =
+        hcomp (λ j → λ {(r = i0) → snd g k
+                     ; (r = i1) → help'-filler i k j
+                     ; (i = i0) → compPath-filler' (cong (fst g) (cong fst z)) (snd g) (r ∧ j) k
+                     ; (i = i1) → cong snd z (~ r) k
+                     ; (k = i0) → gener (cong (fst g) (cong fst z)) j r i
+                     ; (k = i1) → pt C})
+            (cong snd z (~ r ∨ ~ i) k)
+
 -- We will need an explicitly defined equivalence
 -- (PathP (λ i → p i ≡ y) q q) ≃ (sym q ∙∙ p ∙∙ q ≡ refl)
 -- This is given by →∙∙lCancel below
@@ -666,3 +738,38 @@ of homotopy groups defined using (Sⁿ →∙ A) -}
   where
   lem : πLES.fib→A f n .fst ≡ sMap (Ω^→ (suc n) (fst , refl) .fst)
   lem = cong sMap (cong fst (Ω^fibf→A≡ (suc n) f))
+
+
+open import Cubical.Homotopy.Connected
+open import Cubical.Homotopy.Freudenthal
+open import Cubical.HITs.Truncation as Trunc
+open import Cubical.Data.Unit
+
+con→contrπ : ∀ {ℓ} {A : Pointed ℓ} (n : ℕ) → isConnected (3 + n) (typ A)
+          → isContr (π (suc n) A)
+con→contrπ {A = A} n con =
+  subst isContr
+        (cong (π (suc n))
+          (ua∙ (isContr→Equiv isContrUnit* con) (isContr→isProp con _ _))
+      ∙ sym (isoToPath (πTruncIso {A = A} (suc n))))
+    (subst isContr (sym (setTruncIdempotent (isProp→isSet (isContr→isProp (h (suc n))))))
+      (h (suc n)))
+  where
+  h : ∀ {ℓ} (n : ℕ) → isContr ((Ω^ n) (Unit* {ℓ} , lift tt) .fst)
+  h zero = tt* , (λ x → refl)
+  h (suc n) =
+    subst isContr (cong (fst ∘ Ω) (ua∙ (isContr→Equiv isContrUnit* (h n))
+      (isContr→isProp (h n) _ _)))
+      (refl , (λ _ → refl))
+      
+open import Cubical.HITs.Sn
+open import Cubical.HITs.Susp
+
+FF : S₊ 2 → Ω (S₊∙ 3) .fst
+FF = toSusp (S₊∙ 2)
+
+fibFFContrπ : isContr (π 2 (fiber FF refl , north , rCancel (merid north)))
+fibFFContrπ = con→contrπ 1 (isConnectedσ 1 {A = S₊∙ 2} (sphereConnected 2) _)
+
+fibFFContrπ1 : isContr (π 1 (fiber FF refl , north , rCancel (merid north)))
+fibFFContrπ1 = con→contrπ 0 (isConnectedSubtr 3 1 (isConnectedσ 1 {A = S₊∙ 2} (sphereConnected 2) _))
