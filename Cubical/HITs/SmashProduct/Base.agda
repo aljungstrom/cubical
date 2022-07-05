@@ -211,3 +211,244 @@ SmashAssociate⁻ = rearrange ∘ comm ∘ Smash-map (idfun∙ _) (comm , refl)
 
 ⋀-associate⁻ : A ⋀ (B ⋀∙ C) → (A ⋀∙ B) ⋀ C
 ⋀-associate⁻ = (SmashPtProj→⋀∙ ⋀→ idfun∙ _) ∘ Smash→⋀ ∘ SmashAssociate⁻ ∘ ⋀→Smash ∘ (idfun∙ _ ⋀→ ⋀∙→SmashPtProj)
+
+
+-- open import Cubical.Data.Sigma renaming (_×_ to _×'_)
+-- →Point : ((A ⋀∙ B) →∙ C) → A →∙ (B →∙ C ∙)
+-- fst (fst (→Point f) x) y = fst f (inr (x , y))
+-- snd (fst (→Point f) x) = cong (fst f) (sym (push (inl x))) ∙ snd f
+-- snd (→Point {B = B} f) =
+--   ΣPathP ((funExt (λ x → cong (fst f) (sym (push (inr x))) ∙ snd f))
+--         , ((λ i → cong (fst f) (sym (push (push tt i))) ∙ snd f)
+--         ◁ λ i j → (cong (fst f) (sym (push (inr (pt B)))) ∙ snd f) (i ∨ j)))
+
+-- →Point∙ : ((A ⋀∙ B) →∙ C ∙) →∙ (A →∙ B →∙ C ∙ ∙)
+-- fst →Point∙ = →Point
+-- snd (→Point∙ {A = A} {B = B} {C = C}) =
+--   ΣPathP ((funExt (λ x → ΣPathP (refl , (sym (rUnit refl)))))
+--     , {!!})
+
+-- ←Point : A →∙ (B →∙ C ∙) → (A ⋀∙ B) →∙ C
+-- fst (←Point {A = A} {B = B} {C = C} f) (inl x) = fst (fst f (pt A)) (pt B)
+-- fst (←Point f) (inr (x , y)) = fst (fst f x) y
+-- fst (←Point {A = A} f) (push (inl x) i) = (((fst f (pt A)) .snd) ∙ sym ((fst f x) .snd)) i
+-- fst (←Point {B = B} f) (push (inr x) i) = (funExt⁻ (cong fst (snd f)) (pt B) ∙ sym (funExt⁻ (cong fst (snd f)) x)) i
+-- fst (←Point {A = A} {B = B} f) (push (push a i) j) =
+--   (rCancel (fst f (pt A) .snd) ∙ sym (rCancel (funExt⁻ (cong fst (snd f)) (pt B)))) i j
+-- snd (←Point {A = A} f) = fst f (pt A) .snd
+
+-- ←Point∙ : (A →∙ B →∙ C ∙ ∙) →∙ ((A ⋀∙ B) →∙ C ∙)
+-- fst ←Point∙ = ←Point
+-- snd ←Point∙ = {!!}
+
+-- PointIso : Iso (A →∙ (B →∙ C ∙)) ((A ⋀∙ B) →∙ C)
+-- Iso.fun PointIso = ←Point
+-- Iso.inv PointIso = →Point
+-- Iso.rightInv PointIso = {!!}
+-- Iso.leftInv PointIso = {!!}
+
+-- PointEquiv∙ : (A →∙ B →∙ C ∙ ∙) ≃∙ ((A ⋀∙ B) →∙ C ∙)
+-- fst PointEquiv∙ = isoToEquiv PointIso
+-- snd PointEquiv∙ = ←Point∙ .snd
+
+-- open import Cubical.Data.Vec
+-- open import Cubical.Data.Nat
+-- open import Cubical.Data.FinData
+-- open import Cubical.Foundations.Equiv
+-- open import Cubical.HITs.S1
+-- open import Cubical.HITs.S2
+
+
+-- S²-fib : S² → Type
+-- S²-fib x = {!!}
+
+
+
+-- -- HasIso : ∀ {ℓ} (_×_ : Pointed ℓ → Pointed ℓ → Pointed ℓ) → Type _
+-- -- HasIso {ℓ = ℓ} _×'_ = (A B C : Pointed ℓ) → (A ×' (B ×' C)) ≃∙ ((A ×' B) ×' C)
+
+-- -- module gen {ℓ : Level} (_⋁_ _×_ : Pointed ℓ → Pointed ℓ → Pointed ℓ)
+-- --        (inc : {A B : Pointed ℓ} → (A ⋁ B) →∙ (A × B))
+-- --        (h∨ : HasIso _⋁_) (h× : HasIso _×_) where
+-- --   P : (Pointed ℓ → Pointed ℓ → Pointed ℓ)
+-- --   P X Y = Pushout (λ _ → tt) (inc {A = X} {B = Y} .fst) , inl tt
+
+-- --   asd : {!(x : A ⋀ B) → x ≡ x!}
+-- --   asd = {!!}
+
+-- --   FF : (A B C : Pointed ℓ) (f g : fst A → (B ⋀ C))
+-- --     → f ≡ g
+-- --     → (fp : f (pt A) ≡ inl tt)
+-- --       (gp : g (pt A) ≡ inl tt)
+-- --     → Path (A →∙ (B ⋀∙ C)) (f , fp) (g , gp) -- f ≡ g
+-- --   FF A B C f g = J (λ g _ → (fp : f (pt A) ≡ inl tt)
+-- --       (gp : g (pt A) ≡ inl tt)
+-- --     → Path (A →∙ (B ⋀∙ C)) (f , fp) (g , gp))
+-- --     λ fp gp → ΣPathP ({!f!}
+-- --                      , {!? ∙ ?!})
+
+-- --   HasIsoP : HasIso P
+-- --   fst (HasIsoP A B C) = isoToEquiv {!!}
+-- --     where
+-- --     help : Iso (fst (P A (P B C))) (fst (P (P A B) C))
+-- --     Iso.fun help (inl x) = inl tt
+-- --     Iso.fun help (inr x) = inr {!x!}
+-- --     Iso.fun help (push a i) = push {!!} i
+-- --     Iso.inv help = {!!}
+-- --     Iso.rightInv help = {!!}
+-- --     Iso.leftInv help = {!!}
+-- --   snd (HasIsoP A B C) = {!!}
+
+-- -- module PreSymMon {ℓ : Level} (_⊗_ : Pointed ℓ → Pointed ℓ → Pointed ℓ)
+-- --               (i : {A B : Pointed ℓ} → typ A × typ B → typ (A ⊗ B))
+-- --               (iₗ : {A B : Pointed ℓ} (x : typ A) → i (x , snd B) ≡ pt (A ⊗ B))
+-- --               (iᵣ : {A B : Pointed ℓ} (x : typ B) → i (snd A , x) ≡ pt (A ⊗ B))
+-- --               (iₗᵣ : {A B : Pointed ℓ} → iₗ {A = A} {B = B} (pt A) ≡ iᵣ (pt B)) where
+-- --   Cur : {A B C : Pointed ℓ} → ((A ⊗ B) →∙ C) → A →∙ (B →∙ C ∙)
+-- --   fst (fst (Cur f) x) y = fst f (i (x , y))
+-- --   snd (fst (Cur f) x) = cong (fst f) (iₗ x) ∙ snd f
+-- --   snd (Cur {B = B} f) =
+-- --     ΣPathP (funExt (λ y → cong (fst f) (iᵣ y) ∙ snd f)
+-- --           , (cong (_∙ snd f) (cong (cong (fst f)) iₗᵣ)
+-- --           ◁ λ i j → (cong (fst f) (iᵣ (pt B)) ∙ snd f) (i ∨ j)))
+
+-- --   Cur∙ : {A B C : Pointed ℓ} → ((A ⊗ B) →∙ C ∙) →∙ (A →∙ (B →∙ C ∙) ∙)
+-- --   fst Cur∙ = Cur
+-- --   snd Cur∙ = ΣPathP ((funExt (λ x → ΣPathP (refl , (sym (rUnit refl)))))
+-- --     , {!!})
+
+-- --   module _ (e : {A B C : Pointed ℓ} → isEquiv (Cur {A = A} {B = B} {C = C})) where
+-- --     Cur⁻ : {A B C : Pointed ℓ} → (A →∙ (B →∙ C ∙)) → (A ⊗ B) →∙ C
+-- --     Cur⁻ = invEq (_ , e)
+
+-- --     CurEquiv : {A B C : Pointed ℓ} → ((A ⊗ B) →∙ C ∙) ≃∙ (A →∙ (B →∙ C ∙) ∙)
+-- --     fst CurEquiv = Cur , e
+-- --     snd CurEquiv = Cur∙ .snd
+
+    
+
+-- --     module _ {A B C D : Pointed ℓ} where
+-- --       shareElim : (((A ⊗ B) ⊗ C) →∙ D ∙) ≃∙ ((A ⊗ (B ⊗ C)) →∙ D ∙)
+-- --       shareElim =
+-- --         compEquiv∙ CurEquiv
+-- --           (compEquiv∙
+-- --             CurEquiv
+-- --             (compEquiv∙
+-- --               ((isoToEquiv (pre∘∙equiv (invEquiv∙ CurEquiv))) , {!e .equiv-proof!})
+-- --               (invEquiv∙ CurEquiv)))
+
+      
+      
+
+-- --     {-
+-- --     (A ⊗ B) ⊗ D → C
+-- --     (A ⊗ B) → (D → C)
+-- --     → (A → (B → (D → C)))
+-- --     → 
+-- --     -}
+-- --       f : A →∙ (B →∙ C →∙ A ⊗ (B ⊗ C) ∙ ∙) -- A →∙ (B →∙ C ∙) ∙
+-- --       fst (fst (fst f x) y) z = i (x , (i (y , z)))
+-- --       snd (fst (fst f x) y) = cong (λ y → i (x , y)) (iₗ y) ∙ iₗ x
+-- --       fst (snd (fst f x) j) z = (cong (λ y → i (x , y)) (iᵣ z) ∙ iₗ x) j
+-- --       snd (snd (fst f x) j) = {!!}
+-- --       snd f = {!!}
+    
+-- --       F1 : Iso (typ (((A ⊗ B) ⊗ C))) (typ (A ⊗ (B ⊗ C)))
+-- --       Iso.fun F1 = {!!}
+-- --       Iso.inv F1 = {!!}
+-- --       Iso.rightInv F1 = {!!}
+-- --       Iso.leftInv F1 = {!!}
+    
+
+-- -- module SymMon {ℓ : Level} (_⊗_ : Pointed ℓ → Pointed ℓ → Pointed ℓ)
+-- --               (i : {A B : Pointed ℓ} → typ A × typ B → typ (A ⊗ B))
+-- --               (iₗ : {A B : Pointed ℓ} (x : typ A) → i (x , snd B) ≡ pt (A ⊗ B))
+-- --               (iᵣ : {A B : Pointed ℓ} (x : typ B) → i (snd A , x) ≡ pt (A ⊗ B))
+-- --               (iₗᵣ : {A B : Pointed ℓ} → iₗ {A = A} {B = B} (pt A) ≡ iᵣ (pt B)) where
+-- --   module M = PreSymMon _⊗_ i iₗ iᵣ iₗᵣ
+
+  
+-- -- open import Cubical.Data.Sum
+-- -- {-
+-- -- f : A × B → C
+-- -- f(a, b₀) = ?
+-- -- f(a₀, b) = ?
+-- -- f(a₀, b₀) = ?
+-- -- -}
+
+-- -- Sm : {A B : Pointed₀} → (x : A ⋀ B) → Type
+-- -- Sm {A = A} {B = B} (inl x) = {!!}
+-- -- Sm {A = A} {B = B} (inr x) = {!!}
+-- -- Sm {A = A} {B = B} (push a i) = {!!}
+
+
+-- -- swap' : ∀ {ℓ} (n : ℕ) (m : Fin n) (B : Type ℓ) → (e : Vec (Type ℓ) n) → Vec (Type ℓ) n
+-- -- swap' (suc n) zero B e = B ∷ tail (e )
+-- -- swap' (suc n) (suc m) B e = head e ∷ swap' n m B (tail e)
+
+-- -- lookup-swap : ∀ {ℓ} (n : _) (m : _) (X : Vec (Type ℓ) n) → swap' n m (lookup m X) X ≡ X
+-- -- lookup-swap (suc n) zero (x ∷ X) = refl
+-- -- lookup-swap (suc n) (suc m) (x ∷ X) = cong (x ∷_) (lookup-swap n m X)
+
+-- -- Nat' : ∀ {ℓ ℓ'} (n : ℕ) (C C' : Vec (Type ℓ) (suc n) → Type ℓ')
+-- --      → (e : (∀ {ℓ''} (D : Type ℓ'') (X : Vec (Type ℓ) (suc n)) → Iso (C X → D) (C' X → D)))
+-- --      → (ind : ((m : Fin (suc n))  (X : Vec (Type ℓ) (suc n)) (D : Type ℓ)
+-- --        → (F : lookup m X → D)
+-- --        → C X → C (swap' (suc n) m D X)))
+-- --      → ((m : _) (X : _) → ind m X _ (idfun (lookup m X))
+-- --                           ≡ subst C (sym (lookup-swap (suc n) m X)))
+-- --      → {!!}
+-- -- Nat' = {!!}
+
+-- -- Nati∙ : ∀ {ℓ ℓ'} (A : Type ℓ) → (C C' : A → Pointed ℓ')
+-- --   → (e : (∀ {ℓ'''} (D : Pointed ℓ''') (a : A) → Iso (C a →∙ D) (C' a →∙ D)))
+-- --   → (funct : (a : A) → Iso.inv (e (C' a) a) (idfun∙ _) ∘∙ (Iso.fun (e (C a) a) (idfun∙ _)) ≡ idfun∙ _)
+-- --   → ((a : A) → Iso.fun (e (C a) a) (idfun∙ _) ∘∙ (Iso.inv (e (C' a) a) (idfun∙ _)) ≡ idfun∙ _)
+-- --   → (a : _) → Iso (fst (C a)) (fst (C' a))
+-- -- Nati∙ = {!!}
+
+-- -- Nati : ∀ {ℓ ℓ'} (A : Type ℓ) → (C C' : A → Type ℓ')
+-- --   → (e : (∀ {ℓ'''} (D : Type ℓ''') (a : A) → Iso (C a → D) (C' a → D)))
+-- --   → (funct : (a : A) (x : _) → Iso.inv (e (C' a) a) (idfun _) (Iso.fun (e (C a) a) (idfun _) x) ≡ x)
+-- --   → ((a : A) (x : _) → Iso.fun (e (C a) a) (idfun (C a))
+-- --       (Iso.inv (e (C' a) a) (idfun (C' a)) x)
+-- --       ≡ x)
+-- --   → (a : _) → Iso (C a) (C' a)
+-- -- Iso.fun (Nati A C C' e func f2 a) = Iso.inv (e (C' a) a) (idfun _)
+-- -- Iso.inv (Nati A C C' e func f2 a) = Iso.fun (e (C a) a) (idfun _)
+-- -- Iso.rightInv (Nati A C C' e func f2 a) x = func a x
+-- -- Iso.leftInv (Nati A C C' e func f2 a) x = f2 a x
+
+-- -- open import Cubical.Foundations.Pointed
+-- -- open import Cubical.Foundations.Equiv
+
+-- -- codom≃∙ : ∀ {ℓ} {A B C : Pointed ℓ} → B ≃∙ C → (A →∙ B ∙) ≃∙ (A →∙ C ∙)
+-- -- fst (codom≃∙ {A = A} {B = B} {C = C} e) = isoToEquiv (pre∘∙equiv e)
+-- -- snd (codom≃∙ (e , p)) = ΣPathP ((λ i _ → p i) , (sym (lUnit p) ◁ λ i j → p (i ∨ j)))
+
+-- -- assocIso : ∀ {ℓ} (A B C : Pointed ℓ) → Iso (A ⋀ (B ⋀∙ C )) ((A ⋀∙ B) ⋀ C)
+-- -- assocIso {ℓ = ℓ} A B C =
+-- --   Nati∙ (Pointed ℓ ×' Pointed ℓ ×' Pointed ℓ)
+-- --        (λ A → (fst A) ⋀∙ ((fst (snd A)) ⋀∙ (snd (snd A))))
+-- --        (λ A → ((fst A) ⋀∙ (fst (snd A))) ⋀∙ (snd (snd A)))
+-- --        (λ {D (A , B , C) → compIso (invIso PointIso) (compIso (compIso (pre∘∙equiv (invEquiv∙ PointEquiv∙))
+-- --                                     PointIso)
+-- --                                     PointIso)})
+-- --        {!!}
+-- --        {!!}
+-- --        (A , B , C)
+
+-- -- Nat : ∀ {ℓ ℓ'} → (C C' : Type ℓ → Type ℓ')
+-- --   → ((x y : Type ℓ) (f : x → y) → C x → C y)
+-- --   → (∀ {ℓ'''} (D : Type ℓ''') (a : Type ℓ) → Iso (C a → D) (C' a → D))
+-- --   → (a : _) → Iso (C a) (C' a)
+-- -- Iso.fun (Nat C C' ind is a) = Iso.inv (is (C' a) a) (idfun _)
+-- -- Iso.inv (Nat C C' ind is a) = Iso.fun (is (C  a) a) (idfun _)
+-- -- Iso.rightInv (Nat C C' ind is a) x = {!Iso.inv (is (C' a) a) (idfun (C' a))!}
+-- -- Iso.leftInv (Nat C C' ind is a) = {!!}
+
+-- -- NatInCod : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
+-- --   → (e : ∀ {ℓ''} (C : Type ℓ'') → Iso (A → C) (B → C))
+-- --   → (∀ {ℓ''} (C : Type ℓ'') (a : A) → {!Iso.fun (e C) !})
+-- --   → Iso A B
+-- -- NatInCod = {!!}

@@ -31,7 +31,6 @@ open import Cubical.HITs.Truncation as Trunc renaming (rec to trRec)
 open import Cubical.Homotopy.Loopspace
 
 
-
 -- Note that relative to most sources, this notation is off by +2
 isConnected : ∀ {ℓ} (n : HLevel) (A : Type ℓ) → Type ℓ
 isConnected n A = isContr (hLevelTrunc n A)
@@ -193,6 +192,73 @@ isConnectedComp  {C = C} f g n con-f con-g =
         (compEquiv
          (_ , elim.isEquivPrecompose f n P con-f)
          (_ , elim.isEquivPrecompose g n (λ b → P (f b)) con-g) .snd)
+
+isConnectedFunCancel : ∀ {ℓ} {X Y Z : Type ℓ} (f : X → Y) (g : Y → Z) (n : HLevel)
+  → isConnectedFun n f → isConnectedFun (1 + n) (g ∘ f) → isConnectedFun (1 + n) g
+isConnectedFunCancel {ℓ = ℓ} {X = X} {Y = Y} {Z = Z} f g n nconf con∘ =
+  elim.isConnectedPrecompose g (suc n)
+    λ P → (d P) , sec P
+  where
+    module _ (P : Z → TypeOfHLevel ℓ (suc n)) where
+      d : ((a : Y) → P (g a) .fst) → (b : Z) → P b .fst
+      d F z =
+        equiv-proof (elim.isEquivPrecompose (g ∘ f) (suc n) P con∘)
+          (λ x → F (f x))
+          .fst .fst z
+
+      sec : section (λ s → s ∘ g) d
+      sec F = funExt (equiv-proof (elim.isEquivPrecompose f n (λ x → ((d F ∘ g) x ≡ F x)
+          , isOfHLevelPath' n (P (g x) .snd) _ _) nconf)
+          (λ a → (λ i → rec₊ (P (g (f a)) .snd)
+                   (λ { (a , p) → subst (λ x → fst (P x)) p (F (f a)) }) (help a i))
+                ∙ transportRefl (F (f a)))
+          .fst .fst)
+          where
+          help : (a : X) → (con∘ (g (f a)) .fst) ≡ ∣ a , refl ∣
+          help a = isContr→isProp (con∘ (g (f a))) _ _
+
+isConnectedFunCancel' : ∀ {ℓ} {X Y Z : Type ℓ} (f : X → Y) (g : Y → Z) (n : HLevel)
+  → isConnectedFun (1 + n) g → isConnectedFun n (g ∘ f) → isConnectedFun n f
+isConnectedFunCancel' {ℓ = ℓ} {X = X} {Y = Y} {Z = Z} f g zero con-g con-f b =
+  tt* , (λ {tt* → refl})
+isConnectedFunCancel' {ℓ = ℓ} {X = X} {Y = Y} {Z = Z} f g (suc n) con-g con-f =
+  elim.isConnectedPrecompose f (suc n)
+    λ P → d P , d-sec P
+  where
+    module _ (P : Y → TypeOfHLevel ℓ (suc n)) where
+      help : (y : Y) (a : X) (p : _) → ∥ Path (fiber g (g y)) (y , refl) (f a , p) ∥ (suc n)
+      help y a p =
+        Iso.fun (PathIdTruncIso (suc n))
+          (isContr→isProp (con-g (g y)) ∣ y , refl ∣ ∣ (f a , p) ∣)
+
+      help-refl : (x : X) → help (f x) x refl ≡ ∣ (λ b → f x , refl) ∣
+      help-refl x =
+          (λ i → Iso.fun (PathIdTruncIso (suc n))
+                   (isProp→isSet (isContr→isProp (con-g (g (f x)))) _ _
+                    ((isContr→isProp (con-g (g (f x))) ∣ f x , refl ∣ ∣ (f x , refl) ∣)) refl i))
+        ∙ cong ∣_∣ₕ (transportRefl (λ b → f x , refl))
+
+      d : ((a : X) → P (f a) .fst) → (b : Y) → P b .fst
+      d F y = Trunc.rec (snd (P y))
+              (λ {(a , p) →
+                Trunc.rec (P y .snd)
+                  (λ p → subst (fst ∘ P) (cong fst (sym p)) (F a))
+                  (help y a p)})
+              (con-f (g y) .fst)
+
+      d-sec : section (λ s → s ∘ f) d
+      d-sec F =
+        funExt λ x
+          → (λ i → Trunc.rec (snd (P (f x)))
+              (λ {(a , p) →
+                Trunc.rec (P (f x) .snd)
+                  (λ p → subst (fst ∘ P) (cong fst (sym p)) (F a))
+                  (help (f x) a p)})
+              (con-f (g (f x)) .snd ∣ x , refl ∣ i))
+            ∙ (λ i → Trunc.rec (P (f x) .snd)
+                 (λ p → subst (fst ∘ P) (cong fst (sym p)) (F x))
+                 (help-refl x i))
+            ∙ transportRefl (F x)
 
 isEquiv→isConnected : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
     (f : A → B)
@@ -378,6 +444,66 @@ connectedTruncEquiv : ∀ {ℓ} {A B : Type ℓ} (n : HLevel) (f : A → B)
                    → hLevelTrunc n A ≃ hLevelTrunc n B
 connectedTruncEquiv {A = A} {B = B} n f con = isoToEquiv (connectedTruncIso n f con)
 
+isConnectedSuspFun : ∀ {ℓ} {X Y : Type ℓ} (f : X → Y) (n : HLevel)
+    → isConnectedFun n f
+    → isConnectedFun (suc n) (suspFun f)
+isConnectedSuspFun {X = X} {Y = Y} f zero con-f b =
+  (F b)
+  , (Trunc.elim (λ _ → isOfHLevelPath 1 (isOfHLevelTrunc 1) _ _)
+    (uncurry (λ { north → J (λ b y → F b ≡ ∣ north , y ∣) refl
+                ; south → J (λ b y → F b ≡ ∣ south , y ∣) refl
+                ; (merid a i) → F-coh a i})))
+  where
+  F : (b : Susp Y) → hLevelTrunc 1 (fiber (suspFun f) b)
+  F north = ∣ north , refl ∣
+  F south = ∣ south , refl ∣
+  F (merid a i) =
+    isProp→PathP {B = λ i → hLevelTrunc 1 (fiber (suspFun f) (merid a i))}
+      (λ i → isOfHLevelTrunc 1)
+      ∣ north , refl ∣ ∣ south , refl ∣ i
+
+  F-coh : (a : X)
+    → PathP (λ i → (y : merid (f a) i ≡ b) → F b ≡ ∣ merid a i , y ∣)
+             (J (λ b y → F b ≡ ∣ north , y ∣) refl)
+             (J (λ b y → F b ≡ ∣ south , y ∣) refl)
+  F-coh a =
+    isProp→PathP
+      (λ i → isPropΠ λ _ → isOfHLevelPath 1 (isOfHLevelTrunc 1) _ _) _ _
+
+isConnectedSuspFun {ℓ = ℓ} {X = X} {Y = Y} f (suc n) con-f =
+    elim.isConnectedPrecompose _ (suc (suc n))
+      λ P → (d P) , d-sec P
+  where
+  module _ (P : Susp Y → TypeOfHLevel ℓ (suc (suc n))) where
+    d-pre₁ : (a : _) (F : ((a : Susp X) → P (suspFun f a) .fst))
+      → fiber f a → PathP (λ i → P (merid a i) .fst) (F north) (F south)
+    d-pre₁ a F (x , p) =
+      subst (λ a → PathP (λ i₁ → P (merid a i₁) .fst) (F north) (F south)) p
+       (cong F (merid x))
+
+    d-pre₂ : (a : _) (F : ((a : Susp X) → P (suspFun f a) .fst))
+           → hLevelTrunc (suc n) (fiber f a)
+           → PathP (λ i → P (merid a i) .fst) (F north) (F south)
+    d-pre₂ a F s =
+      trRec (isOfHLevelPathP' (suc n) (snd (P south)) _ _)
+              (d-pre₁ a F)
+              s
+
+    d : ((a : Susp X) → P (suspFun f a) .fst) → (b : Susp Y) → P b .fst
+    d F north = F north
+    d F south = F south
+    d F (merid a i) = d-pre₂ a F (con-f a .fst) i
+
+    d-sec : section (λ s → s ∘ (λ z → suspFun f z)) d
+    d-sec F =
+      funExt λ { north → refl
+               ; south → refl
+               ; (merid a i) j → help a j i}
+      where
+      help : (a : _) → cong (d F ∘ suspFun f) (merid a) ≡ cong F (merid a) 
+      help a =
+        (λ i → d-pre₂ (f a) F (con-f (f a) .snd ∣ a , refl ∣ₕ i))
+        ∙ transportRefl (cong F (merid a))
 
 -- TODO : Reorganise the following proofs.
 
@@ -407,6 +533,188 @@ inrConnected {A = A} {B = B} {C = C} n f g iscon =
                     (~ i)
                     (equiv-proof (elim.isEquivPrecompose f n Q iscon)
                                  fun .fst .snd i a))
+
+recₕ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} (n : ℕ)
+  → {h : isOfHLevel n B}
+  → {f : A → B}
+  → (a : A)
+  → Trunc.rec h f ∣ a ∣ₕ ≡ f a
+recₕ zero {h = h} a = isContr→isProp h _ _
+recₕ (suc n) a = refl
+
+Pushout→ : ∀ {ℓ} {X₀ X₁ X₂ Y₀ Y₁ Y₂ : Type ℓ}
+  (f₁ : X₀ → X₁) (f₂ : X₀ → X₂) (g₁ : Y₀ → Y₁) (g₂ : Y₀ → Y₂)
+  (h₀ : X₀ → Y₀) (h₁ : X₁ → Y₁) (h₂ : X₂ → Y₂)
+  (e₁ : h₁ ∘ f₁ ≡ g₁ ∘ h₀) (e₂ : h₂ ∘ f₂ ≡ g₂ ∘ h₀)
+  → Pushout f₁ f₂ → Pushout g₁ g₂
+Pushout→ f₁ f₂ g₁ g₂ h₀ h₁ h₂ e₁ e₂ (inl x) = inl (h₁ x)
+Pushout→ f₁ f₂ g₁ g₂ h₀ h₁ h₂ e₁ e₂ (inr x) = inr (h₂ x)
+Pushout→ f₁ f₂ g₁ g₂ h₀ h₁ h₂ e₁ e₂ (push a i) =
+  ((λ j → inl (e₁ j a)) ∙∙ push (h₀ a) ∙∙ λ j → inr (e₂ (~ j) a)) i
+
+isConnectedFunPushout : ∀ {ℓ} {X₀ X₁ X₂ Y₀ Y₁ Y₂ : Type ℓ}
+  (f₁ : X₀ → X₁) (f₂ : X₀ → X₂) (g₁ : Y₀ → Y₁) (g₂ : Y₀ → Y₂)
+  (h₀ : X₀ → Y₀) (h₁ : X₁ → Y₁) (h₂ : X₂ → Y₂)
+  (e₁ : h₁ ∘ f₁ ≡ g₁ ∘ h₀) (e₂ : h₂ ∘ f₂ ≡ g₂ ∘ h₀)
+  (n : HLevel)
+  → isConnectedFun n h₀ → isConnectedFun (1 + n) h₁ → isConnectedFun (1 + n) h₂
+  → isConnectedFun (1 + n) (Pushout→ f₁ f₂ g₁ g₂ h₀ h₁ h₂ e₁ e₂)
+isConnectedFunPushout {ℓ} {X₀} {X₁} {X₂} {Y₀} {Y₁} {Y₂} f₁ f₂ g₁ g₂ h₀ h₁ h₂ e₁ e₂ n con₀ con₁ con₂ =
+  elim.isConnectedPrecompose _ (suc n)
+    λ P → d P , d-sec P
+  where
+  module _ (P : Pushout g₁ g₂ → TypeOfHLevel ℓ (suc n)) where
+    module _ (F : ((a : Pushout f₁ f₂) →
+       P (Pushout→ f₁ f₂ g₁ g₂ h₀ h₁ h₂ e₁ e₂ a) .fst) ) where
+       
+       inc-l : (x : _) → hLevelTrunc (suc n) (fiber h₁ x) → P (inl x) .fst
+       inc-l x = Trunc.rec (snd (P _))
+                  (uncurry (λ a → J (λ x y → fst (P (inl x))) (F (inl a))))
+
+       inc-r : (x : _) → hLevelTrunc (suc n) (fiber h₂ x) → P (inr x) .fst
+       inc-r x = Trunc.rec (snd (P _))
+                  (uncurry (λ a → J (λ x y → fst (P (inr x))) (F (inr a))))
+
+       push-fill : (x : _) → (i j : I)
+         → P (doubleCompPath-filler (λ j₁ → inl (e₁ j₁ x)) (push (h₀ x))
+              (λ j₁ → inr (e₂ (~ j₁) x)) (~ j) i) .fst
+       push-fill x i j =
+         fill (λ k → P (doubleCompPath-filler (λ j → inl (e₁ j x)) (push (h₀ x)) (λ j → inr (e₂ (~ j) x)) (~ k) i) .fst)
+              (λ k → λ {(i = i0) → transp (λ i₁ → fst (P (inl (e₁ (i₁ ∧ k) x)))) (~ k) (F (inl (f₁ x)))
+                       ; (i = i1) → transp (λ i₁ → fst (P (inr (e₂ (i₁ ∧ k) x)))) (~ k) (F (inr (f₂ x)))})
+              (inS (F (push x i)))
+              j
+
+       push-cc : (x : _) → PathP (λ i₁ → P (push (h₀ x) i₁) .fst)
+         (inc-l (g₁ (h₀ x)) ∣ f₁ x , funExt⁻ e₁ x ∣)
+         (inc-r (g₂ (h₀ x)) ∣ f₂ x , funExt⁻ e₂ x ∣)
+       push-cc x i = push-fill x i i1
+
+       push-c : (x : _) → PathP (λ i₁ → P (push (h₀ x) i₁) .fst)
+                                 (inc-l (g₁ (h₀ x)) (con₁ (g₁ (h₀ x)) .fst))
+                                 (inc-r (g₂ (h₀ x)) (con₂ (g₂ (h₀ x)) .fst))
+       push-c x = cong (inc-l (g₁ (h₀ x))) (con₁ (g₁ (h₀ x)) .snd ∣ (f₁ x) , (funExt⁻ e₁ x) ∣)
+                ◁ (push-cc x)
+                ▷ (cong (inc-r (g₂ (h₀ x))) (sym (con₂ (g₂ (h₀ x)) .snd ∣ (f₂ x) , (funExt⁻ e₂ x) ∣)))
+
+       push-fun : (a : _) → hLevelTrunc n (fiber h₀ a)
+                          → PathP (λ i → P (push a i) .fst) (inc-l (g₁ a) (con₁ (g₁ a) .fst)) (inc-r (g₂ a) (con₂ (g₂ a) .fst))
+       push-fun a = 
+         trRec (isOfHLevelPathP' n (snd (P _)) _ _)
+              (uncurry λ x → J (λ a y →
+                PathP (λ i₁ → P (push a i₁) .fst)
+                (inc-l (g₁ a) (con₁ (g₁ a) .fst))
+                (inc-r (g₂ a) (con₂ (g₂ a) .fst)))
+                (push-c x))
+
+
+    d : ((a : Pushout f₁ f₂) →
+       P (Pushout→ f₁ f₂ g₁ g₂ h₀ h₁ h₂ e₁ e₂ a) .fst) →
+      (b : Pushout g₁ g₂) → P b .fst
+    d F (inl x) = inc-l F x (con₁ x .fst)
+    d F (inr x) = inc-r F x (con₂ x .fst)
+    d F (push a i) = push-fun F a (con₀ a .fst) i
+
+    d-sec : section (λ s → s ∘ (λ z → Pushout→ f₁ f₂ g₁ g₂ h₀ h₁ h₂ e₁ e₂ z)) d
+    d-sec F =
+      funExt λ { (inl x) → cong (inc-l F (h₁ x)) (con₁ (h₁ x) .snd ∣ x , refl ∣)
+                           ∙ transportRefl (F (inl x))
+               ; (inr x) → cong (inc-r F (h₂ x)) (con₂ (h₂ x) .snd ∣ x , refl ∣)
+                           ∙ transportRefl (F (inr x))
+               ; (push a i) → h a i}
+      where
+      h : (a : _) →
+        PathP (λ i → (d F ∘ Pushout→ f₁ f₂ g₁ g₂ h₀ h₁ h₂ e₁ e₂) (push a i) ≡ F (push a i))
+              (cong (inc-l F (h₁ (f₁ a))) (con₁ (h₁ (f₁ a)) .snd ∣ f₁ a , refl ∣) ∙ transportRefl (F (inl (f₁ a))))
+              (cong (inc-r F (h₂ (f₂ a))) (con₂ (h₂ (f₂ a)) .snd ∣ f₂ a , refl ∣) ∙ transportRefl (F (inr (f₂ a))))
+      h a i j =
+        comp (λ k → P (doubleCompPath-filler
+                       (λ j → inl (e₁ j a)) (push (h₀ a)) (λ j → inr (e₂ (~ j) a)) (k ∨ j) i) .fst)
+             (λ k → λ {(i = i0) → i=i0 k j
+                      ; (i = i1) → i=i1 k j
+                      ; (j = i0) → d F (doubleCompPath-filler
+                         (λ j₁ → inl (e₁ j₁ a)) (push (h₀ a)) ((λ j₁ → inr (e₂ (~ j₁) a))) k i)
+                      ; (j = i1) → F (push a i)})
+          (hcomp
+             (λ k → λ {(i = i0) → doubleWhiskFiller
+                    (cong (inc-l F ((g₁ ∘ h₀) a)) (con₁ (g₁ (h₀ a)) .snd ∣ f₁ a , funExt⁻ e₁ a ∣))
+                    (λ i → inc-l F (e₁ (~ i) a) ∣ (f₁ a) , (λ j → e₁ (~ i ∧ j) a) ∣ₕ)
+                    (transportRefl (F (inl (f₁ a)))) k j
+                      ; (i = i1) → doubleWhiskFiller (cong (inc-r F ((g₂ ∘ h₀) a)) (con₂ (g₂ (h₀ a)) .snd ∣ f₂ a , funExt⁻ e₂ a ∣))
+                                   ((λ i → inc-r F (e₂ (~ i) a) ∣ (f₂ a) , (λ j → e₂ (~ i ∧ j) a) ∣ₕ))
+                                   (transportRefl (F (inr (f₂ a)))) k j
+                      ; (j = i0) → ((doubleWhiskFiller (cong (inc-l F (g₁ (h₀ a)) ) (con₁ (g₁ (h₀ a)) .snd ∣ (f₁ a) , (funExt⁻ e₁ a) ∣))
+                                                       (push-cc F a)
+                                                       (sym (cong (inc-r F (g₂ (h₀ a)) ) (con₂ (g₂ (h₀ a)) .snd ∣ (f₂ a) , (funExt⁻ e₂ a) ∣))))
+                                   ▷ (sym lem1)) k i
+                      ; (j = i1) → transportRefl (F (push a i)) k})
+             (comp
+             (λ k → P (doubleCompPath-filler (λ j₁ → inl (e₁ j₁ a)) (push (h₀ a)) (λ j₁ → inr (e₂ (~ j₁) a)) (~ k ∨ j) i) .fst)
+             (λ k → λ {(i = i0) → transp (λ i₁ → fst (P (inl (e₁ (i₁ ∧ (k ∧ ~ j)) a)))) (~ k ∧ ~ j) (F (inl (f₁ a)))
+                      ; (i = i1) → transp (λ i₁ → fst (P (inr (e₂ (i₁ ∧ (k ∧ ~ j)) a)))) (~ k ∧ ~ j) (F (inr (f₂ a)))
+                      ; (j = i0) → push-fill F a i k
+                      ; (j = i1) → transport refl (F (push a i))})
+             (transportRefl (F (push a i)) (~ j))))
+        where
+        lem1 : cong (d F) (push (h₀ a))
+             ≡ (cong (inc-l F (g₁ (h₀ a)) ) (con₁ (g₁ (h₀ a)) .snd ∣ (f₁ a) , (funExt⁻ e₁ a) ∣)
+             ◁ push-cc F a
+             ▷ sym (cong (inc-r F (g₂ (h₀ a)) ) (con₂ (g₂ (h₀ a)) .snd ∣ (f₂ a) , (funExt⁻ e₂ a) ∣))) 
+        lem1 = cong (push-fun F (h₀ a)) (con₀ (h₀ a) .snd ∣ a , refl ∣ₕ)
+             ∙ recₕ n (a , refl)
+             ∙ transportRefl _
+
+        i=i1 : SquareP (λ k j → P (inr (e₂ (~ k ∧ ~ j) a)) .fst)
+               (cong (inc-r F ((g₂ ∘ h₀) a)) (con₂ (g₂ (h₀ a)) .snd ∣ f₂ a , funExt⁻ e₂ a ∣)
+               ◁ ((λ i → inc-r F (e₂ (~ i) a) ∣ (f₂ a) , (λ j → e₂ (~ i ∧ j) a) ∣ₕ))
+               ▷ transportRefl (F (inr (f₂ a))))
+               (cong (inc-r F (h₂ (f₂ a)))
+                  (con₂ (h₂ (f₂ a)) .snd ∣ f₂ a , refl ∣)
+                  ∙ transportRefl (F (inr (f₂ a))))
+               (λ k → d F (inr (e₂ (~ k) a)))
+               λ k → F (inr (f₂ a))
+        i=i1 i j = 
+          hcomp (λ k → λ {(i = i0) → 
+            doubleWhiskFiller
+                   (cong (inc-r F ((g₂ ∘ h₀) a)) (con₂ (g₂ (h₀ a)) .snd ∣ f₂ a , funExt⁻ e₂ a ∣))
+                   (λ i → inc-r F (e₂ (~ i) a) ∣ (f₂ a) , (λ j → e₂ (~ i ∧ j) a) ∣ₕ)
+                   (transportRefl (F (inr (f₂ a)))) k j
+                        ; (i = i1) → compPath-filler' (cong (inc-r F (h₂ (f₂ a)))
+                                          (con₂ (h₂ (f₂ a)) .snd ∣ f₂ a , refl ∣))
+                                      (transportRefl (F (inr (f₂ a)))) k j
+                        ; (j = i0) →
+                          inc-r F (e₂ (~ i) a)
+                            (con₂ (e₂ (~ i) a) .snd
+                            ∣ f₂ a , (λ j → e₂ (~ i ∧ j) a) ∣ (~ k))
+                        ; (j = i1) → transportRefl (F (inr (f₂ a))) (k ∨ i)})
+               (transp (λ i₂ → fst (P (inr (e₂ (~ j ∧ (~ i ∧ i₂)) a))))
+                 (i ∧ j) (F (inr (f₂ a))))
+
+        i=i0 : SquareP (λ k j → P (inl (e₁ (~ k ∧ ~ j) a)) .fst)
+                       (cong (inc-l F ((g₁ ∘ h₀) a)) (con₁ (g₁ (h₀ a)) .snd ∣ f₁ a , funExt⁻ e₁ a ∣)
+                         ◁ (λ i → inc-l F (e₁ (~ i) a) ∣ (f₁ a) , (λ j → e₁ (~ i ∧ j) a) ∣ₕ)
+                         ▷ transportRefl (F (inl (f₁ a))))
+                       (cong (inc-l F (h₁ (f₁ a)))
+                                      (con₁ (h₁ (f₁ a)) .snd ∣ f₁ a , refl ∣)
+                                      ∙ transportRefl (F (inl (f₁ a))))
+                       (λ k → inc-l F (e₁ (~ k) a) (con₁ (e₁ (~ k) a) .fst))
+                       λ k → F (inl (f₁ a))
+        i=i0 i j =
+          hcomp (λ k → λ {(i = i0) →
+                 doubleWhiskFiller
+                   (cong (inc-l F ((g₁ ∘ h₀) a)) (con₁ (g₁ (h₀ a)) .snd ∣ f₁ a , funExt⁻ e₁ a ∣))
+                   (λ i → inc-l F (e₁ (~ i) a) ∣ (f₁ a) , (λ j → e₁ (~ i ∧ j) a) ∣ₕ)
+                   (transportRefl (F (inl (f₁ a)))) k j
+                        ; (i = i1) → compPath-filler' (cong (inc-l F (h₁ (f₁ a)))
+                                          (con₁ (h₁ (f₁ a)) .snd ∣ f₁ a , refl ∣))
+                                      (transportRefl (F (inl (f₁ a)))) k j
+                        ; (j = i0) →
+                          inc-l F (e₁ (~ i) a)
+                            (con₁ (e₁ (~ i) a) .snd
+                            ∣ f₁ a , (λ j → e₁ (~ i ∧ j) a) ∣ (~ k))
+                        ; (j = i1) → transportRefl (F (inl (f₁ a))) (k ∨ i)})
+               (transp (λ i₂ → fst (P (inl (e₁ (~ j ∧ (~ i ∧ i₂)) a))))
+                 (i ∧ j) (F (inl (f₁ a))))
 
 {- Given two fibration B , C : A → Type and a family of maps on fibres
    f : (a : A) → B a → C a, we have that f a is n-connected for all (a : A)

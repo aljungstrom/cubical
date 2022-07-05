@@ -715,3 +715,134 @@ SuspS¹→S²-S¹×S¹→S² (loop i) (loop j) k =
                        (compPath-filler (merid (loop i)) (sym (merid base)) r j)
                  ; (k = i1) → surf j i})
            (surf j i))
+
+
+kebzouz : Path (Path (Path S² base base) refl refl) refl refl
+kebzouz i j k = surf (i ∨ k ∨ j) (i ∧ k ∧ j)
+
+S2→ : S² → Type
+S2→ base = S²
+S2→ (surf i j) =
+  Glue S² λ {(i = i0) → S² , (idEquiv _)
+            ; (i = i1) → S² , idEquiv _
+            ; (j = i0) → S² , (idEquiv _)
+            ; (j = i1) → S² , f- i}
+    where
+    meridS¹ : S¹ → Path S² base base
+    meridS¹ base = refl
+    meridS¹ (loop i) j = surf i j
+
+    surfeq : Path (Path (Path S² base base) _ _) (cong sym (sym surf)) (surf)
+    surfeq = sym (sym≡cong-sym (sym surf))
+
+    S²eq : Iso S² S²
+    fun S²eq base = base
+    fun S²eq (surf i j) = surf (~ j) i
+    inv S²eq base = base
+    inv S²eq (surf i j) = surf (~ j) i
+    rightInv S²eq base = refl
+    rightInv S²eq (surf i i₁) k = surfeq k i i₁
+    leftInv S²eq base = refl
+    leftInv S²eq (surf i i₁) k = surfeq k i i₁
+
+    h : (x : S²) → x ≡ x
+    h base = refl
+    h (surf i j) k = (rUnit surf ∙∙ cong (surf ∙_) kebzouz ∙∙ sym (rUnit surf)) k i j
+
+    f- : idEquiv S² ≡ idEquiv S²
+    f- = Σ≡Prop (λ _ → isPropIsEquiv _) (funExt h)
+
+
+H² : Path (Path (Path S² base base) refl refl) refl refl → (Path (Path S² base base) refl refl)
+H² p i j = transport (λ k → S2→ (p i j k)) base
+
+S²Z : S² → Type
+S²Z base = S¹
+S²Z (surf i j) =
+  Glue S¹ λ {(i = i0) → S¹ , (idEquiv S¹)
+           ; (i = i1) → S¹ , (idEquiv S¹)
+           ; (j = i0) → S¹ , (idEquiv S¹)
+           ; (j = i1) → S¹ , t i}
+  where
+  t : (idEquiv S¹) ≡ (idEquiv S¹)
+  t = Σ≡Prop (λ _ → isPropIsEquiv _)
+      (funExt λ { base → loop
+                ; (loop i) j → loop i * loop j})
+
+open import Cubical.Data.Int
+S1-fib : S₊ 1 → Type
+S1-fib base = ℤ
+S1-fib (loop i) = sucPathℤ i
+
+H³ : Path (Path S² base base) refl refl → Path S¹ base base
+H³ p j = transport (λ i → S²Z (p j i)) base
+
+H⁴ : Path (Path (Path S² base base) refl refl) refl refl → ℤ
+H⁴ p = transport (λ j → S1-fib (H³ (H² p) j)) 0
+
+open import Cubical.Homotopy.Loopspace
+
+ts : (Path (Path S² base base) refl refl)
+ts i j = {!transport (λ r → S2→ (EH 0 surf (sym surf) r i j)) ?!} -- sym (rCancel (surf)) ∙∙ EH 0 surf (sym surf) ∙∙ lCancel surf
+
+-- ℤZ : ℤ
+-- ℤZ = H⁴ kebzouz
+
+-- cool : S₊ 2 → Type
+-- cool north = S₊ 2
+-- cool south = S₊ 2
+-- cool (merid a i) = ua (F a , isEq a) i
+--   where
+--   F : (a : S₊ 1) → S₊ 2 → S₊ 2
+--   F a north = north
+--   F a south = south
+--   F a (merid b i) =  merid (b * (invLooper a)) i
+
+--   Fbase : F base ≡ idfun _
+--   Fbase = {!!}
+
+--   isEq : (a : S₊ 1) → isEquiv (F a)
+--   isEq = toPropElim (λ _ → isPropIsEquiv _) (subst isEquiv (sym Fbase) (idEquiv _ .snd))
+
+-- cool1 : Path (S₊ 2) north north → S₊ 2
+-- cool1 p = transport (λ i → cool (p i)) north
+
+-- cool³ : Path (Path (Path (S₊ 2) north north) refl refl) refl refl → Path (Path (S₊ 2) north north) refl refl
+-- cool³ p = cong (cong cool1) p
+
+-- S2-fib : S₊ 2 → Type
+-- S2-fib north = S¹
+-- S2-fib south = S¹
+-- S2-fib (merid a i) = ua (a *_ , toPropElim {B = λ a → isEquiv (a *_)} (λ _ → isPropIsEquiv _) (idEquiv _ .snd) a) i
+
+-- funz : Path (Path (S₊ 2) north north) refl refl →  Path S¹ base base
+-- funz p = cong (λ p → transport (λ i → S2-fib (p i)) base) p
+
+
+
+-- theGuy : Path (Path (Path (S₊ 2) north north) refl refl) refl refl → ℤ
+-- theGuy x = transport (λ i → S1-fib (funz (cool³ x) i)) 0
+
+-- aguy : I → I → S₊ 2
+-- aguy i j = cool1 (merid (loop i * loop (~ j)) ∙ sym (merid base))
+--  -- i j k
+-- aguy' : Cube (λ j k → (merid (loop (~ j)) ∙ sym (merid base)) k)
+--              (λ j k → (merid (loop (~ j)) ∙ sym (merid base)) k)
+--              (λ i k → (merid (loop i) ∙ sym (merid base)) k)
+--              (λ i k → (merid (loop i) ∙ sym (merid base)) k)
+--              (λ i j → north)
+--              (λ i j → north)
+--       → Path (Path (S₊ 2) north north) refl refl
+-- aguy' p i j = cool1 (p i j)
+
+-- aguy'' : Cube (λ j k → (merid (loop (~ j)) ∙ sym (merid base)) k)
+--              (λ j k → (merid (loop (~ j)) ∙ sym (merid base)) k)
+--              (λ i k → (merid (loop i) ∙ sym (merid base)) k)
+--              (λ i k → (merid (loop i) ∙ sym (merid base)) k)
+--              (λ i j → north)
+--              (λ i j → north)
+--        → ℤ
+-- aguy'' x = transport (λ i → S1-fib (funz (aguy' x) i)) 0
+
+-- br : ℤ
+-- br = aguy'' λ i j k → σ (S₊∙ 1) (loop (~ j) * loop i) k 
