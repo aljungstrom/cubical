@@ -175,12 +175,8 @@ S³≡SuspS² : S³ ≡ SuspS²
 S³≡SuspS² = ua S³≃SuspS²
 
 IsoType→IsoSusp : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → Iso A B → Iso (Susp A) (Susp B)
-fun (IsoType→IsoSusp is) north = north
-fun (IsoType→IsoSusp is) south = south
-fun (IsoType→IsoSusp is) (merid a i) = merid (fun is a) i
-inv (IsoType→IsoSusp is) north = north
-inv (IsoType→IsoSusp is) south = south
-inv (IsoType→IsoSusp is) (merid a i) = merid (inv is a) i
+fun (IsoType→IsoSusp is) = suspFun (fun is)
+inv (IsoType→IsoSusp is) = suspFun (inv is)
 rightInv (IsoType→IsoSusp is) north = refl
 rightInv (IsoType→IsoSusp is) south = refl
 rightInv (IsoType→IsoSusp is) (merid a i) j = merid (rightInv is a j) i

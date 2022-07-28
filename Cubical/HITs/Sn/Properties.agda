@@ -282,6 +282,15 @@ wedgeconLeft zero (suc m) {A = A} hlev f g hom = help
                                 (hom j))))
 wedgeconLeft (suc n) m {A = A} hlev f g hom _ = refl
 
+wedgeconRightN : (n m : ℕ) {A : (S₊ (2 + n)) → (S₊ (2 + m)) → Type ℓ}
+             → (hLev : ((x : S₊ (2 + n)) (y : S₊ (2 + m)) → isOfHLevel ((2 + n) + (2 + m)) (A x y)))
+             → (f : (x : _) → A north x)
+             → (g : (x : _) → A x north)
+             → (hom : g north ≡ f north)
+             → wedgeconRight (suc n) (suc m) hLev f g hom north ≡ sym hom
+wedgeconRightN n m hlev f g hom = refl 
+
+
 ---------- Connectedness -----------
 
 sphereConnected : (n : HLevel) → isConnected (suc n) (S₊ n)
@@ -715,3 +724,799 @@ SuspS¹→S²-S¹×S¹→S² (loop i) (loop j) k =
                        (compPath-filler (merid (loop i)) (sym (merid base)) r j)
                  ; (k = i1) → surf j i})
            (surf j i))
+
+
+
+
+-- J₂ : Type
+-- J₂ = Pushout {A = S₊∙ 2 ⋁ S₊∙ 2 } {B = S₊ 2 × S₊ 2} {C = S₊ 2} ⋁↪ fold⋁
+
+-- isOfHLev : (x : J₂) → isOfHLevel 4 (S₊∙ 2 →∙ (hLevelTrunc 6 J₂ , ∣ x ∣))
+-- isOfHLev x = {!!}
+
+-- commS : (x a : S₊ 2) → Path J₂ (inl (x , a)) (inl (a , x))
+-- commS north a = {!!}
+-- commS south a = {!!}
+-- commS (merid a₁ i) a = {!!}
+
+-- LF : (x : S₊ 2) → (S₊∙ 2 →∙ (hLevelTrunc 6 J₂ , ∣ inl (north , x) ∣))
+-- fst (LF y) x = ∣ inl (x , y) ∣ₕ
+-- snd (LF x) = refl
+
+-- RF : (x : S₊ 2) → (S₊∙ 2 →∙ (hLevelTrunc 6 J₂ , ∣ inl (x , north) ∣))
+-- fst (RF x) y = ∣ inl (y , x) ∣ₕ
+-- snd (RF x) = cong ∣_∣ₕ (push (inr x) ∙ sym (push (inl x)))
+
+-- MID : RF north ≡ LF north
+-- fst (MID i) y = ∣ inl (y , north) ∣
+-- snd (MID i) j = ∣ ((λ j → (push (push tt (~ j)) ∙ sym (push (inl north)))) ∙ rCancel' (push (inl north))) i j ∣ₕ
+
+-- open import Cubical.Foundations.Pointed.Homogeneous
+-- incl' : (x y : S₊ 2) → (S₊∙ 2 →∙ (hLevelTrunc 6 J₂ , ∣ inl (x , y) ∣))
+-- incl' = wedgeconFun 1 1 (λ x y → isOfHLev _) LF RF MID
+
+-- incl : (x y : S₊ 2) → (S₊∙ 2 →∙ (hLevelTrunc 6 J₂ , ∣ inl (x , y) ∣))
+-- incl =
+--   wedgeconFun 1 1
+--     (λ x y → isOfHLev _)
+--     (λ y → (λ x → ∣ inl (x , y) ∣ₕ) , refl)
+--     (λ x → (λ y → ∣ inl (x , y) ∣ₕ) , refl)
+--     (ΣPathP ((funExt (λ x → cong ∣_∣ₕ (push (inr x) ∙ sym (push (inl x)))))
+--           , λ i j → ∣ ((λ j → (push (push tt (~ j)) ∙ sym (push (inl north)))) ∙ rCancel' (push (inl north))) j i ∣ₕ))
+
+
+-- eq : (a x : S₊ 2)  → incl' a (pt (Susp S¹ , snd (S₊∙ 2))) .fst x ≡ ∣ inl (x , a) ∣
+-- eq a x = funExt⁻ (cong fst (wedgeconRight 1 1
+--   (λ x y → isOfHLev _) LF RF MID a)) x
+
+-- incl'' : (x : S₊ 2) → {!!}
+-- incl'' x = {!!}
+
+-- pp : S₊ 2 → (i j k : I) → hLevelTrunc 6 J₂
+-- pp x i j k =
+--   hfill (λ k → λ {(i = i0) → incl' x (pt (Susp S¹ , snd (S₊∙ 2))) .snd j
+--                  ; (i = i1) → ∣ compPath-filler (push (inr x)) (sym (push (inl x))) (~ k) j ∣ₕ
+--                  ; (j = i0) → eq x north i
+--                  ; (j = i1) → ∣ push (inl x) (i ∧ k) ∣ₕ})
+--         (inS ((wedgeconRight 1 1 {A = λ x y → S₊∙ 2 →∙ (hLevelTrunc 6 J₂ , ∣ inl (x , y) ∣)} (λ x y → isOfHLev _) LF RF MID x) i .snd j))
+--         k
+
+-- S2-act : S₊ 2 → J₂ → hLevelTrunc 6 J₂
+-- S2-act x (inl (y , z)) = incl' y z .fst x
+-- S2-act x (inr y) = ∣ inl (x , y) ∣
+-- S2-act x (push (inl a) i) = eq a x i -- eq a x i
+-- S2-act x (push (inr b) i) = ∣ inl (x , b) ∣
+-- S2-act x (push (push tt i₁) i) = ∣ inl (x , north) ∣
+
+-- S2→J² : S₊ 2 → hLevelTrunc 6 J₂ → hLevelTrunc 6 J₂
+-- S2→J² x = rec (isOfHLevelTrunc 6) (S2-act x)
+
+-- S2-actId : (x : _) → S2-act north x ≡ ∣ x ∣
+-- S2-actId (inl x) = incl' (fst x) (snd x) .snd
+-- S2-actId (inr x) = cong ∣_∣ₕ (push (inr x))
+-- S2-actId (push (inl x) i) j = pp x i j i1
+-- S2-actId (push (inr x) i) j = ∣ push (inr x) (i ∧ j) ∣
+-- S2-actId (push (push a k) i) j =
+--   hcomp (λ r → λ {(i = i0) → ∣ inl (north , north) ∣ₕ
+--                  ; (i = i1) → cubie r j k
+--                  ; (j = i0) →  ∣ inl (north , north) ∣
+--                  ; (j = i1) → ∣ push (push a k) (i ∧ r) ∣
+--                  ; (k = i0) → pp (snd (S₊∙ 2)) i j r
+--                  ; (k = i1) →  ∣ push (inr (snd (S₊∙ 2))) (i ∧ r ∧ j) ∣ })
+--         (pp (snd (S₊∙ 2)) (i ∧ ~ k) j i0)
+--   where -- r j k
+--   genLem : ∀ {ℓ} {A : Type ℓ} (x y : A) (pushinl pushinr : x ≡ y) (pushtt : pushinl ≡ pushinr)
+--          → Cube (λ j k → ((λ j → pushtt (~ j) ∙ sym pushinl) ∙ rCancel' pushinl) k j)
+--                  (λ j k → pushinr j)
+--                  (λ r k → x)
+--                  (λ r k → pushtt k r)
+--                  (λ r j → compPath-filler pushinr (sym pushinl) (~ r) j)
+--                  λ r j → pushinr (r ∧ j)
+--   genLem x = J> (J> (cong flipSquare (sym (lUnit (rCancel' refl))) ◁ λ i j k → rCancel-filler' (refl {x = x}) k i j))
+
+--   cubie : Cube {A = hLevelTrunc 6 J₂}
+--                (λ j k → ∣ ((λ j → (push (push tt (~ j))
+--                         ∙ sym (push (inl north))))
+--                         ∙ rCancel' (push (inl north))) k j ∣ₕ)
+--                (λ j k → ∣ push (inr (snd (S₊∙ 2))) j ∣)
+--                (λ r k → ∣ inl (north , north) ∣)
+--                (λ r k → ∣ push (push tt k) r ∣)
+--                (λ r j → ∣ compPath-filler (push (inr (snd (S₊∙ 2)))) (λ i₁ → push (inl (snd (S₊∙ 2))) (~ i₁)) (~ (r ∧ i1)) j ∣) -- (λ r j → pp (snd (S₊∙ 2)) i1 j i1)
+--                λ r j → ∣ push (inr (snd (S₊∙ 2))) (r ∧ j) ∣
+--   cubie i j k = ∣ genLem (inl (north , north)) (inr north) (push (inl north)) (push (inr north)) (λ k → push (push tt k)) i j k ∣ₕ
+
+-- S2→J²-north : S2→J² north ≡ idfun _
+-- S2→J²-north = funExt (elim (λ _ → isOfHLevelPath 6 (isOfHLevelTrunc 6) _ _) S2-actId)
+
+-- S2→J²-isEquiv : (x : _) → isEquiv (S2→J² x)
+-- S2→J²-isEquiv = sphereElim 1 (λ _ → isProp→isSet (isPropIsEquiv _))
+--                    (subst isEquiv (sym S2→J²-north) (idEquiv _ .snd))
+
+-- S2→J²auto : S₊ 2 → hLevelTrunc 6 J₂ ≃ hLevelTrunc 6 J₂
+-- fst (S2→J²auto x) = S2→J² x
+-- snd (S2→J²auto x) = S2→J²-isEquiv x
+
+-- J²-fib : S₊ 3 → Type
+-- J²-fib north = hLevelTrunc 6 J₂
+-- J²-fib south = hLevelTrunc 6 J₂
+-- J²-fib (merid a i) = ua (S2→J²auto a) (~ i)
+
+-- -- σ (a ⌣ b) 
+
+-- tta : S₊ 2 → S₊ 2 → Susp (join S¹ S¹)
+-- tta north y = north
+-- tta south y = south
+-- tta (merid a i) north = merid (inl a) i
+-- tta (merid a i) south = merid (inl base) i
+-- tta (merid a i) (merid b j) = merid ((push a b ∙ sym (push base b)) j) i
+
+
+
+-- S¹→ : {!!}
+-- S¹→ = {!!}
+
+-- Pash : J₂ → Susp (join S¹ S¹)
+-- Pash (inl x) = tta (fst x) (snd x)
+-- Pash (inr x) = north
+-- Pash (push (inl north) i) = north
+-- Pash (push (inl south) i) = merid (inr base) (~ i)
+-- Pash (push (inl (merid a j)) i) =
+--   hcomp (λ k → λ {(i = i0) → merid (inl a) j
+--                  ; (i = i1) → merid (inr base) (j ∧ ~ k)
+--                  ; (j = i0) → north
+--                  ; (j = i1) → merid (inr base) (~ i ∨ ~ k)})
+--         (merid (push a base i) j)
+-- Pash (push (inr x) i) = north
+-- Pash (push (push a i₁) i) = north
+-- {-
+-- j = i0 ⊢ north
+-- j = i1 ⊢ merid (inr base) (~ i)
+-- i = i0 ⊢ merid (inl a) j
+-- i = i1 ⊢ north
+-- -}
+
+
+
+-- TT→S3 : S₊ 2 → S₊ 2 → join S¹ S¹
+-- TT→S3 north y = inl base
+-- TT→S3 south y = inl base
+-- TT→S3 (merid a i) north = inl base
+-- TT→S3 (merid a i) south = inl base
+-- TT→S3 (merid a i) (merid a₁ j) = {!!}
+
+-- S3-fib : (x : S₊ 3) → Type
+-- S3-fib north = {!!}
+-- S3-fib south = {!!}
+-- S3-fib (merid a i) = {!!}
+
+-- +S : join S¹ S¹ → join S¹ S¹ → join S¹ S¹
+-- +S (inl x) (inl y) = inl (x * y)
+-- +S (inl x) (inr y) = inr (x * y)
+-- +S (inl x) (push a b i) = push (x * a) (x * b) i
+-- +S (inr x) (inl y) = inl (x * y)
+-- +S (inr x) (inr y) = inr (x * y)
+-- +S (inr x) (push a b i) = push (x * a) (x * b) i
+-- +S (push a b i) (inl x) = (push (a * x) (b * x) ∙ sym (push (b * x) (b * x))) i -- (push (a * x) (invLooper b * x) ∙ sym (push (invLooper b * x) (invLooper b * x))) i
+-- +S (push a b i) (inr x) = {!push!}
+-- +S (push a b i) (push c d j) = {!!}
+
+-- fib : join S¹ S¹ → Type
+-- fib (inl x) = S¹ × S¹
+-- fib (inr x) = S¹ × S¹
+-- fib (push a b i) = isoToPath (Σ-cong-iso (idIso {A = S¹}) λ _ → S¹-act (invLooper b)) (~ i)
+
+-- inci : S₊ 1 → S₊ 1 → S₊ 1 → Susp (join S¹ S¹)
+-- inci x base z = north
+-- inci x (loop i) z = (merid (inl (x * z)) ∙ sym (merid (inl base))) i
+
+-- inci2 : S₊ 1 → S₊ 1 → S₊ 1 → Susp (join S¹ S¹)
+-- inci2 x base z = north
+-- inci2 x (loop i) z = (merid (inr (x * z)) ∙ sym (merid (inl base))) i
+
+-- fib→' : (x : join S¹ S¹) → fib x → Susp (join S¹ S¹)
+-- fib→' (inl x) p = inci x (fst p) (snd p) -- x * z
+-- fib→' (inr x) p = {!!}
+-- fib→' (push a b i) p = {!!}                -- push (x * l) (x
+
+-- baha : (a x y b : S¹) → inci a x (invLooper b * y) ≡ inci2 b x y
+-- baha a base y b = refl
+-- baha a (loop i) y b j = (merid (push (a * ((invLooper b) * y)) (b * y) j) ∙ sym (merid (inl base))) i
+
+-- fib→ : (x : join S¹ S¹) → fib x → Susp (join S¹ S¹)
+-- fib→ (inl x) (y , z) = inci x y z
+-- fib→ (inr x) (y , z) = inci2 x y z
+-- fib→ (push a b i) p =
+--   hcomp (λ j → λ {(i = i0) → inci a (fst p) (snd p)
+--                  ; (i = i1) → baha a (fst p) (snd p) b j})
+--         (inci a (fst s) (snd s))
+--   where
+--   s = ua-unglue (isoToEquiv (Σ-cong-iso idIso (λ _ → S¹-act (invLooper b)))) (~ i) p
+
+
+-- fibA : Σ _ fib → S₊ 3
+-- fibA = uncurry λ x p → suspFun Hopf (fib→ x p)
+
+-- fibA' : Σ _ fib → S₊ 3
+-- fibA' = uncurry λ x _ → joinS¹S¹→S³ x
+
+-- J∙ : Pointed ℓ-zero
+-- J∙ = join S¹ S¹ , inl base
+
+-- loopSquare : ∀ {ℓ} {A : Type ℓ} {x : A} (p : x ≡ x) (i j k : I) → A
+-- loopSquare p i j k =
+--   hfill (λ k → λ {(i = i0) → p (j ∨ ~ k)
+--                  ; (i = i1) → p (j ∧ k)
+--                  ; (j = i0) → p (i ∨ ~ k)
+--                  ; (j = i1) → p (k ∧ i)})
+--          (inS (p i0))
+--          k
+
+
+-- lemi : S₊ 2 → S₊ 2 → Susp (join S¹ S¹)
+-- lemi north north = north
+-- lemi north south = north
+-- lemi north (merid b i) = σ J∙ (inr b) i
+-- lemi south north = north
+-- lemi south south = north
+-- lemi south (merid b i) = σ J∙ (inr b) i
+-- lemi (merid a i) north = σ J∙ (inl a) i
+-- lemi (merid a i) south = σ J∙ (inl a) i
+-- lemi (merid a i) (merid b j) =
+--   hcomp (λ k → λ {(i = i0) → σ J∙ (push a b k) j
+--                  ; (i = i1) → σ J∙ (push a b k) j
+--                  ; (j = i0) → σ J∙ (inl a) i
+--                  ; (j = i1) → σ J∙ (inl a) i})
+--         (loopSquare (σ J∙ (inl a)) i j i1)
+
+-- fibmap : (x : join S¹ S¹) → fib x → Susp (join S¹ S¹)
+-- fibmap (inl x) p = lemi (S¹×S¹→S² x (fst p)) (S¹×S¹→S² x (snd p))
+-- fibmap (inr x) p = lemi (S¹×S¹→S² (fst p) x) (S¹×S¹→S² (snd p) x)
+-- fibmap (push a b i) p = {!!}
+
+-- asd : (x : _) → fibA x ≡ fibA' x
+-- asd (inl x , base , z) = refl
+-- asd (inl x , loop i , z) j = (cong-∙ (suspFun Hopf) (merid (inl (x * z))) (sym ( (merid (inl base)))) ∙ rCancel (merid north)) j i
+-- asd (inr x , base , z) = merid north
+-- asd (inr x , loop i , z) = {!!}
+-- asd (push a b i , p) = {!!}
+
+-- -- lola : (x y : _) → suspFun Hopf (tta x y) ≡ north
+-- -- lola x y = {!!}
+
+-- -- Total→ : (x : _) → J²-fib x → hLevelTrunc 6 (Susp (join S¹ S¹))
+-- -- Total→ north = map Pash
+-- -- Total→ south _ = ∣ north ∣
+-- -- Total→ (merid a i) = {!
+
+-- -- !}
+-- --   where
+-- --   help : PathP (λ i → ua (S2→J²auto a) (~ i) → hLevelTrunc 6 (Susp (join S¹ S¹))) (map Pash) λ _ → ∣ north ∣
+-- --   help = toPathP (funExt (elim {!!} λ x → (λ i → transportRefl (rec₊ (isOfHLevelTrunc 6) (λ a₁ → ∣ Pash a₁ ∣ₕ) (transportRefl (S2-act a x) i)) i)
+-- --                                         ∙ {!λ _ → ∣ ? ∣ₕ!}
+-- --                                         ∙ {!!})) -- (λ i → transportRefl (transportRefl (map Pash {!∣ x ∣!}) i) i) ∙ {!!}))
+-- --     where
+-- --     Fun1 : (a : S₊ 2) → S₊∙ 2 →∙ ((S₊∙ 2) →∙ hLevelTrunc∙ 6 (Susp (join S¹ S¹) , north) ∙)
+-- --     fst (fst (Fun1 a) x) y = map Pash (S2-act a (inl (x , y))) 
+-- --     snd (fst (Fun1 a) x) = {!incl' north x .fst a!}
+-- --     snd (Fun1 a) = {!!}
+
+-- --     wedgeap : (a x y : S₊ 2) → map Pash (S2-act a (inl (x , y))) ≡ ∣ north ∣
+-- --     wedgeap a = {!!}
+
+-- --     lem2 : (a : _) (x : _) → map Pash (S2-act a x) ≡ ∣ north ∣
+-- --     lem2 a (inl (x , y)) = {!!}
+-- --     lem2 a (inr x) = {!!}
+-- --     lem2 a (push a₁ i) = {!!}
+
+-- -- lem1 : (x : _) (y : J²-fib x) → map (suspFun Hopf) (Total→ x y) ≡ ∣ x ∣
+-- -- lem1 north = elim {!!} λ { (inl (north , north)) → refl ; (inl (south , north)) → cong ∣_∣ₕ (sym (merid north))
+-- --                           ; (inl (merid a i , north)) → {!!}
+-- --                           ; (inl (x , south)) → {!!}
+-- --                           ; (inl (x , merid a i)) → {!!}
+-- --                           ; (inr x) → {!!}
+-- --                           ; (push a i) → {!!}}
+-- -- lem1 south = {!!}
+-- -- lem1 (merid a i) y = {!!}
+
+
+
+
+-- -- {-
+-- -- k = i0 ⊢ pp (snd (S₊∙ 2)) i j i1
+-- -- k = i1 ⊢ ∣ push (inr (snd (S₊∙ 2))) (i ∧ j) ∣
+-- -- i = i0 ⊢ incl' (pt (Susp S¹ , snd (S₊∙ 2)))
+-- --          (pt (Susp S¹ , snd (S₊∙ 2))) .snd j
+-- -- i = i1 ⊢ ∣ push (inr (snd (S₊∙ 2))) j ∣
+-- -- j = i0 ⊢ ∣ inl (north , north) ∣
+-- -- j = i1 ⊢ ∣ push (push a k) i ∣
+-- -- -}
+
+-- -- -- ss : S₊ 2 → Susp (S¹ × S¹) → Susp (S¹ × S¹)
+-- -- -- ss north y = y
+-- -- -- ss south y = y
+-- -- -- ss (merid a i) y = {!!}
+-- -- --   where
+-- -- --   gr : (a : S¹) (y : Susp (S¹ × S¹)) → y ≡ y
+-- -- --   gr a y = {!!}
+
+-- -- -- Suspi : S₊ 3 → Type
+-- -- -- Suspi north = Susp (S¹ × S¹)
+-- -- -- Suspi south = Susp (S¹ × S¹)
+-- -- -- Suspi (merid a i) = {!!}
+
+-- -- -- joinFib : join (S₊ 2) (S₊ 2) → Susp (join S¹ S¹)
+-- -- -- joinFib (inl x) = suspFun inl x
+-- -- -- joinFib (inr x) = suspFun inr x
+-- -- -- joinFib (push north north i) = north
+-- -- -- joinFib (push north south i) = merid (inl base) i
+-- -- -- joinFib (push north (merid a j) i) = {!!}
+-- -- -- joinFib (push south b i) = {!b!}
+-- -- -- joinFib (push (merid a i₁) north i) = {!!}
+-- -- -- joinFib (push (merid a i₁) south i) = {!!}
+-- -- -- joinFib (push (merid a i₁) (merid a₁ i₂) i) = {!!}
+
+-- -- -- -- test : J₂ → hLevelTrunc 6 (Susp (join S¹ S¹))
+-- -- -- -- test (inl (north , north)) = ∣ north ∣
+-- -- -- -- test (inl (north , south)) = ∣ north ∣
+-- -- -- -- test (inl (north , merid a i)) = ∣ σ ((join S¹ S¹) , inl base) (inr a) i ∣
+-- -- -- -- test (inl (south , north)) = ∣ north ∣
+-- -- -- -- test (inl (south , south)) = ∣ north ∣
+-- -- -- -- test (inl (south , merid a i)) = ∣ north ∣
+-- -- -- -- test (inl (merid a j , north)) = ∣ σ ((join S¹ S¹) , inl base) (inl a) j ∣
+-- -- -- -- test (inl (merid a j , south)) = ∣ north ∣
+-- -- -- -- test (inl (merid a j , merid b i)) = {!!}
+-- -- -- -- test (inr x) = {!!}
+-- -- -- -- test (push a i) = {!!}
+
+-- -- -- -- S¹act : S₊ 2 → S₊ 2 → S₊ 2 → hLevelTrunc 6 J₂
+-- -- -- -- S¹act north x y = ∣ inl (x , north) ∣
+-- -- -- -- S¹act south x y = ∣ inl (north , y) ∣
+-- -- -- -- S¹act (merid a i) x y = {!!}
+
+-- -- -- -- S2-act : S₊ 2 → J₂ → hLevelTrunc 4 J₂
+-- -- -- -- S2-act x (inl (a , b)) = {!!}
+-- -- -- -- S2-act x (inr x₁) = {!!}
+-- -- -- -- S2-act x (push a i) = {!!}
+
+-- -- -- -- fib : S₊ 3 → Type
+-- -- -- -- fib north = J₂
+-- -- -- -- fib south = J₂
+-- -- -- -- fib (merid a i) = {!!}
+-- -- -- --   where
+-- -- -- --   l : (a : S¹) (b : S₊ 2) → b ≡ b 
+-- -- -- --   l a north = merid a ∙ sym (merid base)
+-- -- -- --   l a south = sym (merid base) ∙ merid a
+-- -- -- --   l a (merid b i) = {!!}
+
+-- -- -- -- {- isoToPath (IsoType→IsoSusp (S¹-act (a * invLooper b))) (~ i)
+-- -- -- -- -}
+
+-- -- -- -- -- fib→ : Σ _ fib → Susp (join S¹ S¹)
+-- -- -- -- -- fib→ (inl x , y) = suspFun (λ y →  inl (y * x)) y
+-- -- -- -- -- fib→ (inr x , y) = suspFun (λ y →  inr (y * invLooper x)) y
+-- -- -- -- -- fib→ (push a b i , y) = {!!}
+-- -- -- -- --   where
+-- -- -- -- --   h : PathP (λ i → isoToPath (IsoType→IsoSusp (S¹-act (a * invLooper b))) (~ i) → Susp (join S¹ S¹)) (suspFun (λ y →  inl (a * y))) (suspFun (λ y →  inr (y * invLooper b)))
+-- -- -- -- --   h = toPathP (funExt λ x → (λ i → transportRefl (suspFun (λ y₁ → inl (a * y₁)) (transportRefl (suspFun (Iso.fun (S¹-act (a * invLooper b))) x) i)) i)
+-- -- -- -- --             ∙ {!!}) -- (λ i → transportRefl {!transportRefl (IsoType→IsoSusp (S¹-act (a * invLooper b)) .fun x) i!} i) ∙ {!!})
+-- -- -- -- --     where
+-- -- -- -- --     l : (a b : S¹) (x : _) → suspFun (λ y₁ → inl (a * y₁))
+-- -- -- -- --       (suspFun (λ y₁ → a * invLooper b * y₁) x)
+-- -- -- -- --       ≡ suspFun (λ y₁ → inr (y₁ * invLooper b)) x
+-- -- -- -- --     l a b north = refl
+-- -- -- -- --     l a b south = refl
+-- -- -- -- --     l a b (merid c i) j = {!!}
+
+-- -- -- -- -- -- r : (a : S¹) → S₊ 2 → S₊ 2
+-- -- -- -- -- -- r a north = north
+-- -- -- -- -- -- r a south = south
+-- -- -- -- -- -- r a (merid a₁ i) = merid (a * a₁) i
+
+-- -- -- -- -- -- lem : (a : S¹) → isEquiv (r a)
+-- -- -- -- -- -- lem = sphereElim 0 (λ _ → isPropIsEquiv _)
+-- -- -- -- -- --        (subst isEquiv
+-- -- -- -- -- --          (funExt (λ { north → refl
+-- -- -- -- -- --                     ; south → refl
+-- -- -- -- -- --                     ; (merid a i) → refl}))
+-- -- -- -- -- --          (idEquiv (S₊ 2) .snd))
+
+-- -- -- -- -- -- l : S₊ 2 → Type
+-- -- -- -- -- -- l north = S₊ 2
+-- -- -- -- -- -- l south = S₊ 2
+-- -- -- -- -- -- l (merid a i) = ua (r a , lem a) (~ i)
+
+-- -- -- -- -- -- open import Cubical.HITs.SmashProduct
+-- -- -- -- -- -- tts : Σ (S₊ 2) l → Smash (S₊∙ 2) (S₊∙ 2)
+-- -- -- -- -- -- tts (north , p) = proj p north
+-- -- -- -- -- -- tts (south , p) = proj north p
+-- -- -- -- -- -- tts (merid a i , p) =
+-- -- -- -- -- --   hcomp (λ k → λ {(i = i0) → proj p north
+-- -- -- -- -- --                  ; (i = i1) → (gluel (r a p) ∙∙ (sym (gluel north) ∙ gluer north) ∙∙ sym (gluer p)) k})
+-- -- -- -- -- --         (proj (ua-unglue (r a , lem a) (~ i) p) north)
+
+-- -- -- -- -- -- p1 : S₊ 2 → Susp (join S¹ S¹)
+-- -- -- -- -- -- p1 north = north
+-- -- -- -- -- -- p1 south = south
+-- -- -- -- -- -- p1 (merid a i) = merid (inl a) i
+
+-- -- -- -- -- -- p2 : S₊ 2 → Susp (join S¹ S¹)
+-- -- -- -- -- -- p2 north = north
+-- -- -- -- -- -- p2 south = south
+-- -- -- -- -- -- p2 (merid a i) = merid (inr a) i
+
+-- -- -- -- -- -- malem : (a : S¹) (x : S₊ 2) → p1 (r a x) ≡ p2 x
+-- -- -- -- -- -- malem a north = refl
+-- -- -- -- -- -- malem a south = refl
+-- -- -- -- -- -- malem a (merid b i) j = merid (push (a * b) b j) i -- merid (push b (a * b) j) i
+
+-- -- -- -- -- -- tssfill : (i j : I) (a : S¹) (p : ua (r a , lem a) (~ i)) → Susp (join S¹ S¹)
+-- -- -- -- -- -- tssfill i j a p =
+-- -- -- -- -- --   hfill (λ k → λ {(i = i0) → p1 p
+-- -- -- -- -- --                  ; (i = i1) → malem a p k})
+-- -- -- -- -- --         (inS (p1 (ua-unglue (r a , lem a) (~ i) p)))
+-- -- -- -- -- --         j
+
+-- -- -- -- -- -- ttss : Σ (S₊ 2) l → Susp (join S¹ S¹)
+-- -- -- -- -- -- ttss (north , p) = p1 p
+-- -- -- -- -- -- ttss (south , p) = p2 p
+-- -- -- -- -- -- ttss (merid a i , p) = tssfill i i1 a p
+
+-- -- -- -- -- -- Hopf : join S¹ S¹ → S₊ 2
+-- -- -- -- -- -- Hopf (inl x) = north
+-- -- -- -- -- -- Hopf (inr x) = south
+-- -- -- -- -- -- Hopf (push a b i) = merid (a * (invLooper b)) i
+
+-- -- -- -- -- -- Hopf' : join S¹ S¹ → S₊ 2
+-- -- -- -- -- -- Hopf' (inl x) = north
+-- -- -- -- -- -- Hopf' (inr x) = north
+-- -- -- -- -- -- Hopf' (push a b i) = σ (S₊∙ 1) (a * (invLooper b)) i
+
+-- -- -- -- -- -- SuspS : Susp (join S¹ S¹) → S₊ 3
+-- -- -- -- -- -- SuspS = suspFun Hopf
+
+-- -- -- -- -- -- module _ (a b : S¹) where
+-- -- -- -- -- --   fillib : (i j k : I) → join S¹ S¹
+-- -- -- -- -- --   fillib i j k = hfill
+-- -- -- -- -- --     (λ k → λ {(i = i0) → push base (a * invLooper b) (~ j ∧ ~ k)
+-- -- -- -- -- --              ; (i = i1) → push base (a * invLooper b) (~ j ∧ ~ k)
+-- -- -- -- -- --              ; (j = i0) → push base (a * invLooper b) (~ k)
+-- -- -- -- -- --              ; (j = i1) → inl (loop i)})
+-- -- -- -- -- --              (inS (push (loop i) (a * invLooper b) (~ j))) k
+
+-- -- -- -- -- --   filli' : (i j k : I) → join S¹ S¹
+-- -- -- -- -- --   filli' i j k =
+-- -- -- -- -- --     hfill ((λ k → λ {(i = i0) → push base base (j ∧ k)
+-- -- -- -- -- --              ; (i = i1) → push base base (j ∧ k)
+-- -- -- -- -- --              ; (j = i0) → inl base
+-- -- -- -- -- --              ; (j = i1) → push (loop i) base k}))
+-- -- -- -- -- --            (inS (fillib i j i1)) k
+
+-- -- -- -- -- -- filli : (a b : S¹) (i j k : I) → join S¹ S¹
+-- -- -- -- -- -- filli a b i j k =
+-- -- -- -- -- --   hfill (λ k → λ {(i = i0) → ((push (a * invLooper b) base) ∙ (sym (push base base))) k
+-- -- -- -- -- --                 ; (i = i1) → (push base (loop j)) (~ k)
+-- -- -- -- -- --                 ; (j = i0) → compPath-filler' (push (a * invLooper b) base) (sym (push base base)) (~ i) k 
+-- -- -- -- -- --                 ; (j = i1) → compPath-filler' (push (a * invLooper b) base) (sym (push base base)) (~ i) k })
+-- -- -- -- -- --         (inS (push (a * invLooper b) (loop j) i))
+-- -- -- -- -- --         k
+
+-- -- -- -- -- -- SuspS' : Susp (join S¹ S¹) → join S¹ S¹
+-- -- -- -- -- -- SuspS' north = inl base
+-- -- -- -- -- -- SuspS' south = inl base
+-- -- -- -- -- -- SuspS' (merid (inl x) i) = inl base
+-- -- -- -- -- -- SuspS' (merid (inr x) i) = inl base
+-- -- -- -- -- -- SuspS' (merid (push a b i) j) = filli a b i j i1
+
+-- -- -- -- -- -- SuspS* : Susp (join S¹ S¹) → join S¹ S¹
+-- -- -- -- -- -- SuspS* north = inl base
+-- -- -- -- -- -- SuspS* south = inl base
+-- -- -- -- -- -- SuspS* (merid (inl x) i) = inl base
+-- -- -- -- -- -- SuspS* (merid (inr x) i) = inl base
+-- -- -- -- -- -- SuspS* (merid (push a b i) j) =
+-- -- -- -- -- --   hcomp {!!}
+-- -- -- -- -- --         (hcomp {!!}
+-- -- -- -- -- --                {!inS (push (loop i) (a * invLooper b) j)!})
+
+-- -- -- -- -- -- filS3 : (a : S¹) (i j k : I) → join S¹ S¹
+-- -- -- -- -- -- filS3 a i j k =
+-- -- -- -- -- --   hfill (λ k → λ {(i = i0) → rCancel (push base a) k j
+-- -- -- -- -- --                  ; (i = i1) → rCancel (push base a) k j
+-- -- -- -- -- --                  ; (j = i0) → inl (loop i)
+-- -- -- -- -- --                  ; (j = i1) → inl base})
+-- -- -- -- -- --         (inS ((push (loop i) a ∙ sym (push base a)) j))
+-- -- -- -- -- --         k
+
+-- -- -- -- -- -- S₊3→ : S₊ 3 → join S¹ S¹
+-- -- -- -- -- -- S₊3→ north = inl base
+-- -- -- -- -- -- S₊3→ south = inl base
+-- -- -- -- -- -- S₊3→ (merid north i) = inl (loop i)
+-- -- -- -- -- -- S₊3→ (merid south i) = inl base
+-- -- -- -- -- -- S₊3→ (merid (merid a j) i) =
+-- -- -- -- -- --   filS3 a i j i1
+
+-- -- -- -- -- -- SuspS'' : Susp (join S¹ S¹) → join S¹ S¹
+-- -- -- -- -- -- SuspS'' north = inl base
+-- -- -- -- -- -- SuspS'' south = inr base
+-- -- -- -- -- -- SuspS'' (merid (inl x) i) = push base base i
+-- -- -- -- -- -- SuspS'' (merid (inr x) i) = push base base i
+-- -- -- -- -- -- SuspS'' (merid (push a b i) j) = filli' a b i j i1
+
+-- -- -- -- -- -- blahem : Susp (join S¹ S¹) → S₊ 2
+-- -- -- -- -- -- blahem x = Hopf (SuspS' x)
+
+-- -- -- -- -- -- ra : (q : _) → Hopf' (S₊3→ (SuspS (p1 q))) ≡ north
+-- -- -- -- -- -- ra north = refl
+-- -- -- -- -- -- ra south = refl
+-- -- -- -- -- -- ra (merid a i) = refl
+
+-- -- -- -- -- -- la : (q : _) → Hopf' (S₊3→ (SuspS (p2 q))) ≡ south
+-- -- -- -- -- -- la north = merid base
+-- -- -- -- -- -- la south = merid base
+-- -- -- -- -- -- la (merid a i) = merid base
+
+-- -- -- -- -- -- haha : (p : _) → Hopf' (S₊3→ {!p2!}) ≡ {!!}
+-- -- -- -- -- -- haha = {!!}
+
+-- -- -- -- -- -- baa : (x : _) → Hopf' (S₊3→ (SuspS (ttss x))) ≡ fst x
+-- -- -- -- -- -- baa (north , q) = ra q
+-- -- -- -- -- -- baa (south , p) = la p
+-- -- -- -- -- -- baa (merid a i , p) j =
+-- -- -- -- -- --   hcomp (λ k → λ {(i = i0) → {!!} -- l2 a p j k
+-- -- -- -- -- --                  ; (i = i1) → {!!} -- l1 a p j k
+-- -- -- -- -- --                  ; (j = i0) → Hopf' (S₊3→ (SuspS (tssfill i k a p)))
+-- -- -- -- -- --                  ; (j = i1) → merid a (i ∧ k)})
+-- -- -- -- -- --     (hcomp (λ k → λ {(i = i0) → {!ra (ua-unglue (r a , lem a) (~ i) p) (~ k)!}
+-- -- -- -- -- --                  ; (i = i1) → {!ra (ua-unglue (r a , lem a) (~ i) p) (~ k)!}
+-- -- -- -- -- --                  ; (j = i0) → ra (ua-unglue (r a , lem a) (~ i) p) (~ k)
+-- -- -- -- -- --                  ; (j = i1) → north})
+-- -- -- -- -- --            {!!})
+-- -- -- -- -- --   where
+-- -- -- -- -- --   rightL : (a : S¹) (p : _) → Hopf' (S₊3→ (suspFun Hopf (p1 p))) ≡ north
+-- -- -- -- -- --   rightL a north = refl
+-- -- -- -- -- --   rightL a south = refl
+-- -- -- -- -- --   rightL a (merid a₁ i) = refl
+
+-- -- -- -- -- --   leftL : (a : S¹) (p : _) → Hopf' (S₊3→ (suspFun Hopf (p1 (r a p)))) ≡ north
+-- -- -- -- -- --   leftL a north = refl
+-- -- -- -- -- --   leftL a south = refl
+-- -- -- -- -- --   leftL a (merid b i) j = Hopf' (S₊3→ (suspFun Hopf (merid (push a b j) i)))
+
+-- -- -- -- -- -- --   l2 : (a : S¹) (p : _) → PathP (λ i → rightL a p i ≡ ra p i) (λ k → Hopf' (S₊3→ (suspFun Hopf (p1 p)))) refl
+-- -- -- -- -- -- --   l2 a north = refl
+-- -- -- -- -- -- --   l2 a south = refl
+-- -- -- -- -- -- --   l2 a (merid a₁ i) = refl
+
+-- -- -- -- -- -- --   l1 : (a : S¹) (p : _) → PathP (λ i → leftL a p i ≡ la p i) (λ k → Hopf' (S₊3→ (suspFun Hopf (malem a p k)))) (merid a)
+-- -- -- -- -- -- --   l1 a north i j = compPath-filler (merid base) (sym (merid a)) (~ j) i
+-- -- -- -- -- -- --   l1 a south i j = compPath-filler (merid base) (sym (merid a)) (~ j) i
+-- -- -- -- -- -- --   l1 a (merid b k) i j =
+-- -- -- -- -- -- --     hcomp (λ r → λ {(i = i0) → Hopf' (filS3 (a * b * invLooper b) k j r)
+-- -- -- -- -- -- --                  ; (i = i1) → {!!}
+-- -- -- -- -- -- --                  ; (j = i0) → {!!} -- compPath-filler (merid base) (sym (merid a)) (~ j) i
+-- -- -- -- -- -- --                  ; (j = i1) → {!!} -- compPath-filler (merid base) (sym (merid a)) (~ j) i
+-- -- -- -- -- -- --                  ; (k = i0) → {!Hopf' (filS3 (a * b * invLooper b) k j r)!} -- Hopf {!suspFun Hopf (malem a p k))) -- filS3 (a * b * invLooper b) j i r!}
+-- -- -- -- -- -- --                  ; (k = i1) → {!!}})
+-- -- -- -- -- -- --           {!!}
+
+-- -- -- -- -- -- --   l' : PathP (λ i → (p : l (merid a i))
+-- -- -- -- -- -- --                   → Hopf' (S₊3→ (SuspS (ttss (merid a i , p)))) ≡ merid a i)
+-- -- -- -- -- -- --                   ra
+-- -- -- -- -- -- --                   la
+-- -- -- -- -- -- --   l' = toPathP (funExt (λ x → cong (transport (λ i → Hopf' (S₊3→ (SuspS (ttss (merid a i , transp (λ j → ua (r a , lem a) (~ i ∧ j)) i x)))) ≡ merid a i))
+-- -- -- -- -- -- --                                                (λ _ → ra (transport refl (r a x)))
+-- -- -- -- -- -- --                                 ∙∙ {!!}
+-- -- -- -- -- -- --                                 ∙∙ {!transp (λ j → ua (r a , lem a) (~ i ∧ j)) i x!}))
+
+-- -- -- -- -- -- -- blahem'' : (x : _) → Iso.fun (IsoSphereJoin 1 1) (SuspS'' x) ≡ suspFun Hopf' x
+-- -- -- -- -- -- -- blahem'' north = refl
+-- -- -- -- -- -- -- blahem'' south = refl
+-- -- -- -- -- -- -- blahem'' (merid (inl x) i) = refl
+-- -- -- -- -- -- -- blahem'' (merid (inr x) i) = refl
+-- -- -- -- -- -- -- blahem'' (merid (push a b i) j) k =
+-- -- -- -- -- -- --   hcomp (λ r → λ {(i = i0) → merid north (j ∧ (r ∨ k))
+-- -- -- -- -- -- --                  ; (i = i1) → merid north (j ∧ (r ∨ k))
+-- -- -- -- -- -- --                  ; (j = i0) → north -- north
+-- -- -- -- -- -- --                  ; (j = i1) → merid north (r ∨ k)
+-- -- -- -- -- -- --                  ; (k = i0) → fun (IsoSphereJoin 1 1) (filli' a b i j r)
+-- -- -- -- -- -- --                  ; (k = i1) → suspFun Hopf' (merid (push a b i) j)})
+-- -- -- -- -- -- --     (hcomp (λ r → λ {(i = i0) → merid north ((~ j ∧ ~ r) ∨ (j ∧ k))
+-- -- -- -- -- -- --                     ; (i = i1) → merid north ((~ j ∧ ~ r) ∨ (j ∧ k)) 
+-- -- -- -- -- -- --                     ; (j = i0) → merid north (~ r)
+-- -- -- -- -- -- --                     ; (j = i1) → merid north k -- merid north k
+-- -- -- -- -- -- --                     ; (k = i0) → fun (IsoSphereJoin 1 1) (fillib a b i j r)
+-- -- -- -- -- -- --                     ; (k = i1) → {!suspFun Hopf' (merid (push a b i) ((~ j ∧ ~ r) ∨ j))!}})
+-- -- -- -- -- -- --               {!!})
+-- -- -- -- -- -- -- {-
+-- -- -- -- -- -- -- i = i0 ⊢ merid north j
+-- -- -- -- -- -- -- i = i1 ⊢ merid north j
+-- -- -- -- -- -- -- j = i0 ⊢ north
+-- -- -- -- -- -- -- j = i1 ⊢ south
+-- -- -- -- -- -- -- k = i0 ⊢ fun (IsoSphereJoin 1 1) (SuspS'' (merid (push a b i) j))
+-- -- -- -- -- -- -- k = i1 ⊢ suspFun Hopf' (merid (push a b i) j)
+-- -- -- -- -- -- -- -}
+
+-- -- -- -- -- -- -- -- blahem' : (x : _) → Iso.fun (IsoSphereJoin 1 1) (SuspS' x) ≡ suspFun Hopf' x
+-- -- -- -- -- -- -- -- blahem' north = refl
+-- -- -- -- -- -- -- -- blahem' south = merid north
+-- -- -- -- -- -- -- -- blahem' (merid (inl x) i) j = merid north (i ∧ j)
+-- -- -- -- -- -- -- -- blahem' (merid (inr x) i) j = merid north (i ∧ j)
+-- -- -- -- -- -- -- -- blahem' (merid (push a b i) j) k = help i j k
+-- -- -- -- -- -- -- --   where -- i j k
+-- -- -- -- -- -- -- --   help : Cube (λ j k → merid north (j ∧ k)) (λ j k → merid north (j ∧ k))
+-- -- -- -- -- -- -- --               (λ _ _ → north)
+-- -- -- -- -- -- -- --               (λ i k → merid north k)
+-- -- -- -- -- -- -- --               (λ i j → fun (IsoSphereJoin 1 1) (SuspS' (merid (push a b i) j)))
+-- -- -- -- -- -- -- --               λ i j → merid (σ (S₊∙ 1) (a * invLooper b) i) j
+-- -- -- -- -- -- -- --   help i j k =
+-- -- -- -- -- -- -- --     hcomp (λ r → λ {(i = i0) → {!!} -- merid north (j ∧ k)
+-- -- -- -- -- -- -- --                    ; (i = i1) → {!compPath-filler (merid (compPath-filler (merid (a * invLooper b)) (sym (merid base)) r i)) (sym (merid north)) (~ r) j!} -- merid (merid base (~ r)) (j ∧ k)
+-- -- -- -- -- -- -- --                    ; (j = i0) → north -- north
+-- -- -- -- -- -- -- --                    ; (j = i1) → merid north (k ∧ r) -- merid (merid base (i ∧ ~ r)) k
+-- -- -- -- -- -- -- --                    ; (k = i0) → Iso.fun (IsoSphereJoin 1 1) (filli a b i j i1)
+-- -- -- -- -- -- -- --                    ; (k = i1) → compPath-filler (merid (compPath-filler (merid (a * invLooper b)) (sym (merid base)) r i)) (sym (merid north)) (~ r) j }) -- merid (compPath-filler (merid (a * invLooper b)) (sym (merid base)) r i) j})
+-- -- -- -- -- -- -- --      (hcomp (λ r → λ {(i = i0) → {!!}
+-- -- -- -- -- -- -- --                    ; (i = i1) → {!!}
+-- -- -- -- -- -- -- --                    ; (j = i0) → Iso.fun (IsoSphereJoin 1 1) (compPath-filler' (push (a * invLooper b) base) (sym (push base base)) (~ i) r)
+-- -- -- -- -- -- -- --                    ; (j = i1) → {!Iso.fun (IsoSphereJoin 1 1) (compPath-filler' (push (a * invLooper b) base) (sym (push base base)) (~ i) i1)!}
+-- -- -- -- -- -- -- --                    ; (k = i0) → Iso.fun (IsoSphereJoin 1 1) (filli a b i j r)
+-- -- -- -- -- -- -- --                    ; (k = i1) → {!!}})
+-- -- -- -- -- -- -- --             {!!})
+-- -- -- -- -- -- -- --     where
+-- -- -- -- -- -- -- --     help' : cong (Iso.fun (IsoSphereJoin 1 1)) ((push (a * invLooper b) base) ∙ (sym (push base base))) ≡ refl
+-- -- -- -- -- -- -- --     help' = cong-∙ ( (Iso.fun (IsoSphereJoin 1 1)))
+-- -- -- -- -- -- -- --                    (push (a * invLooper b) base) (sym (push base base))
+-- -- -- -- -- -- -- --                  ∙ ((cong (λ x → merid x ∙ sym (merid north)) (S¹×S¹→S²rUnit (a * invLooper b))
+-- -- -- -- -- -- -- --                  ∙ rCancel (merid north)))
+-- -- -- -- -- -- -- --     helpC : cong (Iso.fun (IsoSphereJoin 1 1)) ≡ {!!}
+-- -- -- -- -- -- -- --     helpC = {!!}
+
+-- -- -- -- -- -- -- --     Square1 : Cube (λ i k → merid north (~ k))
+-- -- -- -- -- -- -- --                    (λ j k → (Iso.fun (IsoSphereJoin 1 1))
+-- -- -- -- -- -- -- --                    ((push base (loop j)) (~ k)))
+-- -- -- -- -- -- -- --                    (λ i k → merid north (~ k))
+-- -- -- -- -- -- -- --                    (λ i k → merid north (~ k))
+-- -- -- -- -- -- -- --                    (λ _ _ → south) λ _ _ → north
+-- -- -- -- -- -- -- --     Square1 i j k = merid north (~ k)
+
+-- -- -- -- -- -- -- --     -- r j k
+-- -- -- -- -- -- -- --     helpi0 : Cube {!λ _ !} (λ j k → merid north (j ∧ k))
+-- -- -- -- -- -- -- --                   {!!} -- (λ r k → help' k r) -- (λ r k → Iso.fun (IsoSphereJoin 1 1) (filli a b i0 i0 r))
+-- -- -- -- -- -- -- --                   {!!} -- (flipSquare (compPath-filler (cong (Iso.fun (IsoSphereJoin 1 1)) (λ r → filli a b i0 i1 r)) (merid north)))
+-- -- -- -- -- -- -- --                   (λ r j → Iso.fun (IsoSphereJoin 1 1)  (filli a b i0 j r))
+-- -- -- -- -- -- -- --                   {!λ r j → Iso.fun (IsoSphereJoin 1 1)  (filli a b i0 j r)!}
+-- -- -- -- -- -- -- --     helpi0 = {!!}
+
+-- -- -- -- -- -- -- --     help'' : Cube (λ _ _ → south)
+-- -- -- -- -- -- -- --                   (λ j k → merid north (j ∧ k))
+-- -- -- -- -- -- -- --                   (λ r k → merid north (~ r))
+-- -- -- -- -- -- -- --                   (λ r k → merid north (~ r ∨ k))
+-- -- -- -- -- -- -- --                   (λ r j → Iso.fun (IsoSphereJoin 1 1) ((push base (loop j)) (~ r)))
+-- -- -- -- -- -- -- --                   λ r j → merid north (~ r ∨ j)
+-- -- -- -- -- -- -- --     help'' r j k = merid north (~ r ∨ (k ∧ j))
+
+-- -- -- -- -- -- -- -- -- open import Cubical.HITs.Pushout
+
+
+-- -- -- -- -- -- -- -- -- SS : Susp (join S¹ S¹) → S₊ 2
+-- -- -- -- -- -- -- -- -- SS x = Hopf (Iso.inv (IsoSphereJoin 1 1) (SuspS x))
+
+-- -- -- -- -- -- -- -- -- SS2 : Σ (S₊ 2) l → S₊ 2
+-- -- -- -- -- -- -- -- -- SS2 x = SS (ttss x)
+
+-- -- -- -- -- -- -- -- -- rs : (p : _) → SS2 (north , p) ≡ north
+-- -- -- -- -- -- -- -- -- rs north = refl
+-- -- -- -- -- -- -- -- -- rs south = refl
+-- -- -- -- -- -- -- -- -- rs (merid a i) j = Hopf (inv (IsoSphereJoin 1 1) (merid (merid a j) i))
+
+-- -- -- -- -- -- -- -- -- ls : (p : _) → SS2 (south , p) ≡ south
+-- -- -- -- -- -- -- -- -- ls north = merid base
+-- -- -- -- -- -- -- -- -- ls south = merid base
+-- -- -- -- -- -- -- -- -- ls (merid a i) = merid base
+
+-- -- -- -- -- -- -- -- -- lem' : (x : Σ (S₊ 2) l) → SS2 x ≡ fst x
+-- -- -- -- -- -- -- -- -- lem' (north , x) = rs x
+-- -- -- -- -- -- -- -- -- lem' (south , p) = ls p
+-- -- -- -- -- -- -- -- -- lem' (merid a i , p) j =
+-- -- -- -- -- -- -- -- --   hcomp (λ k → λ {(i = i0) → rs p j
+-- -- -- -- -- -- -- -- --                  ; (i = i1) → {!!} -- lol a p j k
+-- -- -- -- -- -- -- -- --                  ; (j = i0) → SS (tssfill i k a p)
+-- -- -- -- -- -- -- -- --                  ; (j = i1) → merid a (i ∧ k)})
+-- -- -- -- -- -- -- -- --         (hcomp (λ k → λ {(i = i0) → {!!}
+-- -- -- -- -- -- -- -- --                  ; (i = i1) → {!!} -- cooll a p j k
+-- -- -- -- -- -- -- -- --                  ; (j = i0) → {!!} -- blat2 a (ua-unglue (r a , lem a) (~ i) p) (~ k)
+-- -- -- -- -- -- -- -- --                  ; (j = i1) → north})
+-- -- -- -- -- -- -- -- --                {!!})
+
+-- -- -- -- -- -- -- -- -- {-
+-- -- -- -- -- -- -- -- -- i = i0 ⊢ rs p j
+-- -- -- -- -- -- -- -- -- i = i1 ⊢ ls p j
+-- -- -- -- -- -- -- -- -- j = i0 ⊢ SS2 (merid a i , p)
+-- -- -- -- -- -- -- -- -- j = i1 ⊢ merid a i
+-- -- -- -- -- -- -- -- -- -}
+
+-- -- -- -- -- -- -- -- --   where
+-- -- -- -- -- -- -- -- --   blat : (a : _) (p : _) → SS (p1 (r a p)) ≡ north
+-- -- -- -- -- -- -- -- --   blat a north = merid base ∙ sym (merid a)
+-- -- -- -- -- -- -- -- --   blat a south = merid base ∙ sym (merid a)
+-- -- -- -- -- -- -- -- --   blat a (merid a₁ i) = {!!} -- merid base ∙ sym (merid a)
+
+-- -- -- -- -- -- -- -- --   blat2 : (a : S¹) → (p : _) → SS (p1 p) ≡ north
+-- -- -- -- -- -- -- -- --   blat2 a north = refl -- merid base ∙ sym (merid a)
+-- -- -- -- -- -- -- -- --   blat2 a south = refl -- merid base ∙ sym (merid a)
+-- -- -- -- -- -- -- -- --   blat2 a (merid b i) j = {!Hopf (inv (IsoSphereJoin 1 1) (merid (merid ? k)))!} -- merid base ∙ sym (merid a)
+
+-- -- -- -- -- -- -- -- -- --   cooll : (a : S¹) → (p : _) → Square (sym (blat2 a (r a p))) (λ _ → north) refl (blat a p)
+-- -- -- -- -- -- -- -- -- --   cooll a north i j = (merid base ∙ sym (merid a)) (~ j ∨ i)
+-- -- -- -- -- -- -- -- -- --   cooll a south i j = (merid base ∙ sym (merid a)) (~ j ∨ i)
+-- -- -- -- -- -- -- -- -- --   cooll a (merid a₁ _) i j = (merid base ∙ sym (merid a)) (~ j ∨ i)
+
+
+-- -- -- -- -- -- -- -- -- --   lol : (a : S¹) (p : S₊ (suc (suc zero)))
+-- -- -- -- -- -- -- -- -- --     → Square (cong SS (malem a p)) (merid a) (blat a p) (ls p)
+-- -- -- -- -- -- -- -- -- --   lol a north j k = compPath-filler (merid base) (sym (merid a)) (~ k) j
+-- -- -- -- -- -- -- -- -- --   lol a south j k = compPath-filler (merid base) (sym (merid a)) (~ k) j
+-- -- -- -- -- -- -- -- -- --   lol a (merid a₁ i) j k =
+-- -- -- -- -- -- -- -- -- --     hcomp (λ r → λ {(i = i0) → compPath-filler (merid base) (λ i₂ → merid a (~ i₂)) (~ k) j
+-- -- -- -- -- -- -- -- -- --                    ; (i = i1) → compPath-filler (merid base) (λ i₂ → merid a (~ i₂)) (~ k) j
+-- -- -- -- -- -- -- -- -- --                    ; (j = i0) → Hopf (inv (IsoSphereJoin 1 1) (merid (merid (cool (~ r)) k) i ))
+-- -- -- -- -- -- -- -- -- --                    ; (j = i1) → merid a k -- compPath-filler (merid base) (λ i₂ → merid a (~ i₂)) (~ k) j
+-- -- -- -- -- -- -- -- -- --                    ; (k = i0) → (merid base ∙ (λ i₂ → merid a (~ i₂))) j
+-- -- -- -- -- -- -- -- -- --                    ; (k  = i1) → merid base j})
+-- -- -- -- -- -- -- -- -- --           (hcomp (λ r → λ {(i = i0) → compPath-filler (merid base) (λ i₂ → merid a (~ i₂)) (~ k ∧ r) j
+-- -- -- -- -- -- -- -- -- --                           ; (i = i1) → compPath-filler (merid base) (λ i₂ → merid a (~ i₂)) (~ k ∧ r) j
+-- -- -- -- -- -- -- -- -- --                           ; (j = i0) → lem1 a (~ r) k i -- Hopf (inv (IsoSphereJoin 1 1) (merid (merid a k) i))
+-- -- -- -- -- -- -- -- -- --                           ; (j = i1) → merid a (k ∨ ~ r)
+-- -- -- -- -- -- -- -- -- --                           ; (k = i0) → compPath-filler (merid base) (λ i₂ → merid a (~ i₂)) r j
+-- -- -- -- -- -- -- -- -- --                           ; (k  = i1) → merid base j})
+-- -- -- -- -- -- -- -- -- --                   (merid base j))
+-- -- -- -- -- -- -- -- -- --     where
+-- -- -- -- -- -- -- -- -- --     cool : a * a₁ * invLooper a₁ ≡ a
+-- -- -- -- -- -- -- -- -- --     cool = {!S¹assoc!} ∙ {!!}
+
+-- -- -- -- -- -- -- -- -- --     kebab = S³→joinS¹S¹
+
+-- -- -- -- -- -- -- -- -- --     lem1 : (a : S¹) → cong (cong (Hopf ∘ inv (IsoSphereJoin 1 1))) (cong merid (merid a))
+-- -- -- -- -- -- -- -- -- --          ≡ refl
+-- -- -- -- -- -- -- -- -- --     lem1 a = {!!}
+
+-- -- -- -- -- -- -- -- -- -- {-
+-- -- -- -- -- -- -- -- -- -- i = i0 ⊢ compPath-filler (merid base) (λ i₂ → merid a (~ i₂)) (~ k)
+-- -- -- -- -- -- -- -- -- --          j
+-- -- -- -- -- -- -- -- -- -- i = i1 ⊢ compPath-filler (merid base) (λ i₂ → merid a (~ i₂)) (~ k)
+-- -- -- -- -- -- -- -- -- --          j
+-- -- -- -- -- -- -- -- -- -- j = i0 ⊢ cong SS (λ j₂ → merid (push (a * a₁) (invLooper a₁) j₂) i)
+-- -- -- -- -- -- -- -- -- --          k
+-- -- -- -- -- -- -- -- -- -- j = i1 ⊢ merid a k
+-- -- -- -- -- -- -- -- -- -- k = i0 ⊢ (merid base ∙ (λ i₂ → merid a (~ i₂))) j
+-- -- -- -- -- -- -- -- -- -- k = i1 ⊢ merid base j
+-- -- -- -- -- -- -- -- -- -- -}
+
+
+
+-- -- -- -- -- -- -- -- -- --   asd : PathP (λ i → (p : ua (r a , lem a) (~ i)) → SS2 (merid a i , p) ≡ merid a i) rs ls
+-- -- -- -- -- -- -- -- -- --   asd = toPathP (funExt λ x → (λ i → transport (λ j → SS2 (merid a j , transp (λ k → ua (r a , lem a) (~ (j ∨ ~ k))) j x) ≡ merid a j)
+-- -- -- -- -- -- -- -- -- --                                                  (rs (transport refl (r a x))))
+-- -- -- -- -- -- -- -- -- --                     ∙ {!rs!}
+-- -- -- -- -- -- -- -- -- --                     ∙ {!!})
+-- -- -- -- -- -- -- -- -- --     where
+-- -- -- -- -- -- -- -- -- --     help : (x : _) → rs (transport (λ j → ua (r a , lem a) (~ (i0 ∨ ~ j))) x) ≡ {!rs (r a x)!} -- r a x
+-- -- -- -- -- -- -- -- -- --     help x = {!!}
+-- -- -- -- -- -- -- -- -- -- -- cool : Σ (S₊ 2) l → join S¹ S¹
+-- -- -- -- -- -- -- -- -- -- -- cool (north , snd₁) = q1 snd₁
+-- -- -- -- -- -- -- -- -- -- -- cool (south , snd₁) = {!!}
+-- -- -- -- -- -- -- -- -- -- -- cool (merid a i , b) = {!!}
+
+-- -- -- -- -- -- -- -- -- -- -- compi : Σ (S₊ 2) l → S₊ 2
+-- -- -- -- -- -- -- -- -- -- -- compi x = Hopf {!!}
+
+
+-- -- -- -- -- -- -- -- -- -- -- -- idi : Iso (Σ (S₊ 2) l) (S₊ 2 × S₊ 2)
+-- -- -- -- -- -- -- -- -- -- -- -- fun idi (north , p) = p , p
+-- -- -- -- -- -- -- -- -- -- -- -- fun idi (south , p) = p , p
+-- -- -- -- -- -- -- -- -- -- -- -- fun idi (merid a i , p) = help i p
+-- -- -- -- -- -- -- -- -- -- -- --   where
+-- -- -- -- -- -- -- -- -- -- -- --   help : PathP (λ i → (ua (r a , lem a) i) → S₊ 2 × S₊ 2) (λ p → p , p) (λ p → p , p)
+-- -- -- -- -- -- -- -- -- -- -- --   help = toPathP (funExt λ x → (λ i → transportRefl (invEq (r a , lem a) (transportRefl x i) , invEq (r a , lem a) (transportRefl x i)) i) ∙ {!!})
+-- -- -- -- -- -- -- -- -- -- -- -- inv idi = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- rightInv idi = {!!}
+-- -- -- -- -- -- -- -- -- -- -- -- leftInv idi = {!!}
