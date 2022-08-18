@@ -101,7 +101,7 @@ makeGroup-right : {A : Type ℓ}
 makeGroup-right 1g _·_ inv set ·Assoc ·IdR ·InvR =
   makeGroup 1g _·_ inv set ·Assoc ·IdR ·IdL ·InvR ·InvL
   where
-    abstract
+  --  abstract
       ·InvL : ∀ a → inv a · a ≡ 1g
       ·InvL a =
         inv a · a
@@ -146,7 +146,7 @@ makeGroup-left : {A : Type ℓ}
 makeGroup-left 1g _·_ inv set ·Assoc ·IdL ·InvL =
   makeGroup 1g _·_ inv set ·Assoc ·IdR ·IdL ·InvR ·InvL
   where
-    abstract
+   -- abstract
       ·InvR : ∀ a → a · inv a ≡ 1g
       ·InvR a =
         a · inv a

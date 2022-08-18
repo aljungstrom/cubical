@@ -715,3 +715,160 @@ SuspS¹→S²-S¹×S¹→S² (loop i) (loop j) k =
                        (compPath-filler (merid (loop i)) (sym (merid base)) r j)
                  ; (k = i1) → surf j i})
            (surf j i))
+
+
+private variable
+  ℓ' : Level
+  A B : Type ℓ
+
+data colim {A : (n : ℕ) → Type ℓ} (f : (n : ℕ) → A n → A (suc n)) : Type ℓ where
+  inc : (n : ℕ) (a : A n) → colim f
+  coh : {n : ℕ} (a : A n) → inc _ (f n a) ≡ inc n a
+
+data NT (n : ℕ) (A : Type ℓ) : Type ℓ where
+  ∣_∣ : A → NT n A
+  hub : (S₊ n → A) → NT n A
+  spoke : (f : S₊ n → A) (x : S₊ n) → hub f ≡ ∣ f x ∣
+
+map' : {n : ℕ} → (A → B) → NT n A → NT n B
+map' {n = n} f ∣ x ∣ = ∣ f x ∣
+map' {n = n} f (hub g) = hub λ x → f (g x)
+map' {n = n} f (spoke g x i) = spoke (λ x → f (g x)) x i
+
+Fam : (A : Type ℓ) → (n m : ℕ) → Type ℓ
+Fam A n zero = NT n A
+Fam A n (suc m) = NT n (Fam A n m)
+
+Fam↑ : {A : Type ℓ} → (n m : ℕ) → Fam A n m → Fam A n (suc m)
+Fam↑ n zero = map' ∣_∣
+Fam↑ n (suc m) = map' ∣_∣
+
+TT : (A : Type ℓ) (n : ℕ) → Type ℓ
+TT A n = colim (Fam↑ {A = A} n)
+
+module _ (TR1 : (n : ℕ) → Type ℓ → Type ℓ)
+         (inc1 : {A : Type ℓ} (n : ℕ) → A → TR1 n A)
+         (TR-ind : {ℓ' : Level} {A : Type ℓ} (n : ℕ)
+                 → (P : TR1 n A → Type ℓ')
+                 → ((x : _) → isOfHLevel (2 + n) (P x))
+                 → ((a : A) → P (inc1 n a))
+                 → (x : _) → P x)
+         (coh : {ℓ' : Level} {A : Type ℓ} (n : ℕ)
+                 → (P : TR1 n A → Type ℓ')
+                 → (hLev : ((x : _) → isOfHLevel (2 + n) (P x)))
+                 → (b : ((a : A) → P (inc1 n a)))
+              → (x : A) → TR-ind n P hLev b (inc1 n x) ≡ b x)
+  where
+  {-
+     (∥ TR n A ∥ₙ → ∥ A ∥ₙ)
+  → (  TR n A   → ∥ TR n A ∥ₙ)
+  -}
+
+  -- (TR A → B) ≃ (A → B)
+  -- (∥ A ∥ₙ → B) ≃ (A → B)
+
+  mapp : (n : ℕ) {A : Type ℓ} → Iso (TR1 n A) (hLevelTrunc (2 + n) A)
+  mapp zero = {!!}
+  mapp (suc n) = {!!}
+
+module _ (A : Type ℓ) where
+  abra : {P : NT 1 A → Type ℓ'}
+       → ((x : _) → isOfHLevel 2 (P x))
+       → ((x : A) → P ∣ x ∣)
+       → (x : _) → P x
+  abra hlev ind ∣ x ∣ = ind x
+  abra {P = P} hlev ind (hub f) = subst P (sym (spoke f base)) (ind (f base))
+  abra {P = P} hlev ind (spoke f x i) = H x i
+    where
+    open import Cubical.Foundations.Transport
+    H : (x : S¹)
+      → PathP (λ i → P (spoke f x i))
+               (subst P (sym (spoke f base)) (ind (f base)))
+               (ind (f x))
+    H = toPropElim (λ _ → isOfHLevelPathP' 1 (hlev _) _ _)
+                   (toPathP (transportTransport⁻ (cong P (spoke f base)) (ind (f base))))
+
+  isEq' : (P : Type ℓ') → isOfHLevel 2 P
+        → Iso (NT 1 A → P) (A → P)
+  Iso.fun (isEq' P hlev) f = f ∘ ∣_∣
+  Iso.inv (isEq' P hlev) f = abra (λ _ → hlev) f
+  Iso.rightInv (isEq' P hlev) f = refl
+  Iso.leftInv (isEq' P hlev) f = funExt (abra (λ _ → isOfHLevelPath 2 hlev _ _) λ _ → refl)
+{-
+recPr : {A : Type ℓ} {n : ℕ} {P : TT A n → Type ℓ'}
+  → ((x : _) → isOfHLevel (2 + n) (P x))
+  → ((a : A) → P (inc 0 ∣ a ∣))
+  → (x : _) → P x
+recPr {A = A} {n = zero} {P = P} hl ind (inc zero ∣ x ∣) = ind x
+recPr {A = A} {n = zero} {P = P} hl ind (inc zero (hub f)) = subst (P ∘ inc zero) (sym (spoke f base)) (ind (f base))
+recPr {A = A} {n = zero} {P = P} hl ind (inc zero (spoke f x i)) = {!!}
+recPr {A = A} {n = zero} {P = P} hl ind (inc (suc n) a) = {!!}
+recPr {A = A} {n = zero} {P = P} hl ind (coh {n = zero} a i) = {!!}
+recPr {A = A} {n = zero} {P = P} hl ind (coh {n = suc m} a i) = {!!}
+recPr {A = A} {n = suc n} {P = P} hl ind x = {!!}
+
+galam : (A : Type ℓ) → (Σ[ x ∈ TT A 0 ] (x ≡ x)) → hLevelTrunc 1 (S¹ → A)
+galam A (inc zero ∣ x ∣ , p) = {!!}
+galam A (inc zero (hub x) , p) = {!!}
+galam A (inc zero (spoke f x i) , p) = {!!}
+galam A (inc (suc n) a , p) = {!!}
+galam A (coh a i , p) = {!!}
+
+TT0 : (A : Type ℓ) (n : ℕ) → isSphereFilled (suc n) (TT A n)
+TT0 A zero f = {!f!}
+TT0 A (suc n) f = {!!}
+
+tr→ : (A : Type ℓ) (n : ℕ) → hLevelTrunc (2 + n) A → TT A n
+tr→ A n ∣ x ∣ = inc zero ∣ x ∣
+tr→ A n (hub f) = inc zero (hub λ x → {!(tr→ A n) ∘ f!})
+tr→ A n (spoke f x i) = {!!}
+-}
+
+indm : {n : ℕ} → (A → B) → NT n A → NT n B 
+indm = {!!}
+
+open import Cubical.HITs.SmashProduct
+
+lem' : (n : ℕ) → Iso (S₊ (suc (n + (2 + n)))) (S₊∙ (2 + n) ⋀ S₊∙ (2 + n))
+lem' n = {!!}
+
+Tr→ : {A : Type ℓ} (n : ℕ) (B : Type ℓ)
+  → (f : A → hLevelTrunc ((2 + n) + (2 + n)) B)
+  → (r : (S₊ (suc n) → A) → hLevelTrunc ((2 + n) + (2 + n)) B) -- 
+  → (((g : S₊ (suc n) → A) → (λ (x : S₊ (suc n)) → f (g x)) ≡ λ _ → r g))
+  → (⌣ : (x : _) → (hLevelTrunc (suc (suc n)) A , x) ⋀ (hLevelTrunc (suc (suc n)) A , x)
+                  → HubAndSpoke B (suc (n + suc (suc n))))
+  → hLevelTrunc (suc (suc n)) A
+  → hLevelTrunc ((2 + n) + (2 + n)) B
+Tr→ n B f r s ⌣ ∣ x ∣ = f x
+Tr→ n B f r s ⌣ (hub f₁) = hub λ x → ⌣ _ (((f₁ , refl {x = f₁ (ptSn _)}) ⋀→ (f₁ , refl {x = f₁ (ptSn _)})) {!x!}) -- Tr→ n B hlev f r s (f₁ (ptSn _))
+Tr→ n B f r s ⌣ (spoke g x i) = {!!} -- sphereElim n {A = λ x → Tr→ n B hlev f r s (g (ptSn _)) ≡ Tr→ n B hlev f r s (g x)} (λ _ → hlev _ _) refl x i
+
+
+Iso1 : {A : Type ℓ} (x : A) (n : ℕ) → NT (suc n) A → Type ℓ
+Iso1 x n ∣ y ∣ = NT n (x ≡ y)
+Iso1 x n (hub f) = NT n (Σ[ r ∈ S₊ (suc n) ] x ≡ f r)
+Iso1 x n (spoke f y i) = {!f x!}
+  where
+  h : Iso (NT n (x ≡ f y)) (NT n (Σ[ r ∈ S₊ (suc n) ] x ≡ f r))
+  Iso.fun h = indm λ p → y , p
+  Iso.inv h ∣ x ∣ = hub {!f!}
+  Iso.inv h (hub x) = {!!}
+  Iso.inv h (spoke f x i) = {!!}
+  Iso.rightInv h = {!!}
+  Iso.leftInv h = {!!}
+
+
+isOfHLevel' : {A : Type ℓ} → isSet (NT 1 A)
+isOfHLevel' {A = A} =
+  abra _ {!λ _ → isP!}
+    (λ x → {!!})
+
+gr : hLevelTrunc 5 (S₊ 3) → A
+gr ∣ x ∣ = {!x!}
+gr (hub f) = {!S² ⋀ S⁴ → S!}
+gr (spoke f x i) = {!!}
+
+{-
+
+-}
