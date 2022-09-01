@@ -19,6 +19,7 @@ open import Cubical.Foundations.Prelude public
            ; cong      to congPath
            ; subst     to substPath
            ; funExt    to funExtPath
+           ; funExt⁻    to funExt⁻Path
            ; isContr   to isContrPath
            ; isProp    to isPropPath )
 open import Cubical.Foundations.Equiv
@@ -103,6 +104,38 @@ Path≡Eq = pathToEq PathPathEq
 -- We get funext by going back and forth between Path and Eq
 funExt : {B : A → Type ℓ} {f g : (x : A) → B x} → ((x : A) → f x ≡ g x) → f ≡ g
 funExt p = pathToEq (λ i x → eqToPath (p x) i)
+
+J-funExt' : ∀ {ℓ ℓ'} {B : A → Type ℓ} {f : (x : A) → B x} → (B : (F : (x : A) → B x)
+  → ((x : A) → Path _ (f x) (F x)) → Type ℓ')
+  → B f (λ _ → reflPath)
+  → (x : _) (f : _) →  B x f
+J-funExt' B bas F id = JPath (λ g F → B g (funExt⁻Path F)) bas {y = F} (funExtPath id)
+
+J-funExt : ∀ {ℓ ℓ'} {B : A → Type ℓ} {f : (x : A) → B x} → (C : (F : (x : A) → B x)
+  → ((x : A) → (f x) ≡ (F x)) → Type ℓ')
+  → C f (λ _ → refl)
+  → (x : _) (f : _) →  C x f
+J-funExt {A = A} {ℓ' = ℓ'} {B = B} {f = f} =
+  transp (λ i → (C : (F : (x : A) → B x) → ((x : A) → PathPathEq {x = f x} {y = F x} i) → Type ℓ') →
+      C f (λ x → M {x = f x} i) →
+      (g : (x₁ : A) → B x₁) (s : (x₁ : A) → PathPathEq {x = f x₁} {y = g x₁} i) → C g s) i0
+      J-funExt' 
+    where
+    M : ∀ {ℓ} {A : Type ℓ} {x : A} → PathP (λ i → PathPathEq {x = x} {y = x} i) reflPath refl
+    M {x = x} = toPathP λ i → transportRefl (transportRefl refl i) i
+
+funExt⁻ : {B : A → Type ℓ} {f g : (x : A) → B x} → f ≡ g → ((x : A) → f x ≡ g x)
+funExt⁻ refl x = refl
+
+funExt⁻-funExt : {B : A → Type ℓ} {f g : (x : A) → B x} → (h : (x : A) → f x ≡ g x)
+  → funExt⁻ (funExt h) ≡ h
+funExt⁻-funExt {f = f} {g = g} =
+  J-funExt (λ F h →  funExt⁻ (funExt h) ≡ h)
+    (ap funExt⁻ (pathToEq (transportRefl refl)))
+    g
+
+funExt-funExt⁻ : {B : A → Type ℓ} {f g : (x : A) → B x} → (p : f ≡ g) → funExt (funExt⁻ p) ≡ p
+funExt-funExt⁻ refl = pathToEq (transportRefl refl)
 
 -- Some lemmas relating the definitions for Path and ≡
 substPath≡transport' : (C : A → Type ℓ) {x y : A} (b : C x) (p : x ≡ y) → substPath C (eqToPath p) b ≡ transport C p b
