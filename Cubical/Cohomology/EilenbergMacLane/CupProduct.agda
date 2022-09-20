@@ -14,6 +14,7 @@ open import Cubical.Algebra.Ring
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Transport
 
 open import Cubical.HITs.EilenbergMacLane1
 open import Cubical.HITs.SetTruncation as ST
@@ -94,21 +95,15 @@ module _ {G'' : Ring ℓ} {A : Type ℓ'} where
             ∙ cong (transport (λ i → EM G' (+'-assoc n m l i)))
                (cong (λ x → (f x ⌣ₖ (g x ⌣ₖ h x))) (sym (transportRefl x))))
 
-open import Cubical.Foundations.Transport
 -- dependent versions
 module _ {G'' : Ring ℓ} {A : Type ℓ'} where
   private
     G' = Ring→AbGroup G''
-    G = fst G'
-    _+G_ = _+Gr_ (snd G')
-
-    cup : (n m : ℕ) → EM G' n → EM G' m → EM G' (n +' m)
-    cup n m x y = x ⌣ₖ y
-
 
   ⌣-1ₕDep : (n : ℕ) (x : coHom n G' A)
     → PathP (λ i → coHom (+'-comm zero n (~ i)) G' A) (x ⌣ 1ₕ) x
-  ⌣-1ₕDep n x = toPathP {A = λ i → coHom (+'-comm zero n (~ i)) G' A} (flipTransport (⌣-1ₕ n x))
+  ⌣-1ₕDep n x = toPathP {A = λ i → coHom (+'-comm zero n (~ i)) G' A}
+                        (flipTransport (⌣-1ₕ n x))
 
   assoc⌣Dep : (n m l : ℕ)
        (x : coHom n G' A) (y : coHom m G' A) (z : coHom l G' A)
