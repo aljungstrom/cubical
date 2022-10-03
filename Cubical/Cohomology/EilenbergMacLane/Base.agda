@@ -21,7 +21,7 @@ open import Cubical.HITs.SetTruncation as ST
 
 private
   variable
-    ℓ ℓ' : Level
+    ℓ ℓ' ℓ'' : Level
 
 open IsAbGroup
 open IsGroup
@@ -33,6 +33,11 @@ open AbGroupStr
 -- cohomology groups
 coHom : (n : ℕ) (G : AbGroup ℓ) (A : Type ℓ') → Type _
 coHom n G A = ∥ (A → EM G n) ∥₂
+
+_*H : {n : ℕ} {G : AbGroup ℓ} {A : Type ℓ'} {B : Type ℓ''}
+  → (A → B)
+  → coHom n G B → coHom n G A
+_*H f = ST.map λ g x → g (f x)
 
 module _ {n : ℕ} {G : AbGroup ℓ} {A : Type ℓ'} where
   _+ₕ_ : coHom n G A → coHom n G A → coHom n G A

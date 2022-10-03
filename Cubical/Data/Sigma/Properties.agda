@@ -447,6 +447,32 @@ module _
     fiberProjEquiv : B a ≃ fiber proj a
     fiberProjEquiv = isoToEquiv fiberProjIso
 
-
 singl≅signl' : {a : A} → Iso (singl a) (singl' a)
 singl≅signl' = Σ-cong-iso-snd λ a → symIso
+
+addSinglIso : (x : A)
+  → Iso (A' × singl x) A'
+fun (addSinglIso x) (b , _) = b
+inv (addSinglIso x) b = b , (isContrSingl _ .fst)
+rightInv (addSinglIso x) a = refl
+leftInv (addSinglIso x) (b , _) =
+  Σ≡Prop (λ _ → isContr→isProp (isContrSingl _)) refl
+
+addSignlIsoDep : (f : (x : A) → B x)
+  → Iso A (Σ[ x ∈ A ] singl (f x))
+fun (addSignlIsoDep f) a = a , isContrSingl _ .fst
+inv (addSignlIsoDep f) = fst
+rightInv (addSignlIsoDep f) _ =
+  Σ≡Prop (λ _ → isContr→isProp (isContrSingl _)) refl
+leftInv (addSignlIsoDep f) a = refl
+
+singlΣIso : ∀ {ℓ'} {x : A}
+  {B : singl x → Type ℓ'}
+  → Iso (Σ (singl x) B) (B (x , refl))
+fun (singlΣIso {B = B}) =
+  uncurry (uncurry λ x p
+   → transport (λ i → B ((p (~ i)) , λ j → p (~ i ∧ j))))
+inv singlΣIso b = (_ , refl) , b
+rightInv singlΣIso b = transportRefl b
+leftInv (singlΣIso {x = x} {B = B}) =
+  uncurry (uncurry (J> λ y → ΣPathP (refl , (transportRefl y))))
