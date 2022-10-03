@@ -386,6 +386,23 @@ dic n m = l (n ≟ m)
   l (eq x) = inl (0 , x)
   l (gt x) = inr x
 
+¬<-&-≡ : {n m : ℕ} → n < m → n ≡ m → ⊥
+¬<-&-≡ {n} {m} (x , p) q = ¬m<m {m = n} (x , p ∙ sym q)
+
+¬<-&-> : {n m : ℕ} → n < m → n > m → ⊥
+¬<-&-> {n} {m} p q = ¬m<m (<-trans p q)
+
+isPropTrichotomy : {n m : ℕ} → isProp (Trichotomy n m)
+isPropTrichotomy (lt x) (lt y) = cong lt (isProp≤ x y)
+isPropTrichotomy (lt x) (eq y) = ⊥.rec (¬<-&-≡ x y)
+isPropTrichotomy (lt x) (gt y) = ⊥.rec (¬m<m (<-trans x y))
+isPropTrichotomy (eq x) (lt y) = ⊥.rec (¬<-&-≡ y x)
+isPropTrichotomy (eq x) (eq y) = cong eq (isSetℕ _ _ _ _)
+isPropTrichotomy (eq x) (gt y) = ⊥.rec (¬<-&-≡ y (sym x))
+isPropTrichotomy (gt x) (lt y) = ⊥.rec (¬m<m (<-trans x y))
+isPropTrichotomy (gt x) (eq y) = ⊥.rec (¬<-&-≡ x (sym y))
+isPropTrichotomy (gt x) (gt y) = cong gt (isProp≤ x y)
+
 substℕ-lem : ∀ {ℓ} {B : ℕ → Type ℓ}
   → {n m : ℕ} (p q : n ≡ m)
   → (bn : B n)
@@ -500,8 +517,32 @@ fib-deloop n = fib-deloop'
                     ∙ +ₖ≡id-ℤ/2 (n +' n) _)
                ∙ lUnitₖ (n +' n) (cup n n q q))
   abstract
+    P : (e : 0ₖ (suc n) ≡ 0ₖ (suc n)) →
+        F (⌣-deloop n .fst) e ≡ ⌣-deloop n
+    P p = →∙Homogeneous≡ (isHomogeneousPath _ _)
+                 (funExt λ q →
+                   sym (substResp· _ (+'-suc' n n) _ _)
+                 ∙ cong (subst (λ m → fst (Ω (K∙ m))) (+'-suc' n n))
+                        (cong₂ _∙_ (sym (EM→ΩEM+1-sym (n +' n) _)
+                                 ∙ cong (EM→ΩEM+1 (n +' n))
+                                    (-ₖConst-ℤ/2-gen (n +' n)
+                                      (cup n n (ΩEM+1→EM n p) (ΩEM+1→EM n p))))
+                                 (cong (EM→ΩEM+1 (n +' n))
+                                   (cong₂ (cup n n)
+                                     (ΩEM+1→EM-hom n p q)
+                                     (ΩEM+1→EM-hom n p q)))
+                       ∙ sym (EM→ΩEM+1-hom (n +' n) _ _)
+                       ∙ cong (EM→ΩEM+1 (n +' n))
+                          (mainLem _ _)))
+
+  fib-deloop'' : fiber Ω→ (⌣-deloop n)
+  fib-deloop'' =
+    Iso.fun (Ω→-fib (⌣-deloop n))
+     (EM→Prop _ n (λ _ → asd n (⌣-deloop n) .snd _) ((0ₖ (n +' suc n)) ,
+       (⌣-deloop n .fst , P)))
+  abstract
     fib-deloop' : fiber Ω→ (⌣-deloop n)
-    fib-deloop' =   Iso.fun (Ω→-fib (⌣-deloop n))
+    fib-deloop' = Iso.fun (Ω→-fib (⌣-deloop n))
         (EM→Prop _ n (λ _ → asd n (⌣-deloop n) .snd _)
           (0ₖ (n +' suc n)
         , (⌣-deloop n .fst)
@@ -606,32 +647,30 @@ isPropdec≤ℕ n i (inl x) (inr y) = ⊥.rec (propHelp n i (x , y))
 isPropdec≤ℕ n i (inr x) (inl y) = ⊥.rec (propHelp n i (y , x))
 isPropdec≤ℕ n i (inr x) (inr y) = cong inr (isProp≤ x y)
 
-Sqₖ∙-gen : (n i : ℕ) → (i ≤ n) ⊎ (i > n) → K∙ n →∙ K∙ (i +' n)
-Sqₖ∙-gen zero zero q = id∙ _
-Sqₖ∙-gen zero (suc i) q = (λ _ → 0ₖ (suc i)) , refl
-Sqₖ∙-gen (suc n) zero q = id∙ _
-Sqₖ∙-gen (suc n) (suc i) (inl (zero , q)) =
-    (λ x → subst (λ m → K (m +' suc n)) (sym q)
-            (cup (suc n) (suc n) x x))
-  , cong (subst (λ m → K (m +' suc n)) (sym q)) (0ₖ-⌣ₖ (suc n) (suc n) (0ₖ (suc n)))
-   ∙ lemiSubst _
-fst (Sqₖ∙-gen (suc n) (suc i) (inl (suc zero , q))) x =
-  subst (λ m → K (m +' (suc n))) (sym (cong predℕ q))
-    (fib-deloop n .fst .fst x)
-snd (Sqₖ∙-gen (suc n) (suc i) (inl (suc zero , q))) =
-  cong (subst (λ m → K (m +' (suc n))) (sym (cong predℕ q)))
-       (fib-deloop n .fst .snd)
-     ∙ lemiSubst _
-Sqₖ∙-gen (suc n) (suc i) (inl (suc (suc x) , q)) = 
-  invEq (eq3 n (suc i) (x , (+-suc x (suc i) ∙ cong predℕ q)))
-    (Sqₖ∙-gen n (suc i) (inl ((suc x) , (cong predℕ q))))
-Sqₖ∙-gen (suc n) (suc i) (inr x) = (λ _ → 0ₖ (suc (suc (i + n)))) , refl
+Sqₖ∙-gen' : (n i : ℕ) → Trichotomy i n → K∙ n →∙ K∙ (i +' n)
+Sqₖ∙-gen' zero zero p = id∙ _
+Sqₖ∙-gen' zero (suc i) p = (λ _ → 0ₖ (suc i)) , refl
+Sqₖ∙-gen' (suc n) zero p = id∙ _
+fst (Sqₖ∙-gen' (suc n) (suc i) (lt (zero , p))) x =
+  subst (λ m → K (m +' (suc n))) (sym (cong predℕ p)) (fib-deloop n .fst .fst x)
+snd (Sqₖ∙-gen' (suc n) (suc i) (lt (zero , p))) =
+    cong (subst (λ m → K (m +' (suc n))) (sym (cong predℕ p))) (fib-deloop n .fst .snd)
+  ∙ lemiSubst _
+Sqₖ∙-gen' (suc n) (suc i) (lt (suc x , p)) =
+  invEq (eq3 n (suc i) (x , cong predℕ p))
+    (Sqₖ∙-gen' n (suc i) (lt (x , cong predℕ p)))
+fst (Sqₖ∙-gen' (suc n) (suc i) (eq q)) x =
+  subst (λ m → K (m +' suc n)) (sym q) (cup (suc n) (suc n) x x)
+snd (Sqₖ∙-gen' (suc n) (suc i) (eq q)) =
+    cong (subst (λ m → K (m +' suc n)) (sym q)) (0ₖ-⌣ₖ (suc n) (suc n) (0ₖ (suc n)))
+  ∙ lemiSubst _
+Sqₖ∙-gen' (suc n) (suc i) (gt q) = (λ _ → 0ₖ (suc (suc (i + n)))) , refl
 
-Sqₖ∙ : {n : ℕ} (i : ℕ) → K∙ n →∙ K∙ (i +' n)
-Sqₖ∙ i = Sqₖ∙-gen _ i (dec≤ℕ _ _)
+Sqₖ∙' : {n : ℕ} (i : ℕ) → K∙ n →∙ K∙ (i +' n)
+Sqₖ∙' {n = n} i = Sqₖ∙-gen' _ i (i ≟ n)
 
-Sqₖ : {n : ℕ} (i : ℕ) → K n → K (i +' n)
-Sqₖ i = Sqₖ∙ i .fst
+Sqₖ' : {n : ℕ} (i : ℕ) → K n → K (i +' n)
+Sqₖ' i = Sqₖ∙' i .fst
 
 SubstK : {n m : ℕ} (p : n ≡ m) → K∙ n →∙ K∙ m
 fst (SubstK p) = subst K p
@@ -655,29 +694,29 @@ substΩ≡ {n = n} = J (λ m p → substΩK p
                      refl )))
 
 -- axioms
-Sqₖ0 : {n : ℕ} (x : K n) → Sqₖ 0 x ≡ x
+Sqₖ0 : {n : ℕ} (x : K n) → Sqₖ' 0 x ≡ x
 Sqₖ0 {n = zero} x = refl
 Sqₖ0 {n = suc n} x = refl
 
-Sqₖ⌣ₖ : {n : ℕ} (x : K n) → Sqₖ n x ≡ cup n n x x
+Sqₖ⌣ₖ : {n : ℕ} (x : K n) → Sqₖ' n x ≡ cup n n x x
 Sqₖ⌣ₖ {n = zero} = ℤ/2-elim refl refl
 Sqₖ⌣ₖ {n = suc n} x =
-     (λ i → Sqₖ∙-gen (suc n) (suc n)
-              (isPropdec≤ℕ (suc n) (suc n) (dec≤ℕ _ _)
-              (inl (0 , refl)) i) .fst x)
+     (λ i → Sqₖ∙-gen' (suc n) (suc n)
+              (isPropTrichotomy (suc n ≟ suc n)
+              (eq refl) i) .fst x) -- (inl (0 , refl)) i) .fst x)
   ∙ transportRefl _
 
-Sqₖ> : {n : ℕ} (i : ℕ) → i > n → (x : K n) → Sqₖ i x ≡ 0ₖ (i +' n)
+Sqₖ> : {n : ℕ} (i : ℕ) → i > n → (x : K n) → Sqₖ' i x ≡ 0ₖ (i +' n)
 Sqₖ> {n = zero} zero p x = ⊥.rec (¬m<m p)
 Sqₖ> {n = zero} (suc i) p x = refl
 Sqₖ> {n = suc n} zero p x = ⊥.rec (snotz (sym (+-suc _ _) ∙ snd p))
 Sqₖ> {n = suc n} (suc i) p x j =
-  Sqₖ∙-gen (suc n) (suc i)
-   (isPropdec≤ℕ (suc n) (suc i) (dec≤ℕ _ _) (inr p) j) .fst x
+  Sqₖ∙-gen' (suc n) (suc i)
+   (isPropTrichotomy (suc i ≟ suc n) (gt p) j) .fst x
 
 Sq : ∀ {ℓ} {A : Type ℓ} {n : ℕ} (i : ℕ)
   → coHom n ℤ/2 A → coHom (i +' n) ℤ/2 A
-Sq i = ST.map λ f x → Sqₖ i (f x)
+Sq i = ST.map λ f x → Sqₖ' i (f x)
 
 Sq-nat : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} (f : A → B) {n : ℕ} (i : ℕ)
   → (x : coHom n ℤ/2 B)
@@ -689,18 +728,20 @@ Sq-nat f i = ST.elim (λ _ → isSetPathImplicit) λ f → refl
 fst (ΩEM+1→EM∙ {G = G₁} n) = ΩEM+1→EM n
 snd (ΩEM+1→EM∙ {G = G₁} n) = ΩEM+1→EM-refl n
 
-Sq↓ : (n i : ℕ) → Ω (EM∙ ℤ/2 (suc n)) →∙ Ω (EM∙ ℤ/2 (i +' suc n))
-fst (Sq↓ n i) x = subst (λ n → fst (Ω (EM∙ ℤ/2 n)))
+
+Sq↓' : (n i : ℕ) → Ω (EM∙ ℤ/2 (suc n)) →∙ Ω (EM∙ ℤ/2 (i +' suc n))
+fst (Sq↓' n i) x = subst (λ n → fst (Ω (EM∙ ℤ/2 n)))
                         (+'-suc' i n)
-                        (EM→ΩEM+1 (i +' n) (Sqₖ {n = n} i (ΩEM+1→EM n x)))
-snd (Sq↓ n i) =
-    cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' i n))
+                        (EM→ΩEM+1 (i +' n) (Sqₖ' {n = n} i (ΩEM+1→EM n x)))
+snd (Sq↓' n i) =
+      cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' i n))
          (cong (EM→ΩEM+1 (i +' n))
-           (cong (Sqₖ i)
+           (cong (Sqₖ' i)
              (ΩEM+1→EM-refl n)
-          ∙ Sqₖ∙ i .snd)
+          ∙ Sqₖ∙' i .snd)
         ∙ EM→ΩEM+1-0ₖ (i +' n))
   ∙ λ j → transp (λ k → fst (Ω (EM∙ ℤ/2 (+'-suc' i n (j ∨ k))))) j refl
+
 
 wrap-id : (n : ℕ) {x : K n} (r q1 q2 : x ≡ x)
   → q1 ≡ q2 → q1 ≡ sym r ∙∙ q2 ∙∙ r
@@ -735,108 +776,77 @@ substRefl-lem : {n : ℕ} (m : ℕ) (p : n ≡ m) →
   subst (λ n₁ → fst (Ω (EM∙ ℤ/2 n₁))) p refl ≡ refl
 substRefl-lem = J> (transportRefl refl)
 
-Ω-Sq : (n i : ℕ) → (i ≤ n) ⊎ (i > n)
-  → Sq↓ n i
-   ≡ Ω→ (Sqₖ∙ {n = suc n} i)
-Ω-Sq zero zero p =
+Ω-Sq' : (n i : ℕ) → Trichotomy i n
+  → Sq↓' n i
+   ≡ Ω→ (Sqₖ∙' {n = suc n} i)
+Ω-Sq' zero zero p =
   →∙Homogeneous≡ (isHomogeneousPath _ _)
     (funExt λ x → cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' zero zero))
       (Iso.rightInv (Iso-EM-ΩEM+1 zero) x)
     ∙ transportRefl x
     ∙ wrap-id 1 refl x _ refl)
-Ω-Sq zero (suc i) (inl x) = ⊥.rec (snotz (sym (+-suc _ _) ∙ x .snd))
-Ω-Sq zero (suc i) (inr (zero , p)) =
+Ω-Sq' zero (suc i) (lt x) = ⊥.rec (snotz (sym (+-suc _ _) ∙ x .snd))
+Ω-Sq' zero (suc i) (eq p) = ⊥.rec (snotz p)
+Ω-Sq' zero (suc i) (gt (zero , p)) =
     →∙Homogeneous≡ (isHomogeneousPath _ _)
-       (funExt (λ q → cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n)))
-                                   (+'-suc' (suc i) zero))
-                            (cong (EM→ΩEM+1 (suc i))
-                             (λ j → Sqₖ∙-gen zero (suc i)
-                              (isPropdec≤ℕ _ _ (dec≤ℕ _ _) (inr (0 , p)) j)
-                                .fst (ΩEM+1→EM zero q))
-                           ∙ EM→ΩEM+1-0ₖ (suc i))
-                    ∙∙ ((λ j → transp (λ k → fst (Ω (EM∙ ℤ/2 (+'-suc' (suc i) zero (k ∨ j))))) j refl))
-                    ∙∙ sym (funExt⁻ (cong fst h) q)))
-   ∙ (cong Ω→ λ j → Sqₖ∙-gen (suc zero) (suc i)
-      (isPropdec≤ℕ 1 (suc i) (inl (0 , sym p)) (dec≤ℕ _ _) j))
-
+      (funExt (λ q →   cong (substΩK (+'-suc' (suc i) zero) .fst)
+                       (cong (EM→ΩEM+1 (suc i))
+                         (λ j → Sqₖ∙-gen' 0 (suc i)
+                         (isPropTrichotomy (suc i ≟ 0) (gt (i , +-comm i 1)) j) .fst (ΩEM+1→EM zero q))
+                      ∙ EM→ΩEM+1-0ₖ (suc i))
+                    ∙ substΩK (+'-suc' (suc i) zero) .snd
+                    ∙ sym (funExt⁻ (cong fst h) q)))
+  ∙ cong Ω→ (cong (Sqₖ∙-gen' 1 (suc i)) (isPropTrichotomy (eq (sym p)) (suc i ≟ 1)))
   where
   pr : (q : snd (K∙ 1) ≡ snd (K∙ 1))
-     → cong (subst (λ m → K (m +' 1)) (λ i₂ → sym p (~ i₂)))
+     → cong (subst (λ m → K (m +' 1)) p)
            (cong₂ (cup 1 1) q q)
      ≡ refl
   pr q = cong (cong (subst (λ m → K (m +' 1)) p)) (cong₂-cup 1 q)
 
-  h : Ω→ (Sqₖ∙-gen 1 (suc i) (inl (0 , sym p))) ≡ ((λ _ → refl) , refl)
+  h : Ω→ (Sqₖ∙-gen' 1 (suc i) (eq (sym p))) ≡ ((λ _ → refl) , refl)
   h = →∙Homogeneous≡ (isHomogeneousPath _ _)
        (funExt λ q → cong₂ (λ x y → sym x ∙∙ y ∙∙ x) refl (pr q)
                     ∙ ∙∙lCancel _)
 
-Ω-Sq zero (suc i) (inr (suc x , p)) =
-   →∙Homogeneous≡ (isHomogeneousPath _ _)
-      (funExt (λ q → cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' (suc i) zero))
-           (EM→ΩEM+1-0ₖ (suc i))
-        ∙∙ (λ j → transp (λ k → fst (Ω (EM∙ ℤ/2 (+'-suc' (suc i) zero (k ∨ j))))) j refl)
-        ∙∙ sym (∙∙lCancel (snd (Sqₖ∙-gen 1 (suc i) (inr (x , +-suc x 1 ∙ p)))))))
-  ∙ cong Ω→ λ j → Sqₖ∙-gen (suc zero) (suc i)
-     (isPropdec≤ℕ 1 (suc i)
-      (inr (x , +-suc x 1 ∙ p)) (dec≤ℕ _ _) j)
-Ω-Sq (suc n) zero p =
+Ω-Sq' zero (suc i) (gt (suc x , p)) =
   →∙Homogeneous≡ (isHomogeneousPath _ _)
-    (funExt λ x → cong (subst (λ n₁ → fst (Ω (EM∙ ℤ/2 n₁))) (+'-suc' zero (suc n)))
-                        (Iso.rightInv (Iso-EM-ΩEM+1 (suc n)) x)
-                 ∙ substℕ-lem (+'-suc' zero (suc n)) refl x
-                 ∙ transportRefl x
-                 ∙ wrap-id _ _ _ _ refl)
-Ω-Sq (suc n) (suc i) (inl (zero , p)) =
+    (funExt (λ q → cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' (suc i) zero))
+                         (cong (EM→ΩEM+1 (suc i))
+                           ((λ j → Sqₖ∙-gen' zero (suc i) (isPropTrichotomy (suc i ≟ zero)
+                             (gt (i , +-comm i 1)) j) .fst (ΩEM+1→EM zero q))))
+                  ∙ cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' (suc i) zero)) (EM→ΩEM+1-0ₖ _)
+                  ∙ substΩK (+'-suc' (suc i) zero) .snd))
+  ∙ sym (Ω^→const 1)
+  ∙ cong Ω→ (cong (Sqₖ∙-gen' 1 (suc i)) (isPropTrichotomy (gt (x , +-suc x 1 ∙ p)) (suc i ≟ 1)))
+Ω-Sq' (suc n) zero p =
     →∙Homogeneous≡ (isHomogeneousPath _ _)
-      (funExt (λ q → cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' (suc i) (suc n)))
-                          (cong (EM→ΩEM+1 (suc (suc (i + n))))
-                            (λ j → Sqₖ∙-gen (suc n) (suc i)
-                                     (isPropdec≤ℕ _ _
-                                     (dec≤ℕ _ _) (inl (0 , p)) j) .fst
-                                     (ΩEM+1→EM (suc n) q))
-                        ∙ sym (substCommSlice K (fst ∘ Ω ∘ K∙ ∘ suc) EM→ΩEM+1
-                            (cong (_+' suc n) (sym p))
-                            (cup (suc n) (suc n) (ΩEM+1→EM (suc n) q) (ΩEM+1→EM (suc n) q))))
-                    ∙ sym (substComposite (fst ∘ Ω ∘ K∙)
-                       (λ i₁ → suc (p (~ i₁) +' suc n)) (+'-suc' (suc i) (suc n)) _)
-                    ∙ substℕ-lem _ _ _
-                    ∙ substComposite (fst ∘ Ω ∘ K∙)
-                       (+'-suc' (suc n) (suc n)) (λ i₁ → sym p i₁ +' suc (suc n)) _
-                    ∙ sym (Ω→H≡ (⌣-deloop (suc n) .fst q))))
-  ∙ (refl
-  ∙ (λ i → Ω→ H ∘∙ (fib-deloop (suc n) .snd (~ i))))
-  ∙ sym (Ω→∘∙ H (fib-deloop (suc n) .fst))
-  ∙ cong Ω→ (sym help) -- 
-  ∙ cong Ω→ λ j → Sqₖ∙-gen (suc (suc n)) (suc i)
-     (isPropdec≤ℕ _ _ (inl (1 , cong suc p)) (dec≤ℕ _ _) j)
-  where
-  H : K∙ (suc (suc (n + suc n))) →∙ K∙ (suc (suc (i + suc n)))
-  fst H = subst (λ m → K (m +' suc (suc n))) (sym p)
-  snd H = lemiSubst _
-
-  Ω→H≡  : (x : _) → Ω→ H .fst x ≡ subst (fst ∘ Ω ∘ K∙) (λ i → ((sym p i) +' suc (suc n))) x
-  Ω→H≡ x = funExt⁻ (cong fst (sym (substΩ≡ (λ i → ((sym p i) +' suc (suc n)))))) x
-
-
-  help : Sqₖ∙-gen (suc (suc n)) (suc i) (inl (1 , cong suc p))
-       ≡ (H
-       ∘∙ fib-deloop (suc n) .fst)
-  help = →∙Homogeneous≡ (isHomogeneousEM (suc (suc (i + suc n)))) refl
-Ω-Sq (suc n) (suc i) (inl (suc zero , p)) =
-   →∙Homogeneous≡ (isHomogeneousPath _ _)
+      (funExt (λ q → substℕ-lem {B = fst ∘ Ω ∘ K∙} (+'-suc' zero (suc n)) refl _
+                    ∙ transportRefl _
+                    ∙ cong (EM→ΩEM+1 (suc n))
+                         ((λ j → Sqₖ∙-gen' (suc n) zero
+                           (isPropTrichotomy (lt (n , +-comm n 1)) (zero ≟ suc n) j)
+                            .fst (ΩEM+1→EM (suc n) q)))
+                    ∙ Iso.rightInv (Iso-EM-ΩEM+1 (suc n)) q))
+  ∙ sym Ω→id
+  ∙ cong (Ω→ ∘ Sqₖ∙-gen' (suc (suc n)) zero)
+      (isPropTrichotomy
+        (lt (suc n , +-comm (suc n) 1))
+        (zero ≟ (suc (suc n))))
+Ω-Sq' (suc n) (suc i) (lt (zero , p)) =
+     →∙Homogeneous≡ (isHomogeneousPath _ _)
       (funExt (λ q → substℕ-lem {B = λ n → Ω (K∙ n) .fst} (+'-suc' (suc i) (suc n)) (sym (cong (2 +_) (+-suc i n)))
-                         (EM→ΩEM+1 (suc (suc (i + n))) (Sqₖ (suc i) (ΩEM+1→EM (suc n) q)))
+                         (EM→ΩEM+1 (suc (suc (i + n))) (Sqₖ' (suc i) (ΩEM+1→EM (suc n) q)))
             ∙ substCommSlice K (λ n → fst (Ω (K∙ (suc n)))) EM→ΩEM+1 (cong suc (sym (+-suc i n)))
-                         (Sqₖ (suc i) (ΩEM+1→EM (suc n) q))
+                         (Sqₖ' (suc i) (ΩEM+1→EM (suc n) q))
            ∙ cong (EM→ΩEM+1 (suc (i + suc n)))
                (cong (subst K (cong suc (sym (+-suc i n))))
-                 λ k → Sqₖ∙-gen (suc n) (suc i)
-                           (isPropdec≤ℕ _ _ (dec≤ℕ _ _) (inl (suc zero , p)) k) .fst (ΩEM+1→EM (suc n) q))))
+                 λ k → Sqₖ∙-gen' (suc n) (suc i)
+                           (isPropTrichotomy (suc i ≟ suc n) (lt (0 , p)) k) .fst (ΩEM+1→EM (suc n) q))))
   ∙ (sym (secEq (eq' (suc n) (suc i) (0 , p)) _)
   ∙ cong Ω→ (sym help))
-  ∙ cong Ω→ λ j → Sqₖ∙-gen (suc (suc n)) (suc i)
-            (isPropdec≤ℕ _ _ (inl (suc (suc zero) , cong suc p)) (dec≤ℕ _ _) j)
+  ∙ cong Ω→ λ j → Sqₖ∙-gen' (suc (suc n)) (suc i)
+            (isPropTrichotomy (lt (1 , cong suc p)) (suc i ≟ suc (suc n)) j)
   where
   ℕP = (+'-comm (suc i) (suc (suc n)) ∙
       (λ i₂ → +'-suc (suc n) (suc i) (~ i₂)))
@@ -848,41 +858,39 @@ substRefl-lem = J> (transportRefl refl)
                          (EM→ΩEM+1 (suc (suc (i + n))) x)
             ∙ substCommSlice K (λ n → fst (Ω (K∙ (suc n)))) EM→ΩEM+1 (cong suc (sym (+-suc i n))) x
 
-  help : Sqₖ∙-gen (suc (suc n)) (suc i) (inl (2 , cong suc p))
+  help : Sqₖ∙-gen' (suc (suc n)) (suc i) (lt (1 , cong suc p))
        ≡ invEq (eq' (suc n) (suc i) (0 , p))
                ((EM→ΩEM+1 ((suc (i + suc n))) , EM→ΩEM+1-0ₖ (suc (i + suc n)))
                ∘∙ ((SubstK (cong suc (sym (+-suc i n)))
-                ∘∙ Sqₖ∙-gen (suc n) (suc i) (inl (1 , p)))
+                ∘∙ Sqₖ∙-gen' (suc n) (suc i) (lt (0 , p)))
                 ∘∙ (ΩEM+1→EM∙ (suc n))))
-  help = cong (invEq (eq' (suc n) (suc i) (0 , refl ∙ p)))
+  help = cong (invEq (eq' (suc n) (suc i) (0 , p)))
          (→∙Homogeneous≡ (isHomogeneousPath _ _)
            (funExt (λ q →
               helplem (subst (λ m → K (m +' suc n)) (λ i₁ → predℕ (p (~ i₁)))
               (fib-deloop n .fst .fst (ΩEM+1→EM (suc n) q))))))
-     ∙ λ k → invEq (eq' (suc n) (suc i) (0 , lUnit p (~ k)))
-               ((EM→ΩEM+1 ((suc (i + suc n))) , EM→ΩEM+1-0ₖ (suc (i + suc n)))
-               ∘∙ ((SubstK (cong suc (sym (+-suc i n)))
-                ∘∙ Sqₖ∙-gen (suc n) (suc i) (inl (1 , p)))
-                ∘∙ (ΩEM+1→EM∙ (suc n))))
-Ω-Sq (suc n) (suc i) (inl (suc (suc x) , p)) =
-    →∙Homogeneous≡ (isHomogeneousPath _ _)
-       (funExt (λ q → (substℕ-lem {B = λ n → Ω (K∙ n) .fst}
+Ω-Sq' (suc n) (suc i) (lt (suc x , p)) =
+   →∙Homogeneous≡ (isHomogeneousPath _ _)
+      (funExt (λ q → substℕ-lem {B = λ n → Ω (K∙ n) .fst}
                          (+'-suc' (suc i) (suc n))  (sym (cong (suc ∘ suc) (+-suc i n)))
-                         (EM→ΩEM+1 (suc (suc (i + n))) (Sqₖ (suc i) (ΩEM+1→EM (suc n) q)))
-                     ∙ substCommSlice K (λ n → fst (Ω (K∙ (suc n))))
-                         EM→ΩEM+1 (cong suc (sym (+-suc i n))) (Sqₖ (suc i) (ΩEM+1→EM (suc n) q)))
-                     ∙ cong (EM→ΩEM+1 (suc (i + suc n)))
+                         (EM→ΩEM+1 (suc (suc (i + n))) (Sqₖ' (suc i) (ΩEM+1→EM (suc n) q)))
+                   ∙∙ substCommSlice K (λ n → fst (Ω (K∙ (suc n))))
+                         EM→ΩEM+1 (cong suc (sym (+-suc i n)))
+                          (Sqₖ' (suc i) (ΩEM+1→EM (suc n) q))
+                   ∙∙ cong (EM→ΩEM+1 (suc (i + suc n)))
                        (cong (fst HH)
-                         λ k → Sqₖ∙-gen (suc n) (suc i)
-                           (isPropdec≤ℕ _ _ (dec≤ℕ _ _) (inl (suc (suc x) , p)) k) .fst (ΩEM+1→EM (suc n) q))))
-  ∙ sym (secEq (eq' (suc n) (suc i) (suc x , cong suc (+-suc x (suc i)) ∙ p))
+                         λ k → Sqₖ∙-gen' (suc n) (suc i)
+                           (isPropTrichotomy (suc i ≟ suc n) (lt (suc x , p)) k)
+                           .fst (ΩEM+1→EM (suc n) q))))
+  ∙ sym (secEq (eq' (suc n) (suc i) (suc x , p))
       ((EM→ΩEM+1 ((suc (i + suc n))) , EM→ΩEM+1-0ₖ (suc (i + suc n)))
                ∘∙ ((HH
-                ∘∙ Sqₖ∙-gen (suc n) (suc i) (inl ((suc (suc x)) , p)))
+                ∘∙ Sqₖ∙-gen' (suc n) (suc i) (lt ((suc x) , p)))
                 ∘∙ (ΩEM+1→EM∙ (suc n)))))
   ∙ cong Ω→ (sym help)
-  ∙ cong Ω→ λ j → Sqₖ∙-gen (suc (suc n)) (suc i)
-            (isPropdec≤ℕ _ _ (inl (suc (suc (suc x)) ,  cong suc p)) (dec≤ℕ _ _) j)
+  ∙ cong Ω→ λ j → Sqₖ∙-gen' (suc (suc n)) (suc i)
+            (isPropTrichotomy (lt (suc (suc x) ,  cong suc p))
+            (suc i ≟ suc (suc n)) j)
   where
   HH : K∙ (suc (suc (i + n))) →∙ K∙ (suc (i + (suc n))) 
   HH = SubstK (cong suc (sym (+-suc i n)))
@@ -899,51 +907,296 @@ substRefl-lem = J> (transportRefl refl)
                          (EM→ΩEM+1 (suc (suc (i + n))) x)
             ∙ substCommSlice K (λ n → fst (Ω (K∙ (suc n)))) EM→ΩEM+1 (cong suc (sym (+-suc i n))) x
 
-  help : Sqₖ∙-gen (suc (suc n)) (suc i) (inl (3 + x , cong suc p))
-      ≡ invEq (eq' (suc n) (suc i) (suc x , (cong suc (+-suc x (suc i)) ∙ p)))
+  help : Sqₖ∙-gen' (suc (suc n)) (suc i) (lt (2 + x , cong suc p))
+      ≡ invEq (eq' (suc n) (suc i) (suc x , p))
                ((EM→ΩEM+1 ((suc (i + suc n))) , EM→ΩEM+1-0ₖ (suc (i + suc n)))
                ∘∙ ((HH
-                ∘∙ Sqₖ∙-gen (suc n) (suc i) (inl ((suc (suc x)) , p)))
+                ∘∙ Sqₖ∙-gen' (suc n) (suc i) (lt (((suc x)) , p)))
                 ∘∙ (ΩEM+1→EM∙ (suc n))))
-  help = cong (invEq (eq' (suc n) (suc i) (suc x , cong suc (+-suc x (suc i)) ∙ p)))
+  help = cong (invEq (eq' (suc n) (suc i) (suc x , p)))
               (→∙Homogeneous≡ (isHomogeneousPath _ _)
                 (funExt λ q → cong (substΩK (sym ℕP) .fst)
-                                    (λ _ → EM→ΩEM+1 (suc (suc (i + n))) (Sqₖ∙-gen (suc n) (suc i)
-                                         (inl (suc (suc x) , (λ i₂ → predℕ (cong suc p i₂)))) .fst (ΩEM+1→EM (suc n) q)))
-                             ∙ helplem (Sqₖ∙-gen (suc n) (suc i)
-                                  (inl (suc (suc x) , (λ i₂ → predℕ (cong suc p i₂)))) .fst (ΩEM+1→EM (suc n) q))))
-Ω-Sq (suc n) (suc i) (inr (zero , p)) =
+                                    (λ _ → EM→ΩEM+1 (suc (suc (i + n)))
+                                      (Sqₖ∙-gen' (suc n) (suc i)
+                                         (lt (suc x , p)) .fst (ΩEM+1→EM (suc n) q)))
+                             ∙ helplem (Sqₖ∙-gen' (suc n) (suc i)
+                                  (lt (suc x , p)) .fst (ΩEM+1→EM (suc n) q))))
+
+Ω-Sq' (suc n) (suc i) (eq p) =
     →∙Homogeneous≡ (isHomogeneousPath _ _)
-      (funExt (λ q → cong (subst (λ n₁ → fst (Ω (EM∙ ℤ/2 n₁))) (+'-suc' (suc i) (suc n)))
-                          (((λ j → EM→ΩEM+1 (suc (suc (i + n)))
-                            (Sqₖ∙-gen (suc n) (suc i)
-                             (isPropdec≤ℕ _ _ (dec≤ℕ _ _)
-                             (inr (0 , p)) j) .fst (ΩEM+1→EM (suc n) q))))
-                         ∙ EM→ΩEM+1-0ₖ _)
-                    ∙ (substRefl-lem _ (+'-suc' (suc i) (suc n))
-                     ∙ sym (∙∙lCancel _))
-                    ∙ cong₂ (λ x y → sym x ∙∙ y ∙∙ x) refl
-                       (sym (cong (cong (subst (λ m → K m) (cong (_+' suc (suc n)) p)))
-                         (cong₂-cup (suc (suc n)) q)))))
-  ∙ cong Ω→ λ j → Sqₖ∙-gen (suc (suc n)) (suc i)
-            (isPropdec≤ℕ _ _ (inl (0 , sym p)) (dec≤ℕ _ _)
-             j)
-Ω-Sq (suc n) (suc i) (inr (suc x , p)) =
-  →∙Homogeneous≡ (isHomogeneousPath _ _)
-    (funExt λ q →
-        (cong (subst (λ n₁ → fst (Ω (EM∙ ℤ/2 n₁)))
-                     (+'-suc' (suc i) (suc n)))
-              (cong (EM→ΩEM+1 (suc (suc (i + n))))
-                (λ j → Sqₖ∙-gen (suc n) (suc i)
-                         (isPropdec≤ℕ _ _ (dec≤ℕ _ _)
-                         (inr (suc x , p)) j) .fst (ΩEM+1→EM (suc n) q))
-             ∙ EM→ΩEM+1-0ₖ (suc (suc (i + n))))
-       ∙ λ j → transp (λ k → fst (Ω (EM∙ ℤ/2 (+'-suc' (suc i) (suc n) (j ∨ k)))))
-                       j refl)
-      ∙ rUnit refl)
-  ∙ cong Ω→ (sym lem2)
+      (funExt (λ q → cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' (suc i) (suc n)))
+                          (cong (EM→ΩEM+1 (suc (suc (i + n))))
+                            (λ j → Sqₖ∙-gen' (suc n) (suc i)
+                                     (isPropTrichotomy
+                                     (suc i ≟ suc n) (eq p) j) .fst
+                                     (ΩEM+1→EM (suc n) q))
+                        ∙ sym (substCommSlice K (fst ∘ Ω ∘ K∙ ∘ suc) EM→ΩEM+1
+                            (cong (_+' suc n) (sym p))
+                            (cup (suc n) (suc n) (ΩEM+1→EM (suc n) q) (ΩEM+1→EM (suc n) q))))
+                    ∙ sym (substComposite (fst ∘ Ω ∘ K∙)
+                       (λ i₁ → suc (p (~ i₁) +' suc n)) (+'-suc' (suc i) (suc n)) _)
+                    ∙ substℕ-lem _ _ _
+                    ∙ substComposite (fst ∘ Ω ∘ K∙)
+                       (+'-suc' (suc n) (suc n)) (λ i₁ → sym p i₁ +' suc (suc n)) _
+                    ∙ sym (Ω→H≡ (⌣-deloop (suc n) .fst q))))
+  ∙ (refl
+  ∙ (λ i → Ω→ H ∘∙ (fib-deloop (suc n) .snd (~ i))))
+  ∙ sym (Ω→∘∙ H (fib-deloop (suc n) .fst))
+  ∙ cong Ω→ (sym help)
+  ∙ cong Ω→ λ j → Sqₖ∙-gen' (suc (suc n)) (suc i)
+     (isPropTrichotomy (lt (zero , cong suc p)) (suc i ≟ suc (suc n)) j)
   where
-  lem2 : Sqₖ∙ {n = suc (suc n)} (suc i) ≡ ((λ _ → 0ₖ (suc (suc (i + suc n)))) , refl)
-  lem2 j = Sqₖ∙-gen (suc (suc n)) (suc i)
-            (isPropdec≤ℕ _ _ (dec≤ℕ _ _)
-            (inr (x , +-suc x (2 + n) ∙ p)) j)
+  H : K∙ (suc (suc (n + suc n))) →∙ K∙ (suc (suc (i + suc n)))
+  fst H = subst (λ m → K (m +' suc (suc n))) (sym p)
+  snd H = lemiSubst _
+
+  Ω→H≡  : (x : _) → Ω→ H .fst x ≡ subst (fst ∘ Ω ∘ K∙) (λ i → ((sym p i) +' suc (suc n))) x
+  Ω→H≡ x = funExt⁻ (cong fst (sym (substΩ≡ (λ i → ((sym p i) +' suc (suc n)))))) x
+
+
+  help : Sqₖ∙-gen' (suc (suc n)) (suc i) (lt (0 , cong suc p))
+       ≡ (H
+       ∘∙ fib-deloop (suc n) .fst)
+  help = →∙Homogeneous≡ (isHomogeneousEM (suc (suc (i + suc n)))) refl
+Ω-Sq' (suc n) (suc i) (gt (zero , p)) =
+    →∙Homogeneous≡ (isHomogeneousPath _ _)
+      (funExt (λ q → cong (substΩK (+'-suc' (suc i) (suc n)) .fst)
+                       (cong (EM→ΩEM+1 (suc (suc (i + n))))
+                         (λ j → Sqₖ∙-gen' (suc n) (suc i)
+                                 (isPropTrichotomy (suc i ≟ suc n)
+                                   (gt (0 , p)) j) .fst (ΩEM+1→EM (suc n) q))
+                      ∙ EM→ΩEM+1-0ₖ (suc (suc (i + n))))
+        ∙∙ (substRefl-lem _ (+'-suc' (suc i) (suc n))
+                     ∙ sym (∙∙lCancel _))
+        ∙∙ cong₂ (λ x y → sym x ∙∙ y ∙∙ x) refl
+             (sym (cong (cong (subst (λ m → K m) (cong (_+' suc (suc n)) p)))
+               (cong₂-cup (suc (suc n)) q)))))
+  ∙ cong (Ω→ ∘ Sqₖ∙-gen' (suc (suc n)) (suc i))
+      (isPropTrichotomy
+        (eq (sym p))
+        (suc i ≟ suc (suc n)))
+Ω-Sq' (suc n) (suc i) (gt (suc x , p)) =
+  →∙Homogeneous≡ (isHomogeneousPath _ _)
+    (funExt (λ q → cong (substΩK (+'-suc' (suc i) (suc n)) .fst)
+                     (cong (EM→ΩEM+1 (suc (suc (i + n))))
+                       (λ j → Sqₖ∙-gen' (suc n) (suc i)
+                          (isPropTrichotomy (suc i ≟ suc n) (gt (suc x , p)) j) .fst
+                            (ΩEM+1→EM (suc n) q))
+                     ∙ EM→ΩEM+1-0ₖ (suc (suc (i + n))))
+                  ∙ substΩK (+'-suc' (suc i) (suc n)) .snd))
+  ∙ sym Ω→const
+  ∙ cong Ω→ (cong (Sqₖ∙-gen' (suc (suc n)) (suc i))
+     (isPropTrichotomy (gt (x , +-suc x (2 + n) ∙ p)) (suc i ≟ suc (suc n))))
+
+-- Ω-Sq : (n i : ℕ) → (i ≤ n) ⊎ (i > n)
+--   → Sq↓ n i
+--    ≡ Ω→ (Sqₖ∙ {n = suc n} i)
+-- Ω-Sq zero zero p =
+--   →∙Homogeneous≡ (isHomogeneousPath _ _)
+--     (funExt λ x → cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' zero zero))
+--       (Iso.rightInv (Iso-EM-ΩEM+1 zero) x)
+--     ∙ transportRefl x
+--     ∙ wrap-id 1 refl x _ refl)
+-- Ω-Sq zero (suc i) (inl x) = ⊥.rec (snotz (sym (+-suc _ _) ∙ x .snd))
+-- Ω-Sq zero (suc i) (inr (zero , p)) =
+--     →∙Homogeneous≡ (isHomogeneousPath _ _)
+--        (funExt (λ q → cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n)))
+--                                    (+'-suc' (suc i) zero))
+--                             (cong (EM→ΩEM+1 (suc i))
+--                              (λ j → Sqₖ∙-gen zero (suc i)
+--                               (isPropdec≤ℕ _ _ (dec≤ℕ _ _) (inr (0 , p)) j)
+--                                 .fst (ΩEM+1→EM zero q))
+--                            ∙ EM→ΩEM+1-0ₖ (suc i))
+--                     ∙∙ ((λ j → transp (λ k → fst (Ω (EM∙ ℤ/2 (+'-suc' (suc i) zero (k ∨ j))))) j refl))
+--                     ∙∙ sym (funExt⁻ (cong fst h) q)))
+--    ∙ (cong Ω→ λ j → Sqₖ∙-gen (suc zero) (suc i)
+--       (isPropdec≤ℕ 1 (suc i) (inl (0 , sym p)) (dec≤ℕ _ _) j))
+
+--   where
+--   pr : (q : snd (K∙ 1) ≡ snd (K∙ 1))
+--      → cong (subst (λ m → K (m +' 1)) (λ i₂ → sym p (~ i₂)))
+--            (cong₂ (cup 1 1) q q)
+--      ≡ refl
+--   pr q = cong (cong (subst (λ m → K (m +' 1)) p)) (cong₂-cup 1 q)
+
+--   h : Ω→ (Sqₖ∙-gen 1 (suc i) (inl (0 , sym p))) ≡ ((λ _ → refl) , refl)
+--   h = →∙Homogeneous≡ (isHomogeneousPath _ _)
+--        (funExt λ q → cong₂ (λ x y → sym x ∙∙ y ∙∙ x) refl (pr q)
+--                     ∙ ∙∙lCancel _)
+
+-- Ω-Sq zero (suc i) (inr (suc x , p)) =
+--    →∙Homogeneous≡ (isHomogeneousPath _ _)
+--       (funExt (λ q → cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' (suc i) zero))
+--            (EM→ΩEM+1-0ₖ (suc i))
+--         ∙∙ (λ j → transp (λ k → fst (Ω (EM∙ ℤ/2 (+'-suc' (suc i) zero (k ∨ j))))) j refl)
+--         ∙∙ sym (∙∙lCancel (snd (Sqₖ∙-gen 1 (suc i) (inr (x , +-suc x 1 ∙ p)))))))
+--   ∙ cong Ω→ λ j → Sqₖ∙-gen (suc zero) (suc i)
+--      (isPropdec≤ℕ 1 (suc i)
+--       (inr (x , +-suc x 1 ∙ p)) (dec≤ℕ _ _) j)
+-- Ω-Sq (suc n) zero p =
+--   →∙Homogeneous≡ (isHomogeneousPath _ _)
+--     (funExt λ x → cong (subst (λ n₁ → fst (Ω (EM∙ ℤ/2 n₁))) (+'-suc' zero (suc n)))
+--                         (Iso.rightInv (Iso-EM-ΩEM+1 (suc n)) x)
+--                  ∙ substℕ-lem (+'-suc' zero (suc n)) refl x
+--                  ∙ transportRefl x
+--                  ∙ wrap-id _ _ _ _ refl)
+-- Ω-Sq (suc n) (suc i) (inl (zero , p)) =
+--     →∙Homogeneous≡ (isHomogeneousPath _ _)
+--       (funExt (λ q → cong (subst (λ n → fst (Ω (EM∙ ℤ/2 n))) (+'-suc' (suc i) (suc n)))
+--                           (cong (EM→ΩEM+1 (suc (suc (i + n))))
+--                             (λ j → Sqₖ∙-gen (suc n) (suc i)
+--                                      (isPropdec≤ℕ _ _
+--                                      (dec≤ℕ _ _) (inl (0 , p)) j) .fst
+--                                      (ΩEM+1→EM (suc n) q))
+--                         ∙ sym (substCommSlice K (fst ∘ Ω ∘ K∙ ∘ suc) EM→ΩEM+1
+--                             (cong (_+' suc n) (sym p))
+--                             (cup (suc n) (suc n) (ΩEM+1→EM (suc n) q) (ΩEM+1→EM (suc n) q))))
+--                     ∙ sym (substComposite (fst ∘ Ω ∘ K∙)
+--                        (λ i₁ → suc (p (~ i₁) +' suc n)) (+'-suc' (suc i) (suc n)) _)
+--                     ∙ substℕ-lem _ _ _
+--                     ∙ substComposite (fst ∘ Ω ∘ K∙)
+--                        (+'-suc' (suc n) (suc n)) (λ i₁ → sym p i₁ +' suc (suc n)) _
+--                     ∙ sym (Ω→H≡ (⌣-deloop (suc n) .fst q))))
+--   ∙ (refl
+--   ∙ (λ i → Ω→ H ∘∙ (fib-deloop (suc n) .snd (~ i))))
+--   ∙ sym (Ω→∘∙ H (fib-deloop (suc n) .fst))
+--   ∙ cong Ω→ (sym help)
+--   ∙ cong Ω→ λ j → Sqₖ∙-gen (suc (suc n)) (suc i)
+--      (isPropdec≤ℕ _ _ (inl (1 , cong suc p)) (dec≤ℕ _ _) j)
+--   where
+--   H : K∙ (suc (suc (n + suc n))) →∙ K∙ (suc (suc (i + suc n)))
+--   fst H = subst (λ m → K (m +' suc (suc n))) (sym p)
+--   snd H = lemiSubst _
+
+--   Ω→H≡  : (x : _) → Ω→ H .fst x ≡ subst (fst ∘ Ω ∘ K∙) (λ i → ((sym p i) +' suc (suc n))) x
+--   Ω→H≡ x = funExt⁻ (cong fst (sym (substΩ≡ (λ i → ((sym p i) +' suc (suc n)))))) x
+
+
+--   help : Sqₖ∙-gen (suc (suc n)) (suc i) (inl (1 , cong suc p))
+--        ≡ (H
+--        ∘∙ fib-deloop (suc n) .fst)
+--   help = →∙Homogeneous≡ (isHomogeneousEM (suc (suc (i + suc n)))) refl
+-- Ω-Sq (suc n) (suc i) (inl (suc zero , p)) =
+--    →∙Homogeneous≡ (isHomogeneousPath _ _)
+--       (funExt (λ q → substℕ-lem {B = λ n → Ω (K∙ n) .fst} (+'-suc' (suc i) (suc n)) (sym (cong (2 +_) (+-suc i n)))
+--                          (EM→ΩEM+1 (suc (suc (i + n))) (Sqₖ (suc i) (ΩEM+1→EM (suc n) q)))
+--             ∙ substCommSlice K (λ n → fst (Ω (K∙ (suc n)))) EM→ΩEM+1 (cong suc (sym (+-suc i n)))
+--                          (Sqₖ (suc i) (ΩEM+1→EM (suc n) q))
+--            ∙ cong (EM→ΩEM+1 (suc (i + suc n)))
+--                (cong (subst K (cong suc (sym (+-suc i n))))
+--                  λ k → Sqₖ∙-gen (suc n) (suc i)
+--                            (isPropdec≤ℕ _ _ (dec≤ℕ _ _) (inl (suc zero , p)) k) .fst (ΩEM+1→EM (suc n) q))))
+--   ∙ (sym (secEq (eq' (suc n) (suc i) (0 , p)) _)
+--   ∙ cong Ω→ (sym help))
+--   ∙ cong Ω→ λ j → Sqₖ∙-gen (suc (suc n)) (suc i)
+--             (isPropdec≤ℕ _ _ (inl (suc (suc zero) , cong suc p)) (dec≤ℕ _ _) j)
+--   where
+--   ℕP = (+'-comm (suc i) (suc (suc n)) ∙
+--       (λ i₂ → +'-suc (suc n) (suc i) (~ i₂)))
+--      ∙ (λ i₂ → suc (+'-comm (suc n) (suc i) i₂))
+
+--   helplem : (x : _) → substΩK (sym ℕP) .fst (EM→ΩEM+1 (suc (suc (i + n))) x)
+--                      ≡ EM→ΩEM+1 (suc (i + suc n)) (SubstK (cong suc (sym (+-suc i n))) .fst x)
+--   helplem x = substℕ-lem {B = λ n → Ω (K∙ n) .fst} (sym ℕP) (sym (cong (2 +_) (+-suc i n)))
+--                          (EM→ΩEM+1 (suc (suc (i + n))) x)
+--             ∙ substCommSlice K (λ n → fst (Ω (K∙ (suc n)))) EM→ΩEM+1 (cong suc (sym (+-suc i n))) x
+
+--   help : Sqₖ∙-gen (suc (suc n)) (suc i) (inl (2 , cong suc p))
+--        ≡ invEq (eq' (suc n) (suc i) (0 , p))
+--                ((EM→ΩEM+1 ((suc (i + suc n))) , EM→ΩEM+1-0ₖ (suc (i + suc n)))
+--                ∘∙ ((SubstK (cong suc (sym (+-suc i n)))
+--                 ∘∙ Sqₖ∙-gen (suc n) (suc i) (inl (1 , p)))
+--                 ∘∙ (ΩEM+1→EM∙ (suc n))))
+--   help = cong (invEq (eq' (suc n) (suc i) (0 , refl ∙ p)))
+--          (→∙Homogeneous≡ (isHomogeneousPath _ _)
+--            (funExt (λ q →
+--               helplem (subst (λ m → K (m +' suc n)) (λ i₁ → predℕ (p (~ i₁)))
+--               (fib-deloop n .fst .fst (ΩEM+1→EM (suc n) q))))))
+--      ∙ λ k → invEq (eq' (suc n) (suc i) (0 , lUnit p (~ k)))
+--                ((EM→ΩEM+1 ((suc (i + suc n))) , EM→ΩEM+1-0ₖ (suc (i + suc n)))
+--                ∘∙ ((SubstK (cong suc (sym (+-suc i n)))
+--                 ∘∙ Sqₖ∙-gen (suc n) (suc i) (inl (1 , p)))
+--                 ∘∙ (ΩEM+1→EM∙ (suc n))))
+-- Ω-Sq (suc n) (suc i) (inl (suc (suc x) , p)) =
+--     →∙Homogeneous≡ (isHomogeneousPath _ _)
+--        (funExt (λ q → (substℕ-lem {B = λ n → Ω (K∙ n) .fst}
+--                          (+'-suc' (suc i) (suc n))  (sym (cong (suc ∘ suc) (+-suc i n)))
+--                          (EM→ΩEM+1 (suc (suc (i + n))) (Sqₖ (suc i) (ΩEM+1→EM (suc n) q)))
+--                      ∙ substCommSlice K (λ n → fst (Ω (K∙ (suc n))))
+--                          EM→ΩEM+1 (cong suc (sym (+-suc i n))) (Sqₖ (suc i) (ΩEM+1→EM (suc n) q)))
+--                      ∙ cong (EM→ΩEM+1 (suc (i + suc n)))
+--                        (cong (fst HH)
+--                          λ k → Sqₖ∙-gen (suc n) (suc i)
+--                            (isPropdec≤ℕ _ _ (dec≤ℕ _ _) (inl (suc (suc x) , p)) k) .fst (ΩEM+1→EM (suc n) q))))
+--   ∙ sym (secEq (eq' (suc n) (suc i) (suc x , cong suc (+-suc x (suc i)) ∙ p))
+--       ((EM→ΩEM+1 ((suc (i + suc n))) , EM→ΩEM+1-0ₖ (suc (i + suc n)))
+--                ∘∙ ((HH
+--                 ∘∙ Sqₖ∙-gen (suc n) (suc i) (inl ((suc (suc x)) , p)))
+--                 ∘∙ (ΩEM+1→EM∙ (suc n)))))
+--   ∙ cong Ω→ (sym help)
+--   ∙ cong Ω→ λ j → Sqₖ∙-gen (suc (suc n)) (suc i)
+--             (isPropdec≤ℕ _ _ (inl (suc (suc (suc x)) ,  cong suc p)) (dec≤ℕ _ _) j)
+--   where
+--   HH : K∙ (suc (suc (i + n))) →∙ K∙ (suc (i + (suc n))) 
+--   HH = SubstK (cong suc (sym (+-suc i n)))
+
+--   ℕP = (+'-comm (suc i) (suc (suc n)) ∙
+--         (λ i₂ → +'-suc (suc n) (suc i) (~ i₂)))
+--        ∙ (λ i₂ → suc (+'-comm (suc n) (suc i) i₂))
+--   ℕP≡ : ℕP ≡ cong (2 +_) (+-suc i n)
+--   ℕP≡ = isSetℕ _ _ _ _
+
+--   helplem : (x : _) → substΩK (sym ℕP) .fst (EM→ΩEM+1 (suc (suc (i + n))) x)
+--                      ≡ EM→ΩEM+1 (suc (i + suc n)) (SubstK (cong suc (sym (+-suc i n))) .fst x)
+--   helplem x = substℕ-lem {B = λ n → Ω (K∙ n) .fst} (sym ℕP) (sym (cong (2 +_) (+-suc i n)))
+--                          (EM→ΩEM+1 (suc (suc (i + n))) x)
+--             ∙ substCommSlice K (λ n → fst (Ω (K∙ (suc n)))) EM→ΩEM+1 (cong suc (sym (+-suc i n))) x
+
+--   help : Sqₖ∙-gen (suc (suc n)) (suc i) (inl (3 + x , cong suc p))
+--       ≡ invEq (eq' (suc n) (suc i) (suc x , (cong suc (+-suc x (suc i)) ∙ p)))
+--                ((EM→ΩEM+1 ((suc (i + suc n))) , EM→ΩEM+1-0ₖ (suc (i + suc n)))
+--                ∘∙ ((HH
+--                 ∘∙ Sqₖ∙-gen (suc n) (suc i) (inl ((suc (suc x)) , p)))
+--                 ∘∙ (ΩEM+1→EM∙ (suc n))))
+--   help = cong (invEq (eq' (suc n) (suc i) (suc x , cong suc (+-suc x (suc i)) ∙ p)))
+--               (→∙Homogeneous≡ (isHomogeneousPath _ _)
+--                 (funExt λ q → cong (substΩK (sym ℕP) .fst)
+--                                     (λ _ → EM→ΩEM+1 (suc (suc (i + n))) (Sqₖ∙-gen (suc n) (suc i)
+--                                          (inl (suc (suc x) , (λ i₂ → predℕ (cong suc p i₂)))) .fst (ΩEM+1→EM (suc n) q)))
+--                              ∙ helplem (Sqₖ∙-gen (suc n) (suc i)
+--                                   (inl (suc (suc x) , (λ i₂ → predℕ (cong suc p i₂)))) .fst (ΩEM+1→EM (suc n) q))))
+-- Ω-Sq (suc n) (suc i) (inr (zero , p)) =
+--     →∙Homogeneous≡ (isHomogeneousPath _ _)
+--       (funExt (λ q → cong (subst (λ n₁ → fst (Ω (EM∙ ℤ/2 n₁))) (+'-suc' (suc i) (suc n)))
+--                           (((λ j → EM→ΩEM+1 (suc (suc (i + n)))
+--                             (Sqₖ∙-gen (suc n) (suc i)
+--                              (isPropdec≤ℕ _ _ (dec≤ℕ _ _)
+--                              (inr (0 , p)) j) .fst (ΩEM+1→EM (suc n) q))))
+--                          ∙ EM→ΩEM+1-0ₖ _)
+--                     ∙ (substRefl-lem _ (+'-suc' (suc i) (suc n))
+--                      ∙ sym (∙∙lCancel _))
+--                     ∙ cong₂ (λ x y → sym x ∙∙ y ∙∙ x) refl
+--                        (sym (cong (cong (subst (λ m → K m) (cong (_+' suc (suc n)) p)))
+--                          (cong₂-cup (suc (suc n)) q)))))
+--   ∙ cong Ω→ λ j → Sqₖ∙-gen (suc (suc n)) (suc i)
+--             (isPropdec≤ℕ _ _ (inl (0 , sym p)) (dec≤ℕ _ _)
+--              j)
+-- Ω-Sq (suc n) (suc i) (inr (suc x , p)) =
+--   →∙Homogeneous≡ (isHomogeneousPath _ _)
+--     (funExt λ q →
+--         (cong (subst (λ n₁ → fst (Ω (EM∙ ℤ/2 n₁)))
+--                      (+'-suc' (suc i) (suc n)))
+--               (cong (EM→ΩEM+1 (suc (suc (i + n))))
+--                 (λ j → Sqₖ∙-gen (suc n) (suc i)
+--                          (isPropdec≤ℕ _ _ (dec≤ℕ _ _)
+--                          (inr (suc x , p)) j) .fst (ΩEM+1→EM (suc n) q))
+--              ∙ EM→ΩEM+1-0ₖ (suc (suc (i + n))))
+--        ∙ λ j → transp (λ k → fst (Ω (EM∙ ℤ/2 (+'-suc' (suc i) (suc n) (j ∨ k)))))
+--                        j refl)
+--       ∙ rUnit refl)
+--   ∙ cong Ω→ (sym lem2)
+--   where
+--   lem2 : Sqₖ∙ {n = suc (suc n)} (suc i) ≡ ((λ _ → 0ₖ (suc (suc (i + suc n)))) , refl)
+--   lem2 j = Sqₖ∙-gen (suc (suc n)) (suc i)
+--             (isPropdec≤ℕ _ _ (dec≤ℕ _ _)
+--             (inr (x , +-suc x (2 + n) ∙ p)) j)

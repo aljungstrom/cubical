@@ -65,6 +65,10 @@ snd (Ω→ {A = A} {B = B} (f , p)) = ∙∙lCancel p
           → Ω→ {A = A} {B = B} ((λ _ → pt B) , refl) ≡ ((λ _ → refl) , refl)
 Ω→const = →∙Homogeneous≡ (isHomogeneousPath _ _) (funExt λ _ → sym (rUnit _))
 
+Ω→id : ∀ {ℓ} {A : Pointed ℓ}
+     → Ω→ (id∙ A) ≡ id∙ _
+Ω→id = →∙Homogeneous≡ (isHomogeneousPath _ _) (funExt (sym ∘ rUnit))
+
 {- Ω→ is a homomorphism -}
 Ω→pres∙filler : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'} (f : A →∙ B)
         → (p q : typ (Ω A))
