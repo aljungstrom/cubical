@@ -36,6 +36,7 @@ open import Cubical.HITs.Susp
 open import Cubical.HITs.Truncation as TR
 
 open import Cubical.Algebra.CommRing.Base
+open import Cubical.Algebra.Ring
 open import Cubical.Algebra.Group.Instances.IntMod
 open import Cubical.Algebra.CommRing.Instances.IntMod
 open import Cubical.Algebra.AbGroup.Base
@@ -215,6 +216,12 @@ module EM2 {ℓ : Level} (G : AbGroup ℓ)
 
 ℤ/2 : AbGroup ℓ-zero
 ℤ/2 = Group→AbGroup (ℤGroup/ 2) +ₘ-comm
+
+Kℤ/2 : (n : ℕ) → Type
+Kℤ/2 n = EM (Ring→AbGroup ℤ/2Ring) n
+
+Kℤ/2∙ : (n : ℕ) → Pointed₀
+Kℤ/2∙ n = EM∙ ℤ/2 n
 
 private
   module EMZ/2 = EM2 ℤ/2 -Const-ℤ/2

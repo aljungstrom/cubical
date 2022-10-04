@@ -202,3 +202,28 @@ syntax ⌣[]ₖ-syntax R x y = x ⌣[ R ]ₖ y
 syntax ⌣[]Cₖ-syntax R x y = x ⌣[ R ]Cₖ y
 syntax ⌣[,,]ₖ-syntax n m R x y = x ⌣[ R , n , m ]ₖ y
 syntax ⌣[,,]Cₖ-syntax n m R x y = x ⌣[ R , n , m ]Cₖ y
+
+-- additional properties
+cong₂-⌣ₖ : ∀ {ℓ} (R : Ring ℓ)
+  → (n : ℕ) (q : 0ₖ n ≡ 0ₖ n)
+  → cong₂ (λ x y → x ⌣[ R ]ₖ y) q q ≡ refl
+cong₂-⌣ₖ R n q =
+    cong₂Funct (_⌣ₖ_ {G'' = R}) q q
+  ∙ cong₂ _∙_ lem-l lem-r
+  ∙ sym (rUnit refl)
+  where
+  lem-l : cong (λ x → x ⌣[ R ]ₖ 0ₖ n) q ≡ refl
+  lem-l i j =
+    hcomp (λ k → λ {(i = i0) → ⌣ₖ-0ₖ n n (q j) (~ k)
+                   ; (i = i1) → ⌣ₖ-0ₖ n n (0ₖ n) (~ k)
+                   ; (j = i0) → ⌣ₖ-0ₖ n n (q j) (~ k)
+                   ; (j = i1) → ⌣ₖ-0ₖ n n (q j) (~ k)})
+           (0ₖ (n +' n))
+
+  lem-r : cong (λ x → 0ₖ n ⌣[ R ]ₖ x) q ≡ refl
+  lem-r i j =
+    hcomp (λ k → λ {(i = i0) → 0ₖ-⌣ₖ n n (q j) (~ k)
+                   ; (i = i1) → 0ₖ-⌣ₖ n n (0ₖ n) (~ k)
+                   ; (j = i0) → 0ₖ-⌣ₖ n n (q j) (~ k)
+                   ; (j = i1) → 0ₖ-⌣ₖ n n (q j) (~ k)})
+           (0ₖ (n +' n))

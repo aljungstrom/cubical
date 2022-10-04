@@ -96,6 +96,17 @@ Iso.inv (pathToIso x) = transport⁻ x
 Iso.rightInv (pathToIso x) = transportTransport⁻ x
 Iso.leftInv (pathToIso x) = transport⁻Transport x
 
+substIso : ∀ {ℓ ℓ'} {A : Type ℓ} {a a' : A}
+   (P : A → Type ℓ') (p : a ≡ a') → Iso (P a) (P a')
+Iso.fun (substIso P p) = subst P p
+Iso.inv (substIso P p) = subst P (sym p)
+Iso.rightInv (substIso P p) = substSubst⁻ P p
+Iso.leftInv (substIso P p) = subst⁻Subst P p
+
+substEquiv' : ∀ {ℓ ℓ'} {A : Type ℓ} {a a' : A}
+  (P : A → Type ℓ') (p : a ≡ a') → P a ≃ P a'
+substEquiv' P p = isoToEquiv (substIso P p)
+
 isInjectiveTransport : ∀ {ℓ : Level} {A B : Type ℓ} {p q : A ≡ B}
   → transport p ≡ transport q → p ≡ q
 isInjectiveTransport {p = p} {q} α i =

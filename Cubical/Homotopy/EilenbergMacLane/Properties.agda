@@ -17,6 +17,7 @@ open import Cubical.Algebra.AbGroup.Base
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Function
 open import Cubical.Foundations.GroupoidLaws renaming (assoc to ∙assoc)
 open import Cubical.Foundations.Path
 open import Cubical.Foundations.HLevels
@@ -297,7 +298,7 @@ module _ {G : AbGroup ℓ} where
   Iso.inv (Iso-EM-ΩEM+1 (suc n)) = encode' n ∣ north ∣
   Iso.rightInv (Iso-EM-ΩEM+1 (suc n)) = decode'-encode' _ _
   Iso.leftInv (Iso-EM-ΩEM+1 (suc n)) = encode'-decode' _
-{-  
+{-
   Iso.fun (Iso-EM-ΩEM+1 (suc zero)) = decode' 0 (0ₖ 2)
   Iso.inv (Iso-EM-ΩEM+1 (suc zero)) = encode' 0 (0ₖ 2)
   Iso.rightInv (Iso-EM-ΩEM+1 (suc zero)) = decode'-encode' 0 (0ₖ 2)
@@ -361,6 +362,10 @@ module _ {G : AbGroup ℓ} where
   EM→ΩEM+1∙ zero .snd = emloop-1g (AbGroup→Group G)
   EM→ΩEM+1∙ (suc zero) .snd = cong (cong ∣_∣ₕ) (rCancel (merid embase))
   EM→ΩEM+1∙ (suc (suc n)) .snd = cong (cong ∣_∣ₕ) (rCancel (merid north))
+
+  ΩEM+1→EM∙ : (n : ℕ) → Ω (EM∙ G (suc n)) →∙ EM∙ G n
+  fst (ΩEM+1→EM∙ n) = ΩEM+1→EM n
+  snd (ΩEM+1→EM∙ n) = ΩEM+1→EM-refl n
 
   EM≃ΩEM+1∙ : (n : ℕ) → EM∙ G n ≡ Ω (EM∙ G (suc n))
   EM≃ΩEM+1∙ n = ua∙ (EM≃ΩEM+1 n) (EM→ΩEM+1-0ₖ n)
@@ -975,3 +980,41 @@ EM⊗-commIso {G = G} {H = H} = Iso→EMIso (GroupIso→GroupEquiv ⨂-commIso)
 EM⊗-assocIso : {G : AbGroup ℓ} {H : AbGroup ℓ'} {L : AbGroup ℓ''}
   → ∀ n → Iso (EM (G ⨂ (H ⨂ L)) n) (EM ((G ⨂ H) ⨂ L) n)
 EM⊗-assocIso = Iso→EMIso (GroupIso→GroupEquiv (GroupEquiv→GroupIso ⨂assoc))
+
+-- transport lemmas
+module EM-subst (G : AbGroup ℓ) where
+  substEM0ₖ : {x y : ℕ} (p : x ≡ y) → subst (EM G) p (0ₖ x) ≡ 0ₖ y
+  substEM0ₖ {x = x} =
+    J (λ y p → subst (EM G) p (0ₖ x) ≡ 0ₖ y) (transportRefl _)
+
+  substEM0ₖ-refl : {x : ℕ} → substEM0ₖ {x = x} refl ≡ transportRefl (0ₖ x)
+  substEM0ₖ-refl = transportRefl _
+
+  substΩEM-refl : {x y : ℕ} (p : x ≡ y)
+    → subst (λ x → fst (Ω (EM∙ G x))) p refl ≡ refl
+  substΩEM-refl {x = x} =
+    J (λ y p → subst (λ x → fst (Ω (EM∙ G x))) p refl ≡ refl)
+      (transportRefl _)
+
+  substEM : {n m : ℕ} (p : n ≡ m) → EM∙ G n →∙ EM∙ G m
+  fst (substEM p) = subst (EM G) p
+  snd (substEM p) = substEM0ₖ _
+
+  substΩEM : {n m : ℕ} (p : n ≡ m) → Ω (EM∙ G n) →∙ Ω (EM∙ G m)
+  fst (substΩEM p) = subst (fst ∘ Ω ∘ (EM∙ G)) p
+  snd (substΩEM p) =
+    J (λ m p → subst (fst ∘ Ω ∘ (EM∙ G)) p refl ≡ refl)
+      (transportRefl refl) p
+
+  substΩEM≡ : {n m : ℕ} (p : n ≡ m) → substΩEM p ≡ Ω→ (substEM p)
+  substΩEM≡ {n = n} =
+    J (λ m p → substΩEM p ≡ Ω→ (substEM p))
+      (→∙Homogeneous≡ (isHomogeneousPath _ _)
+      (funExt (λ p → transportRefl p
+           ∙ (λ j i → hcomp (λ k → λ {(i = i0) → transportRefl (p i0) k
+                                      ; (i = i1) → transportRefl (p i0) k
+                                      ; (j = i0) → transportRefl (p i) k})
+                             (transport refl (p i)))
+           ∙ cong₂ (λ x y → sym x ∙∙ y ∙∙ x)
+                   (sym substEM0ₖ-refl)
+                   refl)))

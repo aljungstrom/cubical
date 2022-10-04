@@ -211,6 +211,12 @@ predℕ-≤-predℕ {suc m} {suc n} ineq = pred-≤-pred ineq
 ∸-≤ zero (suc n) = ≤-refl
 ∸-≤ (suc m) (suc n) = ≤-trans (∸-≤ m n) (1 , refl)
 
+¬<-&-≡ : {n m : ℕ} → n < m → n ≡ m → ⊥
+¬<-&-≡ {n} {m} (x , p) q = ¬m<m {m = n} (x , p ∙ sym q)
+
+¬<-&-> : {n m : ℕ} → n < m → n > m → ⊥
+¬<-&-> {n} {m} p q = ¬m<m (<-trans p q)
+
 ≤-∸-+-cancel : m ≤ n → (n ∸ m) + m ≡ n
 ≤-∸-+-cancel {zero} {n} _ = +-zero _
 ≤-∸-+-cancel {suc m} {zero} m≤n = ⊥.rec (¬-<-zero m≤n)
@@ -265,6 +271,17 @@ zero ≟ zero = eq refl
 zero ≟ suc n = lt (n , +-comm n 1)
 suc m ≟ zero = gt (m , +-comm m 1)
 suc m ≟ suc n = Trichotomy-suc (m ≟ n)
+
+isPropTrichotomy : {n m : ℕ} → isProp (Trichotomy n m)
+isPropTrichotomy (lt x) (lt y) = cong lt (isProp≤ x y)
+isPropTrichotomy (lt x) (eq y) = ⊥.rec (¬<-&-≡ x y)
+isPropTrichotomy (lt x) (gt y) = ⊥.rec (¬m<m (<-trans x y))
+isPropTrichotomy (eq x) (lt y) = ⊥.rec (¬<-&-≡ y x)
+isPropTrichotomy (eq x) (eq y) = cong eq (isSetℕ _ _ _ _)
+isPropTrichotomy (eq x) (gt y) = ⊥.rec (¬<-&-≡ y (sym x))
+isPropTrichotomy (gt x) (lt y) = ⊥.rec (¬m<m (<-trans x y))
+isPropTrichotomy (gt x) (eq y) = ⊥.rec (¬<-&-≡ x (sym y))
+isPropTrichotomy (gt x) (gt y) = cong gt (isProp≤ x y)
 
 splitℕ-≤ : (m n : ℕ) → (m ≤ n) ⊎ (n < m)
 splitℕ-≤ m n with m ≟ n

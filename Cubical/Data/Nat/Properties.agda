@@ -328,7 +328,18 @@ module PlusBis where
   +'-suc (suc n) zero = refl
   +'-suc (suc n) (suc m) = refl
 
--- Neat transport lemma for ℕ
+  +'-suc' : (n m : ℕ) → suc (n +' m) ≡ (n +' suc m)
+  +'-suc' n m = cong suc (+'-comm n m)
+             ∙ +'-suc m n
+             ∙ +'-comm (suc m) n
+
+-- Neat transport lemmas for ℕ
+substℕSwap : ∀ {ℓ} {B : ℕ → Type ℓ}
+  → {n m : ℕ} (p q : n ≡ m)
+  → (bn : B n)
+  → subst B p bn ≡ subst B q bn
+substℕSwap {B = B} p q bn i = subst B (isSetℕ _ _ p q i) bn
+
 compSubstℕ : ∀ {ℓ} {A : ℕ → Type ℓ} {n m l : ℕ}
    (p : n ≡ m) (q : m ≡ l) (r : n ≡ l)
    → {x : _}
@@ -336,4 +347,4 @@ compSubstℕ : ∀ {ℓ} {A : ℕ → Type ℓ} {n m l : ℕ}
    ≡ subst A r x
 compSubstℕ {A = A} p q r {x = x} =
   sym (substComposite A p q x)
-  ∙ λ i → subst A (isSetℕ _ _ (p ∙ q) r i) x
+  ∙ substℕSwap (p ∙ q) r x
