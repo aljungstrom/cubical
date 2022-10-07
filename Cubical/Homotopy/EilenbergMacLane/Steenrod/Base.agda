@@ -524,3 +524,119 @@ substRefl-lem = J> (transportRefl refl)
   ∙ cong Ω→ (cong (Sqₖ∙-gen (suc (suc n)) (suc i))
      (isPropTrichotomy (gt (x , +-suc x (2 + n) ∙ p)) (suc i ≟ suc (suc n))))
 -}
+
+open import Cubical.HITs.EilenbergMacLane1
+_^ : Kℤ/2 1 → Kℤ/2 1
+_^ = elimGroupoid (AbGroup→Group ℤ/2)
+       (λ _ → emsquash)
+       {!!}
+       {!!}
+       {!!}
+
+open import Cubical.HITs.SmashProduct
+
+asd : (n : ℕ) (A B : Pointed₀)
+  → Iso ((Smash A B , proj (pt A) (pt B)) →∙ (Kℤ/2∙ n))
+         ((typ A × typ B , pt A , pt B) →∙ (Kℤ/2∙ n))
+fst (fun (asd n A B) f) x = fst f (proj (fst x) (snd x))
+snd (fun (asd n A B) f) = snd f
+fst (inv (asd n A B) f) basel = fst f (pt A , pt B)
+fst (inv (asd n A B) f) baser = fst f (pt A , pt B)
+fst (inv (asd n A B) f) (proj x y) = ((fst f (x , y)) -ₖ fst f (x , pt B)) -ₖ fst f (pt A , y)
+fst (inv (asd n A B) f) (gluel a i) = {!fst f (pt A , pt B)!}
+fst (inv (asd n A B) f) (gluer b i) = {!cong₂ (λ x y → x -ₖ y) ? ? ∙ ?!}
+snd (inv (asd n A B) f) = cong₂ (λ x y → x -ₖ y) (rCancelₖ n (fst f (pt A , pt B))) (snd f) ∙ rCancelₖ n (0ₖ n)
+rightInv (asd n A B) (f , p) = →∙Homogeneous≡ (isHomogeneousEM _) (funExt λ {(x , y) → {!!}})
+leftInv (asd n A B) = {!!}
+
+
+asd' : (n : ℕ) (A B : Pointed₀) → Smash (Ω A) B → typ (Ω (Smash A B , proj (pt A) (pt B)))
+asd' n A B basel = refl
+asd' n A B baser = refl
+asd' n A B (proj x y) = (sym (gluer y ∙ sym (gluer (pt B))) ∙∙ cong (λ x → proj x y) x ∙∙ (gluer y ∙ sym (gluer (pt B)))) -- proj (x i) (pt B)
+asd' n A B (gluel a i) j = {!!}
+asd' n A B (gluer b i) = {!!}
+
+incl : (A B : Pointed₀) (x : Smash A B) → Path (Smash A B) (proj (pt A) (pt B)) x → Smash (Ω A) B
+incl A B basel p = {!p!}
+incl A B baser p = {!!}
+incl A B (proj x y) q = {!q!}
+incl A B (gluel a i) = {!!}
+incl A B (gluer b i) = {!!}
+
+asd'' : (n : ℕ) (A B : Pointed₀) → typ (Ω (Smash A B , proj (pt A) (pt B))) → Smash (Ω A) B
+asd'' n A B = {!!}
+
+module _ (A B : Pointed₀)
+         (rA : (a : typ A) → Ω A ≃∙ Ω (typ A , a))
+         (rB : (b : typ B) → B ≃∙ fst B , b) where
+  looper : Smash A B → Type
+  looper basel = Smash (Ω A) B
+  looper baser = Smash (Ω A) B
+  looper (proj x y) = Smash ((x ≡ x) , refl) ((typ B , y))
+  looper (gluel a i) = Smash (ua∙ (invEquiv∙ (rA a) .fst) (invEquiv∙ (rA a) .snd) i) B
+  looper (gluer b i) = Smash (Ω A) (ua∙ (invEquiv∙ (rB b) .fst) (invEquiv∙ (rB b) .snd) i)
+
+  br : (x : Smash A B) (p : proj (pt A) (pt B) ≡ x) → looper x
+  br = J> proj refl (pt B)
+
+  tst : (p : proj (pt A) (pt B) ≡ proj (pt A) (pt B)) → Smash (Ω A) B
+  tst p = br _ p
+
+  inn : looper basel → Path (Smash A B) (proj (pt A) (pt B)) basel
+  inn basel = gluel (pt A)
+  inn baser = gluel (pt A)
+  inn (proj x y) = {!!} ∙∙ (cong (λ x → proj x y) x) ∙∙ (gluer y ∙ {!!})
+  inn (gluel a i) = {!!}
+  inn (gluer b i) = {!!}
+
+  looper⁻ : (x : Smash A B) → looper x → proj (pt A) (pt B) ≡ x
+  looper⁻ basel p = {!!}
+  looper⁻ baser p = {!!}
+  looper⁻ (proj x y) p = {!p!}
+  looper⁻ (gluel a i) p = {!!}
+  looper⁻ (gluer b i) p = {!!}
+
+open import Cubical.Foundations.Path
+
+pointedEq : (A B : Pointed₀) (f g : A →∙ B)
+  → isHomogeneous B
+  → Iso (f ≡ g)
+         ((a : typ A)
+         → Σ[ p ∈ fst f a ≡ fst g a ]
+              ((q : pt A ≡ a) → PathP (λ j → (cong (fst f) q ∙∙ p ∙∙ cong (fst g) (sym q)) j ≡ pt B) (snd f) (snd g)))
+fst (fun (pointedEq A B f g hom) p a) i = p i .fst a
+snd (fun (pointedEq A B f g hom) p a) =
+  J (λ a q → PathP
+      (λ j →
+         (cong (fst f) q ∙∙ (λ i → p i .fst a) ∙∙ cong (fst g) (sym q)) j ≡
+         pt B)
+      (snd f) (snd g))
+      (flipSquare (sym (rUnit (λ i → p i .fst (snd A))) ◁ flipSquare (cong snd p)))
+{-
+  hcomp (λ k → λ {(i = i0) → {!snd f j!}
+                 ; (i = i1) → {!!}
+                 ; (j = i0) → doubleCompPath-filler (cong (fst f) q) (λ i → p i .fst a) (cong (fst g) (sym q)) k i
+                 ; (j = i1) → {!!}})
+        {!p i .snd j!}
+  where
+  help : {!———— Boundary ——————————————————————————————————————————————
+i = i0 ⊢ snd f j
+i = i1 ⊢ snd g j
+j = i0 ⊢ (cong (fst f) q ∙∙ fst (fun (pointedEq A B f g hom) p a)
+          ∙∙ cong (fst g) (sym q))
+         i
+j = i1 ⊢ pt B!} -- (q : _) → s (pt A) .fst ≡ ((cong (fst f) q) ∙∙ fst (s (pt A)) ∙∙ cong (fst g) (sym q))
+  help = {!!} -- rUnit _ ∙ λ j → (λ i → fst f (q (j ∧ i))) ∙∙ s (q j) .fst ∙∙ λ i → fst g (q (j ∧ ~ i)) -}
+inv (pointedEq A B f g hom) s = ΣPathP ((funExt (λ a → s a .fst))
+  , flipSquare (rUnit _ ◁ flipSquare (s (pt A) .snd refl)))
+rightInv (pointedEq A B f g hom) s = funExt (λ a → ΣPathP (refl , {!!}))
+leftInv (pointedEq A B f g hom) = {!!}
+
+isOfHLevelΠ↓ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} (n : ℕ)
+  → isOfHLevel n ((x : A) → B x)
+  → (x : A) → isOfHLevel n (B x) 
+isOfHLevelΠ↓ zero hlev x = (fst hlev x) , (λ y → {!snd hle !})
+isOfHLevelΠ↓ (suc zero) hlev x = {!hlev!}
+isOfHLevelΠ↓ (suc (suc zero)) hlev x y z = {!hlev !}
+isOfHLevelΠ↓ (suc (suc (suc n))) hlev x = {!!}
