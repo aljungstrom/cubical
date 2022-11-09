@@ -767,3 +767,127 @@ module _ {ℓ ℓ' ℓ'' : Level} {A : Type ℓ} {B : A → Type ℓ'} {C : A �
   FunConnected→TotalFunConnected n con r =
     isConnectedRetractFromIso n
      (Iso-fibTotalFun-fibFun r) (con (fst r) (snd r))
+
+-- open import Cubical.Data.Empty as ⊥
+-- min→+ : (n m : ℕ) → min n m ≡ n → Σ[ k ∈ ℕ ] n + k ≡ m
+-- min→+ zero m p = m , refl
+-- min→+ (suc n) zero p = ⊥.rec (snotz (sym p))
+-- min→+ (suc n) (suc m) p = min→+ n m (cong predℕ p) .fst
+--                         , cong suc (min→+ n m (cong predℕ p) .snd)
+
+-- open import Cubical.Data.Sum as ⊎
+
+-- help : (n m : ℕ) → (min n m ≡ n) ⊎ (min n m ≡ m)
+-- help zero m = inl refl
+-- help (suc n) zero = inr refl
+-- help (suc n) (suc m) =
+--   ⊎.rec
+--    (λ p → inl (cong suc p))
+--    (λ p → inr (cong suc p))
+--    (help n m)
+
+-- open import Cubical.HITs.Wedge
+
+-- isConnected⋁-pre : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'} (n m : ℕ)
+--   → isConnected n (fst A)
+--   → isConnected m (fst B)
+--   → min n m ≡ n
+--   → isConnected (min n m) (A ⋁ B)
+-- isConnected⋁-pre zero _ _ _ _ = isContrUnit*
+-- isConnected⋁-pre (suc n) zero _ _ _ = isContrUnit*
+-- isConnected⋁-pre {A = A} {B = B} (suc n) (suc m) conA conB p
+--   = subst (λ n → isConnected n (A ⋁ B)) (sym p)
+--       (∣ (inl (pt A)) ∣
+--      , (Trunc.elim (λ _ → isOfHLevelPath (suc n)
+--                     (isOfHLevelTrunc (suc n)) _ _)
+--          λ { (inl x) → ppₗ x (isConnectedPath n conA (pt A) x .fst)
+--            ; (inr x) → ppᵣ x (isConnectedPath n Bcon* (pt B) x .fst)
+--            ; (push a i) → pushh i}))
+--   where
+--   * = min→+ _ _ p
+--   Bcon* : isConnected (suc n) (fst B)
+--   Bcon* = isConnectedSubtr (suc n) (* .fst)
+--            (subst (λ n → isConnected n (fst B))
+--              (sym (* .snd)
+--             ∙ cong suc (+-comm n (fst *))
+--             ∙ sym (+-suc _ n))
+--              conB)
+           
+--   ppₗ : (x : typ A) → hLevelTrunc n (pt A ≡ x)
+--     → Path (hLevelTrunc (suc n) (A ⋁ B)) ∣ inl (pt A) ∣ ∣ inl x ∣
+--   ppₗ x = Trunc.rec (isOfHLevelPath' n (isOfHLevelTrunc (suc n)) _ _)
+--                     λ p i → ∣ inl (p i) ∣ₕ
+
+--   ppᵣ : (x : typ B) → hLevelTrunc n (pt B ≡ x)
+--     → Path (hLevelTrunc (suc n) (A ⋁ B)) ∣ inl (pt A) ∣ ∣ inr x ∣
+--   ppᵣ x = Trunc.rec (isOfHLevelPath' n (isOfHLevelTrunc (suc n)) _ _)
+--                     λ p → cong ∣_∣ₕ (push tt ∙ cong inr p)
+
+--   pushh : Square (ppₗ (snd A) (isConnectedPath n conA (pt A) (snd A) .fst))
+--                  (ppᵣ (snd B) (isConnectedPath n Bcon* (pt B) (snd B) .fst))
+--                  refl
+--                  λ i → ∣ push tt i ∣
+--   pushh = (cong (ppₗ (snd A))
+--             (isConnectedPath n conA (pt A) (snd A) .snd ∣ refl ∣ₕ)
+--           ∙ recₕ n refl)
+--         ◁ (λ i j → ∣ push tt (i ∧ j) ∣ₕ)
+--         ▷ (cong (cong ∣_∣ₕ) (rUnit (push tt))
+--          ∙ sym (recₕ n refl)
+--          ∙ sym (cong (ppᵣ (snd B))
+--             (isConnectedPath n Bcon* (pt B) (snd B) .snd ∣ refl ∣ₕ)))
+
+-- isConnected⋁ : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'} (n m : ℕ)
+--   → isConnected n (fst A)
+--   → isConnected m (fst B)
+--   → isConnected (min n m) (A ⋁ B)
+-- isConnected⋁ {A = A} {B = B} n m conA conB =
+--   ⊎.rec
+--     (isConnected⋁-pre n m conA conB)
+--     (λ p → subst2 isConnected (minComm m n)
+--                                (ua (symPushout (λ _ → pt B) (λ _ → pt A)))
+--              (isConnected⋁-pre m n conB conA (minComm m n ∙ p)))
+--     (help n m)
+
+
+
+
+-- -- pushWedge : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'}
+-- --   →  isContr (Pushout {A = A ⋁ B} (_∨→_ (const∙ A B) (id∙ B)) (_∨→_ (id∙ A) (const∙ B A)))
+-- -- fst (pushWedge {B = B}) = inl (pt B)
+-- -- snd (pushWedge {A = A} {B = B}) (inl x) = push (inl (pt A)) ∙ sym (push (inr x))
+-- -- snd (pushWedge {A = A} {B = B}) (inr x) = push (inl x)
+-- -- snd (pushWedge {A = A} {B = B}) (push (inl x) i) j =
+-- --   hcomp (λ k → λ {(i = i0) → ((push (inl (pt A))) ∙ (λ i₁ → push (inr (B .snd)) (~ i₁))) j
+-- --                  ; (i = i1) → push (inl x) (j ∧ k)
+-- --                  ; (j = i0) → inl (pt B)
+-- --                  ; (j = i1) → push (inl x) (i ∧ k)})
+-- --         {!!}
+-- -- {-
+-- -- i = i0 ⊢ (push (inl (pt A)) ∙ (λ i₁ → push (inr (B .snd)) (~ i₁)))
+-- --          j
+-- -- i = i1 ⊢ push (inl x) j
+-- -- j = i0 ⊢ inl (pt B)
+-- -- j = i1 ⊢ push (inl x) i
+-- -- -}
+-- -- snd (pushWedge {A = A} {B = B}) (push (inr x) i) j =
+-- --   hcomp (λ k → λ {(i = i0) → compPath-filler (push (inl (pt A))) (λ i₁ → push (inr x) (~ i₁)) k j
+-- --                  ; (i = i1) → push (inl (A .snd)) j
+-- --                  ; (j = i0) → inl (pt B)
+-- --                  ; (j = i1) → push (inr x) (i ∨ ~ k)})
+-- --         (push (inl (A .snd)) j)
+-- -- snd (pushWedge {A = A} {B = B}) (push (push a k) i) j =
+-- --   {!i = i0 ⊢ (push (inl (pt A)) ∙ (λ i₁ → push (inr x) (~ i₁))) j
+-- -- i = i1 ⊢ push (inl (A .snd)) j
+-- -- j = i0 ⊢ inl (pt B)
+-- -- j = i1 ⊢ push (inr x) i!}
+
+-- -- univ : (A B C : Type) (n : ℕ) (f : A → B) (h : isOfHLevel (suc n) B) (d d' : B → C)
+-- --    → ((x : hLevelTrunc (suc n) A) → (d ∘ Trunc.rec h f) x ≡ (d' ∘ Trunc.rec h f) x)
+-- --    → d ∘ f ≡ d' ∘ f
+-- -- univ A B C n f h d d' ind = funExt λ x → ind ∣ x ∣
+
+
+-- -- univ2 : (A B C : Type) (n : ℕ) (f : A → B) (h : isOfHLevel (suc n) B) (d d' : B → C)
+-- --    → d ∘ f ≡ d' ∘ f
+-- --    → ((x : hLevelTrunc (suc n) A) → (d ∘ Trunc.rec h f) x ≡ (d' ∘ Trunc.rec h f) x)
+-- -- univ2 A B C n f h d d' ind x = {!!}

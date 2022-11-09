@@ -715,3 +715,86 @@ SuspS¹→S²-S¹×S¹→S² (loop i) (loop j) k =
                        (compPath-filler (merid (loop i)) (sym (merid base)) r j)
                  ; (k = i1) → surf j i})
            (surf j i))
+
+{-
+S→ : S² → Type
+S→ base = S²
+S→ (surf i j) =
+  Glue (isoToPath invEquivS i)
+    λ {(i = i0) → S² , idEquiv S²
+     ; (i = i1) → S² , isoToEquiv (invEq')
+     ; (j = i0) → S² , PP1 i
+     ; (j = i1) → S² , PP1 i}
+  where
+  invER* : S² → S²
+  invER* base = base
+  invER* (surf i i₁) = surf (~ i) i₁
+
+  invER : S² → S²
+  invER base = base
+  invER (surf i i₁) = surf i₁ i
+
+  invEq' : Iso S² S²
+  fun invEq' = invER*
+  inv invEq' = invER*
+  rightInv invEq' base = refl
+  rightInv invEq' (surf i i₁) = refl
+  leftInv invEq' base = refl
+  leftInv invEq' (surf i i₁) = refl
+
+  invEquivS : Iso S² S²
+  fun invEquivS = invER
+  inv invEquivS = invER
+  rightInv invEquivS base = refl
+  rightInv invEquivS (surf i i₁) = refl -- refl
+  leftInv invEquivS base = refl
+  leftInv invEquivS (surf i i₁) = refl -- refl
+
+  pp1 : PathP (λ z → S² → isoToPath invEquivS z) (idfun S²) invER*
+      
+  pp1 = toPathP (funExt λ { base → refl ; (surf i i₁) k → sym≡flipSquare surf (~ k) i i₁ })
+
+  
+
+  PP1 : PathP (λ i →  S² ≃ isoToPath invEquivS i) (idEquiv S²) (isoToEquiv invEq')
+  PP1 = ΣPathP (pp1 , isProp→PathP (λ _ → isPropIsEquiv _) _ _)
+
+  h : (x : S²) → x ≡ x
+  h base = refl
+  h (surf i j) = {!!}
+    where
+    help : Path (Path (Path S² base base) refl refl) surf surf
+    help = {!!}
+
+  br : idEquiv S² ≡ idEquiv S²
+  br = Σ≡Prop isPropIsEquiv (funExt h)
+
+enc : (x : S²) → base ≡ x → S→ x
+enc = J> base
+
+enc' : Path S² base base → S²
+enc' = enc base
+
+S²→ℤ : S² → Type
+S²→ℤ base = S¹
+S²→ℤ (surf i j) = Glue S¹ λ {(i = i0) → S¹ , idEquiv S¹ ; (i = i1) → S¹ , idEquiv S¹
+  ; (j = i0) → S¹ , idEquiv S¹
+  ; (j = i1) → S¹ , asd i}
+  where
+  asd : idEquiv S¹ ≡ idEquiv S¹
+  asd = Σ≡Prop (λ _ → isPropIsEquiv _) (funExt (λ { base → loop ; (loop i) → λ j → loop i * loop j}))
+
+enc'' : (x : S²) → base ≡ x → S²→ℤ x
+enc'' = J> base
+
+open import Cubical.Data.Int
+S²→ℤR : (p : Path (Path S² base base) refl refl) → ℤ
+S²→ℤR p = encode base (cong (enc'' base) p)
+
+P3 : Path (Path (Path S² base base) refl refl) refl refl → ℤ
+P3 p = S²→ℤR (cong (cong enc') p)
+
+open import Cubical.Homotopy.Loopspace
+haha : Path (Path (Path S² base base) refl refl) refl refl
+haha = sym (rCancel refl) ∙∙ EH 0 refl refl ∙∙ lCancel refl
+-}

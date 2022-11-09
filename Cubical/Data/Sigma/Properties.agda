@@ -476,3 +476,100 @@ inv singlΣIso b = (_ , refl) , b
 rightInv singlΣIso b = transportRefl b
 leftInv (singlΣIso {x = x} {B = B}) =
   uncurry (uncurry (J> λ y → ΣPathP (refl , (transportRefl y))))
+
+
+module _ (A B : Type) where
+  t : (*a : A) (b* : B) → A × B → A × B
+  t *a *b (a , b) = a , *b
+
+  map→ : (*a : A) (*b : B) → Σ[ x ∈ A × B ] t *a *b x ≡ (*a , *b)  → B × (*b ≡ *b)
+  map→ *a *b x = snd (fst x) , cong snd (snd x)
+
+  map♭ : (*a : A) (*b : B) → B × (*b ≡ *b) → Σ[ x ∈ A × B ] t *a *b x ≡ (*a , *b) 
+  map♭ *a *b (b , p) = (*a , b) , ΣPathP (refl , p)
+
+  fib : (*a : A) (*b : B) → Iso (Σ[ x ∈ A × B ] t *a *b x ≡ (*a , *b)) (B × (*b ≡ *b))
+  fun (fib *a *b) = map→ *a *b
+  inv (fib *a *b) = map♭ *a *b
+  rightInv (fib *a *b) y = refl
+  leftInv (fib *a *b) ((a , b) , q) = h a b *a (cong fst q) (cong snd q)
+    where
+    h : (a : A) (b : B) (*a : A) (p : a ≡ *a) (q : *b ≡ *b)
+      → map♭ *a *b (map→ *a *b ((a , b) , ΣPathP (p , q))) ≡ ((a , b) , ΣPathP (p , q))
+    h a b = J> λ q → ΣPathP (refl , cong ΣPathP (ΣPathP (refl , refl)))
+
+  ΩB : (*b : B) → Type
+  ΩB *b = (*b ≡ *b)
+
+P : (ℓ : Level) → Type (ℓ-suc ℓ)
+P ℓ = Σ[ A ∈ Type ℓ ] A
+open import Cubical.Data.Nat.Base 
+-- 
+data lim (A : ℕ → Type) (F : (n : ℕ) → A (suc n) → A n) : Type where 
+  inc : (n : ℕ) (a : A n) → lim A F
+  coh : (n : ℕ) (a : A (suc n)) → inc (suc n) a ≡ inc n (F n a)
+
+record lim' (A : ℕ → Type) (F : (n : ℕ) → A (suc n) → A n) : Type where
+  constructor _s_
+  field
+    inc' : (n : ℕ) (a : A n) → lim A F
+    coh' : (n : ℕ) (a : A (suc n)) → inc' (suc n) a ≡ inc' n (F n a)
+
+data f4 : Type where
+  br : f4
+  tr : f4
+  bl : f4
+
+data clim (A : f4 × ℕ → Type)
+  (tr→br : (n : ℕ) → A (tr , n) → A (br , n))
+  (bl→br : (n : ℕ) → A (bl , n) → A (br , n))
+  (br→tr : (n : ℕ) → A (br , suc n) → A (tr , n))
+  (br→bl : (n : ℕ) → A (br , suc n) → A (bl , n)) : Type where
+  inc : (f : f4) (n : ℕ) → A (f , n) → clim A tr→br bl→br br→tr br→bl
+  br→bl* : (n : ℕ) (a : A (br , suc n)) → inc bl n (br→bl n a) ≡ inc br (suc n) a
+  br→tr* : (n : ℕ) (a : A (br , suc n)) → inc tr n (br→tr n a) ≡ inc br (suc n) a
+  tr→br* : (n : ℕ) (a : A (tr , n)) → inc br n (tr→br n a) ≡ inc tr n a
+  bl→br* : (n : ℕ) (a : A (bl , n)) → inc br n (bl→br n a) ≡ inc bl n a
+
+open import Cubical.Foundations.Pointed.Base
+module _ (A : ℕ → P ℓ-zero) (C B : P ℓ-zero) where
+  pb : {A B C : Type} → (A → C) → (B → C) → Type
+  pb {A = A} {B = B} {C = C} f g = Σ[ a ∈ A ] Σ[ b ∈ B ] f a ≡ g b
+
+  A** : ℕ → f4 → P ℓ-zero
+  tr→br : (n : ℕ) → A** n tr →∙ A** n br
+  bl→br : (n : ℕ) → A** n bl →∙ A** n br
+  br→tr : (n : ℕ) → A** (suc n) br →∙ A** n tr
+  br→bl : (n : ℕ) → A** (suc n) br →∙ A** n bl
+  A** zero br = fst C × fst B , snd C , snd B
+  A** zero tr = fst C × fst B , snd C , snd B
+  A** zero bl = Unit , tt
+  A** (suc x) br = pb (tr→br x .fst) (bl→br x .fst) , A** x tr .snd , (A** x bl .snd) , (tr→br x .snd ∙ sym (bl→br x .snd))
+  A** (suc x) tr = pb (tr→br x .fst) (bl→br x .fst) , A** x tr .snd , (A** x bl .snd) , (tr→br x .snd ∙ sym (bl→br x .snd))
+  A** (suc x) bl = Unit , tt
+  tr→br zero = (λ x → fst x , pt B) , refl
+  tr→br (suc zero) = (λ x → fst x , (pt (A** 0 bl)) , x .snd .snd) , refl
+  tr→br (suc (suc n)) = (λ x → fst x , (pt (A** (suc n) bl)) , x .snd .snd) , refl
+  bl→br n = (λ _ → A** n br .snd) , refl
+  br→tr n = fst , refl
+  br→bl n = (λ _ → A** n bl .snd) , refl
+
+  clim' : (clim (λ x → A** (snd x) (fst x) .fst) (λ n → tr→br n .fst) (λ n → bl→br n .fst) (λ n → br→tr n .fst) λ n → br→bl n .fst) → typ B
+  clim' = {!!}
+
+  A* : f4 × ℕ → Type
+  A* (br , p) = {!!}
+  A* (tr , zero) = fst C × fst B
+  A* (tr , suc p) = {!!}
+  A* (bl , p) = Unit
+  FAM : f4 × ℕ → Type
+  FAM (x , y) = {!!}
+
+  -- F : (n : ℕ) → A (suc n) .fst × B → A n .fst × B
+  -- F n (a , b) = A n .snd , b
+
+  -- h : Iso (lim' (λ x → fst (A x) × B) F) B
+  -- fun h (inc' s coh') = {!inc' !}
+  -- inv h = {!!}
+  -- rightInv h = {!!}
+  -- leftInv h = {!!}

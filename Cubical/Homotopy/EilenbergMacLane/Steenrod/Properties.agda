@@ -350,3 +350,48 @@ snd (⌣∘Sq∙∙ n m i) = help
     help = →∙Homogeneous≡ (isHomogeneousEM _)
              (funExt λ y → cong (Sqₖ i) (0ₖ-⌣ₖ n m y)
                           ∙ Sqₖ∙ i .snd)
+
+Ω→∙∙ : ∀ {ℓ ℓ' ℓ''} {A : Pointed ℓ} {B : Pointed ℓ'} {C : Pointed ℓ''}
+  → (A →∙ (B →∙ C ∙))
+  → Ω A →∙ (B →∙ Ω C ∙)
+fst (fst (Ω→∙∙ f) p) b i = Ω→ f .fst p i .fst b
+snd (fst (Ω→∙∙ f) p) j i = Ω→ f .fst p i .snd j
+fst (snd (Ω→∙∙ f) k) b i = Ω→ f .snd k i .fst b 
+snd (snd (Ω→∙∙ f) k) j i = Ω→ f .snd k i .snd j
+
+
+ℕP2 : (n m i : ℕ) → _ ≡ _
+ℕP2 n m i = (cong (i +'_) (sym (+'-suc n m))
+                                 ∙ sym (+'-suc' i (n +' m)))
+
+delFst : (n m i : ℕ)
+  → Kℤ/2∙ (suc n) →∙ (Kℤ/2∙ m →∙ Kℤ/2∙ (i +' (suc n +' m)) ∙)
+  → Kℤ/2∙ n →∙ (Kℤ/2∙ m →∙ Kℤ/2∙ (i +' (n +' m)) ∙)
+delFst n m i f = post∘∙ _ (ΩEM+1→EM∙ (i +' (n +' m))
+                       ∘∙ substΩEM (ℕP2 n m i))
+                       ∘∙ (Ω→∙∙ f ∘∙ EM→ΩEM+1∙ n)
+
+cuper : (n m i : ℕ) → Kℤ/2∙ n →∙ (Kℤ/2∙ m →∙ Kℤ/2∙ (i +' (n +' m)) ∙)
+fst (fst (cuper n m i) x) y = Sqₖ i (x ⌣ₖ y)
+snd (fst (cuper n m i) x) = cong (Sqₖ i) (⌣ₖ-0ₖ n m x) ∙ Sqₖ∙ i .snd
+snd (cuper n m i) =
+  →∙Homogeneous≡ (isHomogeneousEM _) (funExt λ y → cong (Sqₖ i) (0ₖ-⌣ₖ n m y) ∙ Sqₖ∙ i .snd)
+
+cool : (n m i : ℕ) → (suc n) +' m < i
+  → delFst n m i (cuper (suc n) m i) ≡ cuper n m i 
+cool n m i p =
+  →∙Homogeneous≡ (isHomogeneous→∙ (isHomogeneousEM _))
+    (funExt λ x → →∙Homogeneous≡ (isHomogeneousEM _)
+      (funExt λ y → cong (ΩEM+1→EM (i +' (n +' m)))
+                      (cong (substΩEM (ℕP2 n m i) .fst)
+                        (lem x y))
+                    ∙ cong (ΩEM+1→EM (i +' (n +' m)))
+                           (substSubst⁻ (λ n → Ω (EM∙ ℤ/2 n) .fst)
+                             (ℕP2 n m i) (EM→ΩEM+1 (i +' (n +' m)) (Sqₖ i (x ⌣ₖ y)))) -- (transportTransport⁻ _ _)
+                    ∙ {!so!}))
+  where
+  lem : (x : _) (y : _) → fst (fst (Ω→∙∙ (cuper (suc n) m i) ∘∙ EM→ΩEM+1∙ n) x) y
+                        ≡ substΩEM (sym (ℕP2 n m i)) .fst
+                                   (EM→ΩEM+1 _ (Sqₖ i (x ⌣ₖ y)))
+  lem x y = {!ΩSqₖ n i!}
+          ∙ {!!}

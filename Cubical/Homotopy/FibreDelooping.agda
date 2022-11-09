@@ -76,7 +76,6 @@ module _ {ℓ ℓ' : Level} {A : Type ℓ} {B : Type ℓ'} where
     alt-fibΩ : (g : Ω (A , a) →∙ Ω (B , b)) → Type _
     alt-fibΩ g = (x : A) → Σ[ y ∈ B ] pre-alt-fibΩ x y g
 
-
     -- to show the equivalence, we start by showing that the following
     -- two types are equivalent
     ∘pre-alt-fibΩ : (g : Ω (A , a) →∙ Ω (B , b)) (f : A → B) → Type _
@@ -347,3 +346,29 @@ module _ {ℓ ℓ' : Level} {A : Type ℓ} {B : Type ℓ'} where
              (subst (λ m → isConnected m (fiber (λ (x : Unit) → a) p))
                     (+-comm 1 n)
                     (isConnectedPoint (suc n) conA a p))
+
+      -- asd : (f g : A → B) (p : f ≡ g)
+      --    → (p : f a ≡ b) (q : g a ≡ b)
+      --    → {!Path (f !}
+      --    → {!!}
+      -- asd = {!!}
+
+      -- fibasd : (h : Ω (A , a) →∙ Ω (B , b))
+      --   → (s : ∀ {ℓ}  → (B : (A → Type ℓ)) → (B a) → ((x : _) → B x))
+      --   → (b₁ b₂ : B)
+      --   → (k : b₁ ≡ b₂)
+      --   → (h₁ : a ≡ a → b₁ ≡ b)
+      --   → (h₂ : a ≡ a → b₂ ≡ b)
+      --   → PathP (λ i → (p : a ≡ a) → k i ≡ b) h₁ h₂
+      --   → (r₁ : (e : a ≡ a) → toΩ→ h₁ e ≡ h)
+      --   → (r₂ : (e : a ≡ a) → toΩ→ h₂ e ≡ h)
+      --   -- → (r : f a .fst ≡ g a .fst)
+      --   -- → ((p : a ≡ a) → PathP (λ i → r i ≡ b) (f a .snd .fst p) (g a .snd .fst p))
+      --   → Path (alt-fibΩ h) (s _ (b₁ , h₁ , r₁)) (s _ (b₂ , h₂ , r₂)) -- f ≡ g
+      -- fibasd h s b₁ =
+      --      J> λ h₁
+      --   → J> λ r₁ r₂ → cong (s _) (ΣPathP ({!!} , {!!}))
+      
+      --   -- funExt
+      --   --   (ind _
+      --   --    {!J (λ b₂ r → ((p : a ≡ a) → PathP (λ i → r i ≡ b) (f a .snd .fst p) ?) → ?) ? p !})
