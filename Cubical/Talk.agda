@@ -7,18 +7,26 @@ open import Cubical.Data.Nat using (ℕ ; suc ; zero ; isSetℕ)
 
 {-
 - (Cubical) Agda: Functional programming language + proof assistant.
-- Programs in Agda are, in general, 
-- S
+- Let us define our first type: the booleans
 -}
 
-data Bool : Type where
+data Bool : Type where -- data type with two constructors
   true : Bool
   false : Bool
 
+-- We can now write our first program/function
+
+not : Bool → Bool -- → is given by \to
+not true = false
+not false = true
+
+-- Let's prove something about our function
+not-invol : (x : Bool) → not (not x) ≡ x -- _≡_ is the type of equalities
+not-invol true = refl -- the goal is on the form a = a. We have a primitive proof of this denoted refl.
+not-invol false = refl
+
 {-
-data ℕ : Type where
-  zero : ℕ
-  suc  : ℕ → ℕ
+Let's construct two related types: ⊤ ('true'), ⊥ ('false')
 -}
 
 data ⊤ : Type where
@@ -26,6 +34,46 @@ data ⊤ : Type where
 
 data ⊥ : Type where
 
+¬ : Type → Type -- ⊥ allows us to define the 'negation' of a type
+¬ A = A → ⊥
+
+BoolToType : Bool → Type
+BoolToType true = ⊤
+BoolToType false = ⊥
+
+{- This is a dependent type/family of types over Bool. I.e. for every
+boolean x, we have a type (BoolToType x) which differs depending on
+what the value of x is.
+
+In general, a dependent type (indexed by another type A) is a function
+B : A → Type, assigning a type to every point in A.
+
+Here's a pretty trivial fact:
+If you have a dependent type B : A → Type and two equal points x, y : A,
+then you get a function B x → B y. Why?
+
+A function B x → B y is just a function B x → B x by substituting y
+for x (since they're equal!). We always have a function from a type to
+itself, namely the identity -}
+
+substitute : {A : Type} {B : A → Type} (x y : A) → x ≡ y → B x → B y
+substitute x = J> λ x → x -- don't worry about this
+
+-- Let's prove that true ≠ false
+-- Idea: We have an element of (BoolToType true), namely tt : ⊤.
+-- If true = false, substitution tells us that we also get an element of (BoolToType false)
+-- which we defined to be ⊥.
+true≠false : ¬ (true ≡ false)
+true≠false p = substitute {B = BoolToType} true false p tt -- given a proof p : true ≡ false, produce an element in ⊥
+
+
+{-
+data ℕ : Type where
+  zero : ℕ
+  suc  : ℕ → ℕ
+-}
+
+-- Delete?
 data _⊔_ (A B : Type) : Type where
   inl : A → A ⊔ B
   inr : B → A ⊔ B
@@ -254,9 +302,6 @@ insertionSortCheck (a ∷ x) = {!!} -- help a x
   ... | inr x = {!refl!} , (help (maxℕ a b) xs (snd t))
 
 
-
-¬ : Type → Type
-¬ A = A → ⊥
 
 data F₃ : Type where
   one : F₃
