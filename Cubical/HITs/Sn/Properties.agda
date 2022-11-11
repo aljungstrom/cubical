@@ -715,3 +715,407 @@ SuspS¹→S²-S¹×S¹→S² (loop i) (loop j) k =
                        (compPath-filler (merid (loop i)) (sym (merid base)) r j)
                  ; (k = i1) → surf j i})
            (surf j i))
+
+
+
+open import Cubical.Foundations.Prelude
+thing : Path (Path (Path S² base base) refl refl) surf surf
+thing k i j =
+  hcomp (λ r → λ { (i = i0) → surf k r
+                  ; (i = i1) → surf k r
+                  ; (j = i0) → surf k r
+                  ; (j = i1) → surf k r
+                  ; (k = i0) → surf i j
+                  ; (k = i1) → surf i j})
+        (surf i j)
+
+thing' : Path (Path (Path S² base base) refl refl) refl refl
+thing' i j k =
+  hcomp (λ r → λ { (i = i0) → surf r j
+                  ; (i = i1) → surf r j
+                  ; (j = i0) → base
+                  ; (j = i1) → base
+                  ; (k = i0) → surf r j
+                  ; (k = i1) → surf r j})
+        base
+
+open import Cubical.HITs.S1
+open import Cubical.HITs.Susp
+F : Path (Path (Path (Susp S¹) north north) refl refl) refl refl
+F k i j =
+  hcomp (λ r → λ { (i = i0) → {!!}
+                  ; (i = i1) → {!!}
+                  ; (j = i0) → {!!}
+                  ; (j = i1) → {!!}
+                  ; (k = i0) → {!!}
+                  ; (k = i1) → {!!}})
+        (merid (loop i * loop j) k)
+
+
+open import Cubical.Foundations.HLevels
+bzt : (x : Susp S¹) → x ≡ x
+bzt north = refl
+bzt south = refl
+bzt (merid a i) j = merid (rotLoop a j) i
+
+asd : (x : S¹) → Susp S¹ → Susp S¹
+asd base f = f
+asd (loop i) f = bzt f i
+
+asdInv : (x : S¹) → Susp S¹ → Susp S¹
+asdInv base f = f
+asdInv (loop i) f = bzt f (~ i)
+
+asd' : (x : S¹) (y : Susp S¹) → asd x (asdInv x y) ≡ y
+asd' base y = refl
+asd' (loop i) north = refl
+asd' (loop i) south = refl
+asd' (loop i) (merid a j) r = merid (rotLoopInv a i r) j
+
+asd'' : (x : S¹) (y : Susp S¹) → asdInv x (asd x y) ≡ y
+asd'' base y = refl
+asd'' (loop i) north = refl
+asd'' (loop i) south = refl
+asd'' (loop i) (merid a j) r = merid (rotLoopInv a (~ i) r) j
+
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Univalence
+open import Cubical.Data.Sigma
+open import Cubical.Foundations.Isomorphism
+
+isE : (x : S¹) → Iso (Susp S¹) (Susp S¹)
+fun (isE x) = asd x
+inv (isE x) = asdInv x
+rightInv (isE x) = asd' x
+leftInv (isE x) = asd'' x
+
+bzt* : S¹ → Susp S¹ ≡ Susp S¹
+bzt* x = isoToPath (isE x)
+
+gaba : Susp S¹ → Type
+gaba north = Susp S¹
+gaba south = Susp S¹
+gaba (merid a i) = bzt* a i
+
+enc' : (x : Susp S¹) → north ≡ x → gaba x
+enc' = J> north
+
+Om→ : Path (Path (Path (Susp S¹) north north) refl refl) refl refl
+    → Path (Path (Susp S¹) north north) refl refl
+Om→ p i j = enc' north (p i j)
+
+S1** : S¹ → Iso S¹ S¹
+Iso.fun (S1** x) = x *_
+Iso.inv (S1** x) = invLooper x *_
+Iso.rightInv (S1** x) y =
+     assocS¹ x (invLooper x) y
+   ∙ cong (_* y) (sym (rCancelS¹ x))
+Iso.leftInv (S1** x) y =
+     assocS¹ (invLooper x) x y
+  ∙∙ cong (_* y) (commS¹ (invLooper x) x)
+  ∙∙ cong (_* y) (sym (rCancelS¹ x))
+
+gaba2 : Susp S¹ → Type
+gaba2 north = S¹
+gaba2 south = S¹
+gaba2 (merid a i) = isoToPath (S1** a) i
+
+enc'' : (x : Susp S¹) → north ≡ x → gaba2 x
+enc'' = J> base
+
+open import Cubical.Data.Int hiding (_·_)
+f2 : Path (Path (Path (Susp S¹) north north) refl refl) refl refl → ℤ
+f2 p = winding λ i → enc'' north (Om→ p i)
+
+PP : Path (Path (Path (Susp S¹) north north) refl refl) refl refl
+PP s i j =
+  hcomp (λ r → λ { (i = i0) → merid (loop (~ j)) (~ r)
+                  ; (i = i1) → merid (loop (~ j)) (~ r)
+                  ; (j = i0) → merid (loop i) (~ r)
+                  ; (j = i1) → merid (loop i) (~ r)
+                  ; (s = i0) → merid (loop (~ j) * loop i) (~ r)
+                  ; (s = i1) → merid (loop (~ j) * loop i) (~ r)})
+        south
+{-
+PP* : Path (Path (Path (Susp S¹) north nor) refl refl) refl refl
+PP* s i j =
+  hcomp (λ r → λ { (i = i0) → k (loop j) r
+                  ; (i = i1) → k base r
+                  ; (j = i0) → k (loop i) r
+                  ; (j = i1) → k base r
+                  ; (s = i0) → k (loop (j ∨ i)) r
+                  ; (s = i1) → k (loop (j ∨ i)) r})
+        nor
+-}
+
+data JS¹ : Type where
+  b : JS¹
+  h : (x : JS¹) → x ≡ x
+
+data L (A : Type) : Type where
+  nor : L A
+  mer : A → nor ≡ nor
+
+ka : S¹ → JS¹ → JS¹
+ka base y = y
+ka (loop i) y = h y i
+
+kainv : S¹ → JS¹ → JS¹
+kainv base y = y
+kainv (loop i) y = h y (~ i)
+
+IS : S¹ → Iso JS¹ JS¹
+fun (IS x) = ka x
+inv (IS x) = kainv x
+rightInv (IS base) y = refl
+rightInv (IS (loop i)) y j = homotopySymInv h y j i
+leftInv (IS base) y = refl
+leftInv (IS (loop i)) y j = homotopySymInv h y j (~ i)
+
+S²→ : L S¹ → Type
+S²→ nor = JS¹
+S²→ (mer x i) = isoToPath (IS x) i
+
+toL : (x : L S¹) → nor ≡ x → S²→ x
+toL = J> b
+
+wek : Path (Path (Path (L S¹) nor nor) refl refl) refl refl → Path (Path JS¹ b b) refl refl
+wek p i j = toL nor (p i j)
+
+JS¹-el* : ∀ {ℓ} {A : Type ℓ} (a : A)
+  → ((a : A) → JS¹ → a ≡ a) → JS¹ → A
+JS¹-el* a f b = a
+JS¹-el* a f (h x i) = f (JS¹-el* a f x) x i
+
+JS¹-el** : ∀ {ℓ} {A : JS¹ → Type ℓ} (a : A b)
+  → ((x : JS¹) (a : A x) → PathP (λ i → A (h x i)) a a) → (x : JS¹) → A x
+JS¹-el** a F b = a
+JS¹-el** a F (h x i) = F x (JS¹-el** a F x) i
+
+JS→Prop : ∀ {ℓ} {A : JS¹ → Type ℓ} → ((x : JS¹) → isProp (A x))
+  → A b → (x : JS¹) → A x
+JS→Prop p t = JS¹-el** t λ x a → isProp→PathP (λ _ → p _) a a
+
+J2Act : JS¹ → S¹ → S¹
+J2Act = JS¹-el* (idfun _)
+  λ f → JS¹-el*
+    (funExt (λ { base → cong f loop
+               ; (loop i) j → f (loop i * loop j)}))
+    λ _ _ → refl
+
+
+fka : (x : JS¹) → isEquiv (J2Act x)
+fka = JS→Prop (λ _ → isPropIsEquiv _) (idEquiv S¹ .snd)
+
+open import Cubical.HITs.Truncation as TR
+_++_ : S² → hLevelTrunc 4 S² → hLevelTrunc 4 S²
+base ++ y = y
+surf i j ++ y = hs y i j
+  where
+  hs : (y : hLevelTrunc 4 S²) → Square {A = hLevelTrunc 4 S²} (λ _ → y) (λ _ → y)
+                                                 (λ _ → y) (λ _ → y)
+  hs = TR.elim (λ _ → isOfHLevelPath 4 (isOfHLevelPath 4 (isOfHLevelTrunc 4) _ _) _ _) (S²ToSetElim (λ _ → isOfHLevelTrunc 4 _ _ _ _)
+        λ i j → ∣ surf i j ∣)
+
+_++'_ : hLevelTrunc 4 S² → hLevelTrunc 4 S² → hLevelTrunc 4 S²
+_++'_ = TR.rec (isOfHLevelΠ 4 (λ _ → isOfHLevelTrunc 4)) _++_
+
+JJ : (x : hLevelTrunc 4 S²) → Path (hLevelTrunc 4 S²) ∣ base ∣ ∣ base ∣
+  → Path (hLevelTrunc 4 S²) x x
+JJ x p = cong (_++' x) p
+{-
+i = i0 ⊢ q k
+i = i1 ⊢ q k
+j = i0 ⊢ q k
+j = i1 ⊢ q k
+k = i0 ⊢ ∣ surf i j ∣
+k = i1 ⊢ ∣ surf i j ∣
+-}
+
+JS¹2 : JS¹ → hLevelTrunc 4 S²
+JS¹2 = JS¹-el* ∣ base ∣ λ a → JS¹-el* refl λ q _ → main a q
+  where
+  main : (a : hLevelTrunc 4 S²) (q : a ≡ a) → q ≡ q
+  main  = TR.elim (λ _ → isOfHLevelΠ 4 λ _ → isOfHLevelPath 4 (isOfHLevelPath 4 (isOfHLevelTrunc 4) _ _) _ _) (S²ToSetElim (λ _ → isSetΠ λ _ → isOfHLevelTrunc 4 _ _ _ _)
+             λ q i j → 
+               hcomp (λ r → λ {(i = i0) → q (j ∧ r)
+                   ; (i = i1) → q (j ∧ r)
+                   ; (j = i0) → ∣ base ∣
+                   ; (j = i1) → q r})
+                    (∣ surf i j ∣))
+
+open import Cubical.HITs.S1
+S²-fib : S² → Type
+S²-fib base = S¹
+S²-fib (surf i j) =
+  Glue S¹ λ { (i = i0) → S¹ , idEquiv S¹
+            ; (i = i1) → S¹ , SS j
+            ; (j = i0) → S¹ , idEquiv S¹
+            ; (j = i1) → S¹ , idEquiv S¹}
+  where
+  SS : idEquiv S¹ ≡ idEquiv S¹
+  SS = Σ≡Prop isPropIsEquiv λ { i base → loop i ; i (loop j) → loop i * loop j}
+
+enc* : (x : S²) → base ≡ x → S²-fib x
+enc* = J> base
+
+del2 : Path (Path (hLevelTrunc 4 S²) ∣ base ∣ ∣ base ∣) refl refl → Path S¹ base base
+del2 p i = TR.rec (isGroupoidS¹) (enc* base) (Iso.fun (PathIdTruncIso 3) (p i))
+
+
+mega : Path (Path (Path (L S¹) nor nor) refl refl) refl refl → ℤ
+mega p = winding (del2 λ i j → JS¹2 (wek p i j))
+
+module _ (A B : Type) (a* : A) (b* : B) where
+  open import Cubical.HITs.Pushout
+  A×B : Type
+  A×B = A × B
+
+  Ω : (A : Type) → (a : A) → Type
+  Ω A a = a ≡ a
+
+  ΩB : Type
+  ΩB = b* ≡ b*
+{-
+  PB : (n : ℕ) → Type
+  PB→ : (n : ℕ) → PB n → PB n
+  PB zero = Σ[ x ∈ A × B ] x ≡ (fst x , b*)
+  PB (suc n) = Σ[ x ∈ PB n ] x ≡ PB→ n x
+  PB→ zero ((x , y) , p) = (x , b*) , λ i → fst (p i) , b* -- (x , b*) , refl 
+  PB→ (suc n) (x , q) = PB→ n x , cong (PB→ n) q
+-}
+
+  data Silly : A × B → Type where
+    is : (x : A × B) (p : x ≡ (fst x , b*)) → Silly x
+    ki' : (x : A × B) (p q : x ≡ (fst x , b*)) → is x p ≡ is x q
+
+  kl : (x : A × B) → Silly x → A 
+  kl x (is .x p) = fst x
+  kl x (ki' .x p q i) = (cong fst p ∙ cong fst q) i
+
+  kl' : A → Σ[ x ∈  A × B ] Silly x
+  kl' a = (a , b*) , (is (a , b*) refl)
+
+  
+
+--   kl' : A → Σ[ x ∈  A × B ] Silly x
+--   kl' a = (a , b*) , (ki (a , b*))
+
+--   sa : (p : Σ[ x ∈  A × B ] Silly x) → kl' (uncurry kl p) ≡ p
+--   sa = uncurry λ { x (is .x) → ΣPathP ((ΣPathP (refl , {!!})) , {!!}) ; .(fst x , b*) (ki x) → {!!} ; .(p i) (bo x p i) → {!!} } -- (is .x) → ΣPathP (ΣPathP (refl , {!!}) , {!!}) ; .(fst x , b*) (ki x) → {!!}}
+    
+
+-- --   data LOL : Type where
+-- --     hah : A × B → LOL
+-- --     sn = (a : A) (b : B) → (a ≡ a)
+
+
+-- --   pack : ΩB → ΩB
+-- --   pack x = x ∙ x
+
+-- --   PO : (n : ℕ) → Type
+-- --   PO↓ : (n : ℕ) → PO n → PO (suc n)
+-- --   PO zero = A × B
+-- --   PO (suc zero) = Pushout {A = A × B} (λ x → a* , snd x) λ _ → tt
+-- --   PO (suc (suc n)) = Pushout {A = PO n} (PO↓ n) λ _ → tt
+-- --   PO↓ zero x = inl (a* , snd x)
+-- --   PO↓ (suc zero) (inl x) = inl (inl (a* , snd x))
+-- --   PO↓ (suc zero) (inr x) = inl (inr tt)
+-- --   PO↓ (suc zero) (push a i) = inl (push (a* , snd a) i)
+-- --   PO↓ (suc (suc n)) (inl x) = inl (PO↓ (suc n) x)
+-- --   PO↓ (suc (suc n)) (inr x) = inl (inr tt)
+-- --   PO↓ (suc (suc n)) (push a i) = {!PO↓ (suc (suc n)) ?!} -- ({!!} ∙ (λ i → inl (push a i))) i -- inl (({!refl!} ∙ push a) i)
+
+
+-- --   PB : (n : ℕ) → Type
+-- --   PB→ : (n : ℕ) → PB n → PB n
+-- --   PB zero = A × B
+-- --   PB (suc n) = Σ[ x ∈ PB n ] PB→ n x ≡ x
+-- --   PB→ zero = λ x → fst x , b*
+-- --   PB→ (suc n) x = (fst x) , (snd x)
+
+-- --   data colim (A : ℕ → Type) (F : (n : ℕ) → A (suc n) → A n) : Type where
+-- --     inc : (n : ℕ) (a : A n) → colim A F
+-- --     coh : (n : ℕ) (a : A (suc n)) → inc (suc n) a ≡ inc n (F n a)
+
+-- --   PB→B' : (n : ℕ) → PB n → A
+-- --   PB→B' zero x = fst x
+-- --   PB→B' (suc n) x = PB→B' n (fst x)
+
+-- --   PB→B : (colim PB λ n → fst) → A
+-- --   PB→B (inc n a) = PB→B' n a
+-- --   PB→B (coh n a i) = PB→B' n (fst a)
+
+-- --   lee : (a : colim PB λ n → fst) → inc 0 (PB→B a , b*) ≡ a
+-- --   lee (inc zero a) = sym (coh 0 ((fst a , b*) , refl)) ∙ {!!} ∙ coh 0 (a , {!refl!})
+-- --   lee (inc (suc n) a) = {!!}
+-- --   lee (coh n a i) = {!!}
+  
+-- -- --   lee (inc zero a) = hs (fst (fst a)) (cong fst (snd a)) (snd (fst a)) (sym (cong snd (snd a)))
+-- -- --     where
+-- -- --     hs : (a : A) (p : a ≡ a) (b : B) (q : b* ≡ b)
+-- -- --       → inc {A = PB} {F = λ _ → fst} 0 ((a , b*) , refl) ≡ inc zero ((a , b) , (cong₂ _,_ p (sym q)))
+-- -- --     hs a p = J> sym (coh 0 (((a , b*) , refl) , refl)) -- ΣPathP ((λ i → p i , b*) , λ j i → p j , b*)))
+-- -- --            ∙ cong (inc 1) {!!} -- (ΣPathP ((ΣPathP ((λ i → p i , b*) , {!!})) , {!!}))
+-- -- --            ∙ coh 0 (((a , b*) , cong (_, b*) p) , (ΣPathP (refl , refl))) -- uncurry (uncurry λ a b → {!!})
+-- -- --   lee (inc (suc n) a) = {!!}
+-- -- --   lee (coh n a i) = {!!}
+
+-- -- --   M : A × B → A × B
+-- -- --   M (a , p) = a* , p
+
+  
+-- -- --   data HAHA : Type where
+-- -- --     inc : A × B → HAHA
+-- -- --     inc' : (p : A × B) → inc p ≡ inc (M p)
+-- -- --     inc-kill : (p : A × B) (q : fst p ≡ fst p) (r : snd p ≡ b*) → Square (inc' p) (λ i → inc (q i , b*)) (λ i → inc (fst p , r i))  {!!} -- (λ i → inc (q i , snd p)) ≡ refl {x = inc p}
+
+-- -- -- --   HAHA→ : HAHA → B
+-- -- -- --   HAHA→ (inc x) = snd x
+-- -- -- --   HAHA→ (inc' p i) = snd p
+-- -- -- --   HAHA→ (inc-kill p q r i i₁) = ? -- snd p
+
+-- -- -- --   te : (x : HAHA) → inc (a* , (HAHA→ x)) ≡ x
+-- -- -- --   te (inc x) = sym (inc' x)
+-- -- -- --   te (inc' p i) j = {!!}
+-- -- -- --   te (inc-kill p q r i i₁) = {!!}
+
+
+-- -- -- -- -- n : ℤ
+-- -- -- -- -- n = f2 PP
+
+-- -- -- -- -- S²* : (x : S²) → x ≡ x
+-- -- -- -- -- S²* base = refl
+-- -- -- -- -- S²* (surf i j) k = thing k i j
+
+-- -- -- -- -- idEquiv* : idEquiv S² ≡ idEquiv _
+-- -- -- -- -- idEquiv* = Σ≡Prop isPropIsEquiv (funExt S²*)
+
+-- -- -- -- -- S²'' : S² → Type
+-- -- -- -- -- S²'' base = S²
+-- -- -- -- -- S²'' (surf i j) =
+-- -- -- -- --   Glue S² λ { (i = i0) → S² , idEquiv S²
+-- -- -- -- --             ; (i = i1) → S² , idEquiv S²
+-- -- -- -- --             ; (j = i0) → S² , idEquiv S² -- idEquiv* j
+-- -- -- -- --             ; (j = i1) → S² , idEquiv S²}
+
+-- -- -- -- -- enc : (x : S²) → base ≡ x → S²'' x
+-- -- -- -- -- enc = J> base
+
+-- -- -- -- -- del : Path S² base base → S²
+-- -- -- -- -- del = enc base
+
+-- -- -- -- -- DD : Path (Path (Path S² base base) refl refl) refl refl
+-- -- -- -- --   → Path (Path S² base base) refl refl
+-- -- -- -- -- DD p i j = del (p i j)
+
+
+
+-- -- -- -- -- fina : Path (Path (Path S² base base) refl refl) refl refl → ℤ
+-- -- -- -- -- fina p = winding (del2 (DD p))
+
+-- -- -- -- -- fina-t : fina thing' ≡ 0
+-- -- -- -- -- fina-t = refl
+
+-- -- -- -- -- -- thing* : {!!}
+-- -- -- -- -- -- thing* = {!!}
