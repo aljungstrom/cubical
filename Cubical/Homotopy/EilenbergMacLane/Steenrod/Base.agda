@@ -630,7 +630,7 @@ j = i1 ⊢ pt B!} -- (q : _) → s (pt A) .fst ≡ ((cong (fst f) q) ∙∙ fst 
   help = {!!} -- rUnit _ ∙ λ j → (λ i → fst f (q (j ∧ i))) ∙∙ s (q j) .fst ∙∙ λ i → fst g (q (j ∧ ~ i)) -}
 inv (pointedEq A B f g hom) s = ΣPathP ((funExt (λ a → s a .fst))
   , flipSquare (rUnit _ ◁ flipSquare (s (pt A) .snd refl)))
-rightInv (pointedEq A B f g hom) s = funExt (λ a → ΣPathP (refl , {!!}))
+rightInv (pointedEq A B f g hom) s = funExt (λ a → ΣPathP (refl , {!refl!}))
 leftInv (pointedEq A B f g hom) = {!!}
 
 isOfHLevelΠ↓ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} (n : ℕ)
