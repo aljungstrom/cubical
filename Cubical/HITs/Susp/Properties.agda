@@ -360,3 +360,110 @@ toSusp-invSusp A (merid a i) j =
           λ r → flipSquare (sym (rUnit refl)
                 ◁ (flipSquare (sym (sym≡cong-sym r))
                 ▷ rUnit refl)))
+
+
+open import Cubical.HITs.Wedge
+open import Cubical.Data.Unit
+
+open import Cubical.HITs.Pushout
+
+invSusp-toSusp : (A : Pointed ℓ) (x : typ A)
+  → PathP (λ j → merid (pt A) (~ j) ≡ merid (pt A) (~ j))
+     (cong invSusp (toSusp A x)) (sym (toSusp A x))
+invSusp-toSusp A x =
+    cong-∙ invSusp (merid x) (sym (merid (pt A)))
+  ◁ λ i j → hcomp (λ k
+    → λ {(i = i0) → compPath-filler (sym (merid x)) (merid (pt A)) k j
+        ; (i = i1) → toSusp A x (~ j)
+        ; (j = i0) → merid (pt A) (~ i)
+        ; (j = i1) → merid (pt A) (~ i ∧ k)})
+    (compPath-filler (merid x) (sym (merid (pt A))) i (~ j))
+module _ (A' B' : Pointed ℓ) where
+  private
+   A = fst A'
+   B = fst B'
+
+   a* = snd A'
+   b* = snd B'
+
+  W : join A B → (Susp∙ A ⋁ Susp∙ B)
+  W (inl x) = inr north
+  W (inr x) = inl north
+  W (push a b i) = ((λ i → inr (toSusp B' b i)) ∙∙ sym (push tt) ∙∙ λ i → inl (toSusp A' a i)) i
+
+  flip : Susp∙ A ⋁ Susp∙ B → Susp∙ B ⋁ Susp∙ A
+  flip (inl x) = inr x
+  flip (inr x) = inl x
+  flip (push a i) = push a (~ i)
+
+module _ (A' B' : Pointed ℓ) where
+  private
+    A = fst A'
+    B = fst B'
+
+    a* = snd A'
+    b* = snd B'
+
+    WAB = W A' B'
+
+    WBA = W B' A'
+
+  mkLoop : (a : A) (b : B) → Path (join A B) (inl a*) (inl a*)
+  mkLoop a b = (push a* b* ∙ sym (push a b*)) ∙∙ push a b ∙∙ sym (push a* b)
+  
+  _+*_ : (C : Pointed ℓ) (f g : (join A B , inl a*) →∙ C) → (join A B , inl a*) →∙ C
+  fst ((C +* f) g) (inl x) = pt C
+  fst ((C +* f) g) (inr x) = pt C
+  fst ((C +* f) g) (push a b i) =
+    ((sym (snd f) ∙∙ cong (fst f) (mkLoop a b) ∙∙ snd f)
+    ∙ (sym (snd g) ∙∙ cong (fst g) (mkLoop a b) ∙∙ snd g)) i
+  snd ((C +* f) g) = refl
+
+  -S : Susp∙ B ⋁ Susp∙ A → Susp∙ B ⋁ Susp∙ A
+  -S = ((λ x → inl (invSusp x)) , refl)
+     ∨→ ((λ x → inr (invSusp x)) , ((λ i → inr (merid a* (~ i))) ∙∙ sym (push tt) ∙∙ λ i → inl (merid b* i)))
+
+module _ (A' B' : Pointed ℓ) where
+  A = fst A'
+  B = fst B'
+
+  a* = snd A'
+  b* = snd B'
+
+  WAB = W A' B'
+
+  WBA = W B' A'
+
+
+  W1 W2 : join A B → (Susp∙ B) ⋁ (Susp∙ A)
+  W1 x = flip A' B' (W A' B' x)
+  W2 x = W B' A' (Iso.fun join-comm x)
+
+  test : (x : _) → W1 x ≡ -S A' B' (W2 x)
+  test (inl x) i = inl (merid b* i)
+  test (inr x) i = inr (merid a* i)
+  test (push a b i) = help' i
+    where
+    -SAB = -S A' B'
+
+    help' : PathP (λ i → W1 (push a b i) ≡ -S A' B' (W2 (push a b i))) (λ i → inl (merid b* i)) λ i → inr (merid a* i)
+    help' = flipSquare ((cong (cong (flip A' B'))
+                           (λ _ → cong (W A' B') (push a b))) ◁
+      (λ i j → hcomp (λ k
+        → λ { (i = i0) → flip A' B'
+                            (doubleCompPath-filler
+                              (λ i → inr (toSusp B' b i))
+                              (sym (push tt))
+                              (λ i → inl (toSusp A' a i)) k j)
+             ; (i = i1) → doubleCompPath-filler (λ i → inl (invSusp (toSusp B' b (~ i))))
+                             ((λ i → inl (merid b* (~ i))) ∙∙ push tt ∙∙ (λ i → inr (merid a* i)))
+                             (λ i → inr (invSusp (toSusp A' a (~ i)))) k j
+             ; (j = i0) → inl (invSusp-toSusp B' b (~ i) k)
+             ; (j = i1) → inr (invSusp-toSusp A' a (~ i) (~ k))})
+                      (doubleCompPath-filler (λ i → inl (merid b* (~ i))) (push tt) (λ i → inr (merid a* i)) i j))
+      ▷ ((λ j → ((λ i → inl (invSusp (toSusp B' b (~ i)))))
+              ∙∙ (lUnit ((λ i → inl (merid b* (~ i))) ∙∙ push tt ∙∙ (λ i → inr (merid a* i))) j)
+              ∙∙ λ i → inr (invSusp (toSusp A' a (~ i))))
+       ∙ sym (cong-∙∙ -SAB (λ i → inl (toSusp B' b (~ i))) (push tt) λ i → inr (toSusp A' a (~ i)))
+       ∙ cong (cong -SAB)
+        (refl {x = ((λ i → inl (toSusp B' b (~ i))) ∙∙ (push tt) ∙∙ λ i → inr (toSusp A' a (~ i)))})))
