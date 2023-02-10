@@ -57,6 +57,83 @@ isHomogeneous {ℓ} (A , x) = ∀ y → Path (Pointed ℓ) (A , x) (A , y)
         })
       (sym (h (pt B∙)) ∙ h ((sym f₀ ∙∙ funExt⁻ p a₀ ∙∙ g₀) i))
 
+{-
+→∙Homogeneous≡r : ∀ {ℓ ℓ'} {A∙ : Pointed ℓ} {B∙ : Pointed ℓ'} (h : isHomogeneous B∙)
+  → Σ[ p ∈ ({f∙ g∙ : A∙ →∙ B∙} → f∙ .fst ≡ g∙ .fst → f∙ ≡ g∙) ]
+      ({f∙ : A∙ →∙ B∙} → p {f∙ = f∙} refl ≡ refl)
+fst (→∙Homogeneous≡r {A∙ = A∙@(A , a₀)} {B∙@(B , b₀)} h) {f∙@(_ , f₀)} {g∙@(_ , g₀)} p =
+  subst (λ Q∙ → PathP (λ i → A∙ →∙ Q∙ i) f∙ g∙) (sym (flipSquare fix)) badPath
+  where
+  badPath : PathP (λ i → A∙ →∙ (B , (sym f₀ ∙∙ funExt⁻ p a₀ ∙∙ g₀) i)) f∙ g∙
+  badPath i .fst = p i
+  badPath i .snd j = doubleCompPath-filler (sym f₀) (funExt⁻ p a₀) g₀ j i
+
+  fix-gen-f : (f g : A → B) (f₀ : f a₀ ≡ b₀) (g₀ : g a₀ ≡ b₀) (p : f ≡ g)
+    → (i : I) → I → B∙ ≡ (B , (sym f₀ ∙∙ funExt⁻ p a₀ ∙∙ g₀) i) -- PathP (λ i → B∙ ≡ (B , (sym f₀ ∙∙ funExt⁻ p a₀ ∙∙ g₀) i)) refl refl
+  fix-gen-f f g f₀ g₀ p i j =
+    hfill
+      (λ j → λ
+        { (i = i0) → lCancel (h (pt B∙)) j
+        ; (i = i1) → lCancel (h (pt B∙)) j
+        })
+      (inS (sym (h (pt B∙)) ∙ h ((sym f₀ ∙∙ funExt⁻ p a₀ ∙∙ g₀) i)))
+      j
+
+  fix-gen : (f g : A → B) (f₀ : f a₀ ≡ b₀) (g₀ : g a₀ ≡ b₀) (p : f ≡ g)
+    → PathP (λ i → B∙ ≡ (B , (sym f₀ ∙∙ funExt⁻ p a₀ ∙∙ g₀) i)) refl refl
+  fix-gen f g f₀ g₀ p i = fix-gen-f f g f₀ g₀ p i i1
+
+  fix-refl : (f : A → B) (f₀ : f a₀ ≡ b₀)
+    → PathP (λ i → B∙ ≡ (B , (sym f₀ ∙∙ refl ∙∙ f₀) i)) refl refl
+  fix-refl f f₀ i j = B , (∙∙lCancel f₀ (~ j) i)
+
+  pp : (f : A → B) (f₀ : f a₀ ≡ b₀) → fix-gen f f f₀ f₀ refl ≡ fix-refl f f₀
+  pp f f₀ i j k =
+    hcomp
+      (λ r → λ
+        { (i = i0) → fix-gen-f f f f₀ f₀ refl j r k
+        ; (i = i1) → fix-refl f f₀ j k
+        ; (j = i0) → lCancel (h (pt B∙)) (i ∨ r) k 
+        ; (j = i1) → lCancel (h (pt B∙)) (i ∨ r) k 
+        ; (k = i0) → B∙
+        ; (k = i1) → B , ((sym f₀ ∙∙ refl ∙∙ f₀) j)})
+      (hcomp
+      (λ r → λ
+        { (i = i0) → (sym (h (f₀ r))
+                    ∙ h (doubleCompPath-filler (sym f₀) refl f₀ r j)) k
+        ; (i = i1) → B , (∙∙lCancel-fill f₀ (~ k) j r)
+        ; (j = i0) → lCancel (h (f₀ r)) i k 
+        ; (j = i1) → lCancel (h (f₀ r)) i k 
+        ; (k = i0) → B , f₀ r
+        ; (k = i1) → B , doubleCompPath-filler (sym f₀) refl f₀ r j})
+        {!hcomp
+      (λ r → λ
+        { (i = i0) → (sym (h (f₀ r))
+                    ∙ h (doubleCompPath-filler (sym f₀) refl f₀ r j)) k
+        ; (i = i1) → B , (∙∙lCancel-fill f₀ (~ k) j r)
+        ; (j = i0) → lCancel (h (f₀ r)) i k 
+        ; (j = i1) → lCancel (h (f₀ r)) i k 
+        ; (k = i0) → B , f₀ r
+        ; (k = i1) → B , doubleCompPath-filler (sym f₀) refl f₀ r j})!})
+  {-
+  i = i0 ⊢ fix-gen f f f₀ f₀ refl j k
+i = i1 ⊢ fix-refl f f₀ j k
+j = i0 ⊢ refl k
+j = i1 ⊢ refl k
+k = i0 ⊢ B , b₀
+k = i1 ⊢ B , (sym f₀ ∙∙ funExt⁻ refl a₀ ∙∙ f₀) j
+  -}
+
+  fix : PathP (λ i → B∙ ≡ (B , (sym f₀ ∙∙ funExt⁻ p a₀ ∙∙ g₀) i)) refl refl
+  fix i =
+    hcomp
+      (λ j → λ
+        { (i = i0) → lCancel (h (pt B∙)) j
+        ; (i = i1) → lCancel (h (pt B∙)) j
+        })
+      (sym (h (pt B∙)) ∙ h ((sym f₀ ∙∙ funExt⁻ p a₀ ∙∙ g₀) i))
+snd (→∙Homogeneous≡r {A∙ = A∙@(_ , a₀)} {B∙@(B , _)} h) = {!!}
+-}
 →∙Homogeneous≡Path : ∀ {ℓ ℓ'} {A∙ : Pointed ℓ} {B∙ : Pointed ℓ'} {f∙ g∙ : A∙ →∙ B∙}
   (h : isHomogeneous B∙) → (p q : f∙ ≡ g∙) → cong fst p ≡ cong fst q → p ≡ q
 →∙Homogeneous≡Path {A∙ = A∙@(A , a₀)} {B∙@(B , b)} {f∙@(f , f₀)} {g∙@(g , g₀)} h p q r =

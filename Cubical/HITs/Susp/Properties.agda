@@ -424,15 +424,16 @@ module _ (A' B' : Pointed ℓ) where
      ∨→ ((λ x → inr (invSusp x)) , ((λ i → inr (merid a* (~ i))) ∙∙ sym (push tt) ∙∙ λ i → inl (merid b* i)))
 
 module _ (A' B' : Pointed ℓ) where
-  A = fst A'
-  B = fst B'
+  private
+    A = fst A'
+    B = fst B'
 
-  a* = snd A'
-  b* = snd B'
+    a* = snd A'
+    b* = snd B'
 
-  WAB = W A' B'
+    WAB = W A' B'
 
-  WBA = W B' A'
+    WBA = W B' A'
 
 
   W1 W2 : join A B → (Susp∙ B) ⋁ (Susp∙ A)

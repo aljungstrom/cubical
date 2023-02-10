@@ -203,6 +203,14 @@ Iso.leftInv (post∘∙equiv {A = A} {B = B , ptB} {C = C} e) =
              ◁ λ i j → f (retEq (fst e) (pt A) (i ∨ j)))))))
      (snd e)
 
+
+post∘∙equiv' : ∀ {ℓA ℓB ℓC} {A : Pointed ℓA} {B : Pointed ℓB} {C : Pointed ℓC}
+  → (B ≃∙ A) → Iso (A →∙ C) (B →∙ C)
+Iso.fun (post∘∙equiv' {A = A} {B = B} {C = C} e) = fromEq B A C e
+Iso.inv (post∘∙equiv' {A = A} {B = B} {C = C} e) = toEq B A C e
+Iso.rightInv (post∘∙equiv' {A = A} {B = B} {C = C} e) = Iso.leftInv (post∘∙equiv e)
+Iso.leftInv (post∘∙equiv' {A = A} {B = B} {C = C} e) = Iso.rightInv (post∘∙equiv e)
+
 flip→∙∙ : {A : Pointed ℓ} {B : Pointed ℓ'} {C : Pointed ℓA}
   → (A →∙ (B →∙ C ∙)) → B →∙ (A →∙ C ∙)
 fst (fst (flip→∙∙ f) x) a = fst f a .fst x
