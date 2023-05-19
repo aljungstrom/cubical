@@ -37,6 +37,9 @@ open import Cubical.Structures.Pointed
 isHomogeneous : ∀ {ℓ} → Pointed ℓ → Type (ℓ-suc ℓ)
 isHomogeneous {ℓ} (A , x) = ∀ y → Path (Pointed ℓ) (A , x) (A , y)
 
+isHomogeneous≃ : ∀ {ℓ} → Pointed ℓ → Type ℓ
+isHomogeneous≃ (A , x) =  ∀ y → (A , x) ≃∙ (A , y)
+
 -- Pointed functions into a homogeneous type are equal as soon as they are equal
 -- as unpointed functions
 →∙Homogeneous≡ : ∀ {ℓ ℓ'} {A∙ : Pointed ℓ} {B∙ : Pointed ℓ'} {f∙ g∙ : A∙ →∙ B∙}

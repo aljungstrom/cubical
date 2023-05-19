@@ -235,3 +235,48 @@ module _
 
     isConnectedInl∞ : isConnectedFun d (inl∞ n)
     isConnectedInl∞ = elim.isConnectedPrecompose _ _ hasSectionInl∘
+
+
+open import Cubical.Data.Bool
+open import Cubical.HITs.Join
+
+S∞-fam : ℕ → Type
+S∞-fam zero = Bool
+S∞-fam (suc n) = join Bool (S∞-fam n)
+
+Seq : Sequence ℓ-zero
+Sequence.space Seq = S∞-fam
+Sequence.map Seq = inr
+
+S∞ : Type
+S∞ = Lim→ Seq
+
+joinFun : ∀ {ℓ ℓ' ℓ'' ℓ'''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''} {D  : Type ℓ'''} →
+        (f : A → C) (g : B → D) → join A B → join C D 
+joinFun f g (inl x) = inl (f x)
+joinFun f g (inr x) = inr (g x)
+joinFun f g (push a b i) = push (f a) (g b) i
+
+el-data : ElimData Seq (λ _ → join Bool S∞)
+ElimData.finl el-data {k = k} x = inr (inl x)
+ElimData.fpush el-data x = sym (push true (inl x)) ∙ push true (inl (inr x))
+
+el-data' : ElimData Seq (λ _ → S∞)
+ElimData.finl el-data' {k = zero} x = inl {n = 1} (inl x)
+ElimData.finl el-data' {k = suc k} x = inl {n = suc (suc k)} (joinFun (idfun Bool) inr x)
+ElimData.fpush el-data' {k = zero} x = push (inl x) ∙ λ i → inl {n = 2} (inr (push x x i))
+ElimData.fpush el-data' {k = suc k} x = {!x!}
+
+shift : S∞ → S∞
+shift = elimShift _ 1 _ (record { finl = λ {k} → inl ; fpush = push })
+
+Iso-S∞ : Iso S∞ (join Bool S∞)
+Iso.fun Iso-S∞ = elim _ _ el-data
+Iso.inv Iso-S∞ (inl x) = inl {n = 0} x
+Iso.inv Iso-S∞ (inr x) = shift x
+Iso.inv Iso-S∞ (push a x i) = {!x!}
+  where
+  help : (x : S∞) → inl a ≡ shift x
+  help = elimShift _ 1 _ (record { finl = λ {k} x i → sym ((elimShiftβ {!!} 1 1 {!!} {!!})) i x ; fpush = {!!} })
+Iso.rightInv Iso-S∞ = {!!}
+Iso.leftInv Iso-S∞ = {!!}
