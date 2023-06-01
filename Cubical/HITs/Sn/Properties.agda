@@ -715,3 +715,261 @@ SuspS¹→S²-S¹×S¹→S² (loop i) (loop j) k =
                        (compPath-filler (merid (loop i)) (sym (merid base)) r j)
                  ; (k = i1) → surf j i})
            (surf j i))
+
+
+
+
+isEq* : (a : S¹) → Iso S¹ S¹
+fun (isEq* a) = a *_
+inv (isEq* a) = invLooper a *_
+rightInv (isEq* a) b = assocS¹ a (invLooper a) b
+  ∙ cong (_* b) (sym (rCancelS¹ a))
+leftInv (isEq* a) b = assocS¹ (invLooper a) a b
+  ∙ cong (_* b) (commS¹ (invLooper a) a ∙ sym (rCancelS¹ a))
+
+Hopf : S₊ 2 → Type
+Hopf north = S¹
+Hopf south = S¹
+Hopf (merid a i) = isoToPath (isEq* a) i
+
+I-fib' : (i' i j k : I) → join S¹ S¹
+I-fib' i' i j k =
+  hfill (λ k → λ {(i = i0) → push base (loop i') (j ∧ k)
+                 ; (i = i1) → doubleCompPath-filler (push base (loop i')) (sym (push (loop i') (loop i'))) (push (loop i') base) k j
+                 ; (j = i0) → push base (loop i') (~ k ∧ i)
+                 ; (j = i1) → push (loop (i' ∧ i)) (loop (i' ∨ i)) k})
+        (inS {!push (loop (i' ∧ i)) (loop (i' ∨ i)) k!}) -- (inS (push base base (~ j ∧ i)))
+        k
+
+I-fib : (i j k : I) → join S¹ S¹
+I-fib i j k =
+  hfill (λ k → λ {(i = i0) → push base base (j ∧ k)
+                 ; (i = i1) → doubleCompPath-filler
+                                (push base base) (sym (push base base)) (push base base) k j
+                 ; (j = i0) → push base base (~ k ∧ i)
+                 ; (j = i1) → push base base k})
+        (inS (push base base (~ j ∧ i)))
+        k
+
+h-fill : (b : S¹) → push base base ≡ (push base b ∙∙ sym (push b b) ∙∙ push b base)
+h-fill base i j = I-fib i j i1
+h-fill (loop i) j k =
+  hcomp (λ r → λ {(i = i0) → {!I-fib i1 k r!}
+                 ; (i = i1) → {!!}
+                 ; (j = i0) → {!!}
+                 ; (j = i1) → (push base (loop (i ∨ ~ r)) ∙∙ sym (push (loop (i ∧ r)) (loop (i ∨ ~ r))) ∙∙
+          push (loop (i ∧ r)) base)
+         k
+                 ; (k = i0) → {!!}
+                 ; (k = i1) → {!!}})
+        {!!}
+
+open import Cubical.Foundations.Equiv.HalfAdjoint
+push-comp-j : (a b : S¹) → push a a ≡ (push a b ∙∙ sym (push b b) ∙∙ push b a)
+push-comp-j a b = {!!}
+  where
+  h : Iso (inl a ≡ inr a) (Path (S₊ 3) north south)
+  h = congIso Iso-joinS¹S¹-S³
+
+  h≡ : Iso.fun h (push a a) ≡ Iso.fun h (push a b ∙∙ sym (push b b) ∙∙ push b a)
+  h≡ = cong merid (S¹×S¹→S²x+x a)
+     ∙ {!!}
+     ∙ {!!}
+     ∙ sym (cong-∙∙ (fun Iso-joinS¹S¹-S³) (push a b) (sym (push b b)) (push b a))
+
+j' : {!!}
+j' = {!!}
+
+r-m : (a : S¹) → join S¹ S¹ → join S¹ S¹
+r-m a (inl x) = inr (x * a)
+r-m a (inr x) = inl x
+r-m a (push b c i) = push c (b * a) (~ i)
+
+l-m : (a : S¹) → join S¹ S¹ → join S¹ S¹
+l-m a (inl x) = inl (x * a)
+l-m a (inr x) = inr x
+l-m a (push b c i) = push (b * a) c i
+
+l-m≡ : (a b : S¹) (x : _) → l-m a x ≡ r-m b x
+l-m≡ a b (inl x) = push (x * a) (x * b) -- push (x * a) x
+l-m≡ a b (inr x) = sym (push x x) -- sym (push (x * b) x)
+l-m≡ a b (push c d i) j = lem i j
+  where
+  lem : PathP (λ i → push (c * a) d i ≡ push d (c * b) (~ i)) (push (c * a) (c * b)) (sym (push d d))
+  lem = compPathR→PathP {!!}
+    where
+    l2 : cong (fun Iso-joinS¹S¹-S³)
+           (push (c * a) (c * b))
+       ≡ cong (fun Iso-joinS¹S¹-S³)
+           (push (c * a) d ∙ sym (push d d) ∙ push d (c * b))
+    l2 = ({!!}
+       ∙ {!!}
+       ∙ cong (cong joinS¹S¹→S³ (push (c * a) d) ∙_)
+          ({!!}
+          ∙ sym (cong-∙ (fun Iso-joinS¹S¹-S³)
+            (sym (push d d)) (push d (c * b)))))
+      ∙ sym (cong-∙ (fun Iso-joinS¹S¹-S³)
+        (push (c * a) d) (sym (push d d) ∙ push d (c * b)))
+
+rr : join S¹ S¹ → join S¹ S¹ → join S¹ S¹
+rr (inl x) y = l-m x y
+rr (inr x) y = r-m x y
+rr (push a b i) y = l-m≡ a b y i
+
+lef : (x : S¹) → join S¹ S¹ → S₊ 3
+lef x (inl y) = north
+lef x (inr y) = north
+lef x (push a b i) = σ (S₊∙ 2) (S¹×S¹→S² (x  * a) b) i
+
+ri : (x : S¹) → join S¹ S¹ → S₊ 3
+ri x (inl y) = north
+ri x (inr y) = north
+ri x (push a b i) = σ (S₊∙ 2) (S¹×S¹→S² a((invLooper x) * b)) i
+
+data S²₊ : Type where
+  [_] : S₊ 2 → S²₊
+  _⊗_ : S²₊ → S²₊ → S²₊
+  lid : (x : _) → [ north ] ⊗ x ≡ x
+  rid : (x : _) → x ⊗ [ north ] ≡ x
+  coh : lid [ north ] ≡ rid [ north ]
+
+data S²₊' : Type where
+  [_] : S² → S²₊'
+  _⊗_ : S²₊' → S²₊' → S²₊'
+  lid' : (x : _) → [ base ] ⊗ x ≡ x
+  rid' : (x : _) → x ⊗ [ base ] ≡ x
+  coh' : lid' [ base ] ≡ rid' [ base ]
+
+master-lem : ∀ {ℓ} {A : Type ℓ} {x : A} (p : x ≡ x) (m : refl ≡ p)
+  → (λ i → m (~ i) ∙ p) ∙ sym (lUnit p) ≡ (λ i → p ∙ m (~ i)) ∙ sym (rUnit p)
+master-lem = J> refl
+
+S²↑ : S²₊ → Path (S₊ 3) north north
+S²↑ [ x ] = σ (S₊∙ 2) x
+S²↑ (a ⊗ b) = S²↑ a ∙ S²↑ b
+S²↑ (lid x i) j = ((λ i → rCancel (merid north) i ∙ S²↑ x) ∙ sym (lUnit (S²↑ x))) i j
+S²↑ (rid x i) j = ((λ i → S²↑ x ∙ rCancel (merid north) i) ∙ sym (rUnit (S²↑ x))) i j
+S²↑ (coh i j) k = master-lem _ (sym (rCancel (merid north))) i j k
+
+_⌣'_ : S¹ → S¹ → S²₊
+x ⌣' y = [ S¹×S¹→S² x y ]
+
+_⌣*_ : S¹ → S¹ → S²₊'
+x ⌣* y = [ S¹×S¹→S²' x y ]
+
+
+hf : (i j k r : I) → S²₊'
+hf i j k r =
+  hfill (λ r → λ {(i = i0) → coh' (~ r) (~ k)
+                 ; (i = i1) → coh' (~ r) (~ k)
+                 ; (j = i0) → coh' (~ r) (~ k)
+                 ; (j = i1) → coh' (~ r) (~ k)
+                 ; (k = i0) → [ surf i j ]
+                 ; (k = i1) → [ surf i j ] ⊗ [ base ]})
+        (inS (rid' [ surf i j ] (~ k)))
+        r
+
+
+rotloopfiller : (i j k : I)  → S¹
+rotloopfiller i j k  =  hfill (λ k → λ { (i = i0) → loop (j ∨ ~ k)
+                 ; (i = i1) → loop (j ∧ k)
+                 ; (j = i0) → loop (i ∨ ~ k)
+                 ; (j = i1) → loop (i ∧ k)}) (inS base) k
+
+
+d' : (x y z : S¹) → (x ⌣* (y * z)) ≡ ((x ⌣* y) ⊗ (x ⌣* z))
+d' base y z = sym (lid' [ base ])
+d' (loop i) base base j = lid' [ base ] (~ j)
+d' (loop i) base (loop j) k = lid' [ surf i j ] (~ k)
+d' (loop i) (loop j) base k = hf i j k i1
+d' (loop i) (loop j) (loop k) l =
+  hcomp (λ r → λ {(i = i0) → {!!}
+                 ; (i = i1) → {!loop j * loop k!}
+                 ; (j = i0) → {!coh' (~ r) (~ l)!}
+                 ; (j = i1) → {!hf i j l r!}
+                 ; (k = i0) → hf i j l r
+                 ; (k = i1) → hf i j l r
+                 ; (l = i0) → {!!} -- -[ S¹×S¹→S²' (loop i) (rotloopfiller j k r) ]
+                 ; (l = i1) → {!!}})
+         {!!}
+
+distr? : (x y z : S¹) → (x ⌣' (y * z)) ≡ ((x ⌣' y) ⊗ (x ⌣' z ))
+distr? base y z = sym (rid [ north ])
+distr? (loop i) y z j =
+  hcomp (λ r → λ {(i = i0) → rid [ north ] (~ j)
+                 ; (i = i1) → coh r (~ j)
+                 ; (j = i0) → [ S¹×S¹→S² (loop i) (y * z) ]
+                 ; (j = i1) → (sym (cong (cong (λ x → (x ⌣' y) ⊗ (base ⌣' z)) loop ∙_) (lUnit _)) ∙ sym (cong₂Funct (λ p q → (p ⌣' y) ⊗ (q ⌣' z)) loop loop)) r i})
+   (hcomp (λ r → λ {(i = i0) → rid [ north ] (~ j ∨ ~ r)
+                   ; (i = i1) → lid [ north ] (~ j ∨ ~ r)
+                   ; (j = i0) → [ S¹×S¹→S² (loop i) (y * z) ]
+                   ; (j = i1) → (cong (λ x → rid (x ⌣' y) (~ r)) loop
+                               ∙ (λ i → coh (~ i) (~ r))
+                               ∙ cong (λ x → lid (x ⌣' z) (~ r)) loop) i})
+            {!!})
+  where
+  l1 : (y z : S¹) → cong (λ x → [ S¹×S¹→S² x (y * z) ]) loop ≡ cong (_⌣' y) loop ∙ cong (_⌣' z) loop
+  l1 base z = lUnit _
+  l1 (loop i) z = {!!}
+  
+
+lef≡ri : (a b : S¹) (y : _) → lef a y ≡ ri b y
+lef≡ri a b (inl x) = σ (S₊∙ 2) (S¹×S¹→S² ((invLooper x)  * a) (x * b))
+lef≡ri a b (inr x) = σ (S₊∙ 2) {!
+j = i0 ⊢ [ S¹×S¹→S² (loop i) (y * z) ]
+j = i1 ⊢ (loop i ⌣' y) ⊗ (loop i ⌣' z)
+i = i0 ⊢ rid [ north ] (~ j)
+i = i1 ⊢ rid [ north ] (~ j)!}
+lef≡ri a b (push c d i) = {!a * c!}
+-- σ (S₊∙ 2) (   (S¹×S¹→S² (a * c) (a * d)) i
+
++' : join S¹ S¹ → join S¹ S¹ → S₊ 3
++' (inl x) y = ri x y
++' (inr x) y = lef x y
++' (push a b i) y = {!!}
+
+rr-l : (a : _) → rr (inl base) a ≡ a
+rr-l (inl x) i = inl (rUnitS¹ x i)
+rr-l (inr x) = refl
+rr-l (push a b i) j = push (rUnitS¹ a j) b i
+
+qt : join S¹ S¹ → join S¹ S¹ → join S¹ S¹
+qt (inl x) y = y
+qt (inr x) y = y
+qt (push a b i) y = {!!}
+  where
+  pl : (y : join S¹ S¹) → y ≡ y
+  pl (inl x) = refl
+  pl (inr x) = refl
+  pl (push a' b' i) j = {!!}
+
+
+-- private
+--   module _ {A B C : Type} (f : A → B) (g : A → C)
+--     (b : B)
+--     (c : C)
+--     (T1 : B → Type)
+--     (T2 : C → Type)
+--     (T12 : (a : A) → Iso (T1 (f a)) (T2 (g a))) where
+--     open import Cubical.HITs.Pushout
+
+--     Code : Pushout f g → Type
+--     Code (inl x) = T1 x
+--     Code (inr x) = T2 x
+--     Code (push a i) = isoToPath (T12 a) i
+
+--     dec : (c : Pushout f g) → Code c → inl b ≡ c
+--     dec (inl x) = {!!}
+--     dec (inr x) p = {!!}
+--     dec (push a i) p = {!!}
+
+
+-- -- module _ {A B C : Type} (f : A → S₊ 2 × S₊ 2) (g : A → C) where
+-- --   open import Cubical.HITs.Pushout
+-- --   Code : Pushout f g → Type
+-- --   Code (inl (x , y)) = join (Hopf y) (Hopf x)
+-- --   Code (inr x) = {!!}
+-- --   Code (push a i) = {!!}
+
+-- --   dec : {!!}
+-- --   dec = {!!}

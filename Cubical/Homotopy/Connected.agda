@@ -744,3 +744,30 @@ module _ {ℓ ℓ' ℓ'' : Level} {A : Type ℓ} {B : A → Type ℓ'} {C : A �
   FunConnected→TotalFunConnected n con r =
     isConnectedRetractFromIso n
      (Iso-fibTotalFun-fibFun r) (con (fst r) (snd r))
+
+
+con-cofib : ∀ {ℓ} {A B : Type ℓ} (f : A → B) (n : ℕ)
+  → isConnectedFun n f 
+  → isConnected (suc n) (cofib f)
+fst (con-cofib {A = A} {B = B} f zero t) = ∣ inl tt ∣
+snd (con-cofib {A = A} {B = B} f zero t) = λ _ → isOfHLevelTrunc 1 _ _
+con-cofib {A = A} {B = B} f (suc n) t = ∣ inl tt ∣ₕ
+  , (Trunc.elim
+    (λ _ → isOfHLevelPath (2 + n) (isOfHLevelTrunc (2 + n)) _ _)
+    λ { (inl x) → refl
+      ; (inr x) → TR x (t x .fst)
+      ; (push a i) j
+        → hcomp (λ k → λ {(i = i0) → ∣ inl tt ∣
+                         ; (i = i1) → (cong (cong ∣_∣ₕ) (rUnit (push a))
+                                      ∙ cong (TR (f a)) (sym (as a))) k j
+                         ; (j = i0) → ∣ inl tt ∣
+                         ; (j = i1) → ∣ push a i ∣})
+                ∣ push a (i ∧ j) ∣})
+  where
+  TR : (x : B) → hLevelTrunc (suc n) (fiber f x)
+    → Path (hLevelTrunc (2 + n) (cofib f)) ∣ inl tt ∣ ∣ inr x ∣
+  TR x = Trunc.rec (isOfHLevelTrunc (2 + n) _ _)
+          λ p → cong ∣_∣ₕ (push (fst p) ∙ λ i → inr (snd p i))
+
+  as : (a : A) →  t (f a) .fst ≡ (∣ a , refl ∣ₕ)
+  as a = t (f a) .snd _
