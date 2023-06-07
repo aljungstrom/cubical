@@ -652,3 +652,229 @@ SmashAssocIso {A = A} {B = B} {C = C} =
       (compIso
         (invIso (Iso-⋀-⋀×3 C A B))
         ⋀CommIso))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+open import Cubical.HITs.Susp
+open import Cubical.HITs.Join
+
+SmashSusp : Iso (Susp∙ (typ A) ⋀ B) (Susp (A ⋀ B))
+SmashSusp {A = A} {B = B} = {!!}
+  where
+  fillerₗ : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (p : x ≡ y)
+    (z : A) (q : x ≡ z)
+    → I → I → I → A
+  fillerₗ y p z q i j k =
+    hfill (λ k → λ {(i = i0) → doubleCompPath-filler p (sym p) q k j
+                   ; (i = i1) → q (j ∧ k)
+                   ; (j = i1) → q k
+                   ; (j = i0) → p (~ k ∧ ~ i)})
+          (inS (p (~ i ∧ ~ j)))
+          k
+
+  fillerᵣ : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (p : x ≡ y)
+    (z : A) (q : y ≡ z)
+    → I → I → I → A
+  fillerᵣ y p z q i j k =
+    hfill (λ k → λ {(i = i0) → doubleCompPath-filler p q (sym q) k j
+                   ; (i = i1) → p (j ∨ ~ k)
+                   ; (j = i0) → p (~ k)
+                   ; (j = i1) → q (~ k ∧ ~ i)})
+          (inS (q (~ i ∧ j)))
+          k
+
+  fillₗ : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (p : x ≡ y)
+    (z : A) (q : x ≡ z) → (p ∙∙ sym p ∙∙ q) ≡ q
+  fillₗ y p z q i j = fillerₗ y p z q i j i1
+
+  fillᵣ : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (p : x ≡ y)
+    (z : A) (q : y ≡ z) → (p ∙∙ q ∙∙ sym q) ≡ p
+  fillᵣ y p z q i j = fillerₗ _ q _ (sym p) i (~ j) i1
+
+  fillerₗᵣ₁ : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (p : x ≡ y)
+    → I → I → I → A
+  fillerₗᵣ₁ y p k i j = {!!}
+
+  fillₗᵣ : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (p : x ≡ y)
+   → fillₗ _ p _ p ≡ fillᵣ _ p _ (sym p)
+  fillₗᵣ = J> refl
+  {-
+  fillₗᵣ y p k i j =
+    hcomp (λ r → λ {(i = i0) → doubleCompPath-filler p (sym p) p r j
+                   ; (i = i1) → {!!}
+                   ; (j = i0) → p (~ r ∧ (~ i ∨ k))
+                   ; (j = i1) → p (r ∨ (i ∧ k)) -- p (r ∨ (i ∧ k))
+                   ; (k = i0) → {!fillerₗ _ p _ p i j r!}
+                   ; (k = i1) → fillerₗ _ (sym p) _ (sym p) i (~ j) r})
+      {!!}
+-}
+--   J> refl
+
+  fillers : ∀ {ℓ} {A : Type ℓ} {inl⋆A : A} (inr⋆B : A)
+    (p : inl⋆A ≡ inr⋆B)
+    → {!!}
+     ≡ {!!}
+  fillers = {!!}
+
+  JAB = join (typ A) (typ B)
+
+  Smash→Join : Susp (A ⋀ B) → join (typ A) (typ B)
+  Smash→Join north = inr (pt B)
+  Smash→Join south = inl (pt A)
+  Smash→Join (merid (inl x) i) = push (pt A) (pt B) (~ i)
+  Smash→Join (merid (inr (a , b)) i) =
+    (sym (push a (pt B)) ∙∙ push a b ∙∙ sym (push (pt A) b)) i
+  Smash→Join (merid (push (inl x) i) j) =
+    fillₗ _ (sym (push x (pt B))) _ (sym (push (pt A) (pt B))) (~ i) j
+  Smash→Join (merid (push (inr x) i) j) =
+    fillₗ _ (push (pt A) x) _ (push (pt A) (pt B)) (~ i) (~ j)
+  Smash→Join (merid (push (push a k) i) j) =
+    fillₗᵣ _ (sym (push (pt A) (pt B))) k (~ i) j
+
+  Join→Smash : join (typ A) (typ B) → Susp (A ⋀ B)
+  Join→Smash (inl x) = north
+  Join→Smash (inr x) = south
+  Join→Smash (push a b i) = merid (inr (a , b)) i
+
+  Join→Smash→Join : (x : join (typ A) (typ B))
+    → Smash→Join (Join→Smash x) ≡ x
+  Join→Smash→Join (inl x) = sym (push x (pt B))
+  Join→Smash→Join (inr x) = push (pt A) x
+  Join→Smash→Join (push a b i) j =
+    doubleCompPath-filler
+      (sym (push a (pt B))) (push a b) (sym (push (pt A) b)) (~ j) i
+
+  SJS₁ : (a : typ A) (b : typ B)
+    → I → I → I → Susp (A ⋀ B)
+  SJS₁ a b i j k =
+    hfill (λ k → λ {(i = i0) → merid (inr (a , pt B)) (k ∧ ~ j)
+                   ; (i = i1) → merid (inr (pt A , b)) (~ k ∨ j)
+                   ; (j = i0) → Join→Smash
+                       (doubleCompPath-filler
+                         (sym (push a (pt B)))
+                         (push a b)
+                         (sym (push (pt A) b)) k i)
+                   ; (j = i1) → merid (inr (a , b)) i})
+          (inS (merid (inr (a , b)) i))
+          k
+
+  SJS₂ : (a : typ A) (b : typ B)
+    → I → I → I → Susp (A ⋀ B)
+  SJS₂ a b i j k =
+    hfill (λ k → λ {(i = i0) → merid (push (inl a) (~ k)) (~ j)
+                   ; (i = i1) → merid (push (inr b) (~ k)) j
+                   ; (j = i0) → Join→Smash
+                       (doubleCompPath-filler
+                         (sym (push a (pt B)))
+                         (push a b)
+                         (sym (push (pt A) b)) i1 i)
+                   ; (j = i1) → merid (inr (a , b)) i})
+          (inS (SJS₁ a b i j i1))
+          k
+
+  SJS₃ : I → I → I → Susp (A ⋀ B)
+  SJS₃ i j k =
+    hfill (λ k → λ {(i = i0) → merid (inl tt) (~ j)
+                   ; (i = i1) → merid (inl tt) (j ∧ k)
+                   ; (j = i0) → merid (push (inl (pt A)) k) (~ i)
+                   ; (j = i1) → merid (inl tt) (i ∧ k)})
+           (inS (merid (inl tt) (~ j ∧ ~ i)))
+           k
+
+  Smash→Join→Smash : (x : Susp (A ⋀ B))
+    → Join→Smash (Smash→Join x) ≡ x
+  Smash→Join→Smash north = sym (merid (inl tt))
+  Smash→Join→Smash south = merid (inl tt)
+  Smash→Join→Smash (merid (inl x) i) j = SJS₃ i j i1
+  Smash→Join→Smash (merid (inr (a , b)) i) j = SJS₂ a b i j i1
+  Smash→Join→Smash (merid (push (inl x) i) j) k =
+    hcomp (λ r → λ {(i = i0) → {!SJS₃ j k r!}
+                   ; (i = i1) → {!!}
+                   ; (j = i0) → {!merid (push (inr (pt B)) (~ r)) (~ k)!}
+                   ; (j = i1) → {!!} -- merid (push (inr (pt B)) (~ r)) k
+                   ; (k = i0) → Join→Smash (fillerₗ _ (sym (push x (pt B)))
+                                                     _ (sym (push (pt A) (pt B)))
+                                             (~ i) j i1)
+                   ; (k = i1) → merid (push (inl x) i) j})
+           {!!}
+    where
+    he : PathP (λ r → Square (λ k → merid (push (inr (pt B)) (~ r)) (~ k))
+                              (λ k → merid (push (inr (pt B)) (~ r)) k)
+                              (λ j → Join→Smash (fillerₗ _ (sym (push x (pt B)))
+                                                     _ (sym (push (pt A) (pt B)))
+                                             i0 j i1))
+                              λ j → merid (inr (x , pt B)) j)
+               {!λ j k →  Join→Smash (doubleCompPath-filler (sym (push x (snd B))) (push x (snd B)) (sym (push (snd A) (snd B))) k (~ j))!}
+               λ j k → SJS₂ x (pt B) j k i1
+    he = {!fillerₗ _ (sym (push x (pt B)))
+                                                     _ (sym (push (pt A) (pt B)))
+                                             i0 j i1!}
+  Smash→Join→Smash (merid (push (inr x) i) j) k =
+    {!!}
+  Smash→Join→Smash (merid (push (push a i₁) i) j) k = {!!}
+    
+
+
+--   σ∧ = toSusp (A ⋀∙ B)
+--   F : Susp∙ (typ A) ⋀ B → Susp (A ⋀ B)
+--   F (inl x) = north
+--   F (inr (north , y)) = north
+--   F (inr (south , y)) = north
+--   F (inr (merid a i , y)) =
+--     toSusp (A ⋀∙ B) (inr (a , y)) i
+--   F (push (inl north) i) = north
+--   F (push (inl south) i) = north
+--   F (push (inl (merid a i)) j) =
+--     (sym (rCancel (merid (inl tt))) ∙ cong σ∧ (push (inl a))) j i
+--   F (push (inr x) i) = north
+--   F (push (push a i₁) i) = north
+
+--   f1 : (b : fst B)
+--     (q : Path (Susp∙ (typ A) ⋀ B) (inr (north , b)) (inr (north , b)))
+--     → Path (Susp∙ (typ A) ⋀ B) (inl tt) (inl tt)
+--   f1 b q = push (inr b) ∙∙ q ∙∙ sym (push (inr b))
+
+--   ab→Path : fst A → fst B → Path (Susp∙ (typ A) ⋀ B) (inl tt) (inl tt)
+--   ab→Path a b = f1 b (λ i → inr (toSusp A a i , b))
+
+--   ab→Pathₗ : (b : fst B) → ab→Path (pt A) b ≡ refl
+--   ab→Pathₗ b =
+--     cong (f1 b) (λ k i → inr (rCancel (merid (pt A)) k i , b))
+--     ∙ ∙∙lCancel (sym (push (inr b)))
+
+--   ab→Pathᵣ : (a : fst A) → ab→Path a (pt B) ≡ refl
+--   ab→Pathᵣ a i j =
+--     hcomp (λ k → {!λ {(i = i0) → ?}!})
+--           {!!}
+
+-- {-
+-- j = i0 ⊢ inl tt
+-- j = i1 ⊢ inl tt
+-- i = i0 ⊢ ab→Path a (pt B) j
+-- i = i1 ⊢ inl tt
+-- -}
+
+--   GΩ : A ⋀ B → Path (Susp∙ (typ A) ⋀ B) (inl tt) (inl tt)
+--   GΩ (inl x) = refl
+--   GΩ (inr (a , b)) = ab→Path a b
+--   GΩ (push (inl x) i) = ab→Pathᵣ x (~ i)
+--   GΩ (push (inr x) i) = ab→Pathₗ x (~ i)
+--   GΩ (push (push a i) j) k = {!!}
+
+--   G : Susp (A ⋀ B) → Susp∙ (typ A) ⋀ B
+--   G x = {!!}

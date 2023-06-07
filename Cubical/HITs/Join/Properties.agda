@@ -19,12 +19,16 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.Path
+open import Cubical.Foundations.Pointed
 
 open import Cubical.Data.Sigma renaming (fst to proj₁; snd to proj₂)
 open import Cubical.Data.Unit
 
 open import Cubical.HITs.Join.Base
 open import Cubical.HITs.Pushout
+
+open import Cubical.Homotopy.Loopspace
 
 private
   variable
@@ -483,211 +487,212 @@ snd joinAnnihilL (inl tt*) = refl
 snd joinAnnihilL (inr a) = push tt* a
 snd joinAnnihilL (push tt* a i) j = push tt* a (i ∧ j)
 
-open import Cubical.Foundations.Pointed
-open import Cubical.Homotopy.Loopspace
+
+
+
+private module _ {ℓ : Level} {B : Type ℓ} where
+  ganea-fill₁ : {x : B} (y : B)
+    → (p : x ≡ y)
+    → (z : B)
+    → (q : y ≡ z)
+    → (i j k : I) → B
+  ganea-fill₁ y p z q i j k =
+    hfill (λ k → λ {(i = i0) → p j
+                   ; (i = i1) → q (~ j ∧ k)
+                   ; (j = i0) → compPath-filler p q k i
+                   ; (j = i1) → y})
+              (inS (p (i ∨ j)))
+              k
+
+  ganea-fill₂ : (i j k : I)
+    → {x : B} (y : B) (q : x ≡ y)
+       (z : B) (p : q (~ i) ≡ z)
+    → B
+  ganea-fill₂ i j k y q z p =
+    hfill (λ k
+           → λ {(i = i0) → p j
+              ; (i = i1) → compPath-filler' (sym q) p k j
+              ; (j = i0) → q (k ∨ ~ i)
+              ; (j = i1) → z})
+              (inS (p j))
+              k
+
+  ganea-fill₃ : ∀ {ℓ} {A : Type ℓ} (f : A → B) (b : B)
+    (i k : I)
+    (a : A) (q : f a ≡ b) (p : q (~ i) ≡ b)
+    → join (fiber f b) (b ≡ b)
+  ganea-fill₃ f b i k a q p =
+    hfill (λ k → λ {(i = i0) → inr p
+                   ; (i = i1) → push (a , p) (sym q ∙ p) (~ k)})
+          (inS (inr λ j → ganea-fill₂ i j i1 _ q _ p)) k
 
 module _ {A : Pointed ℓ} {B : Pointed ℓ'} (f : A →∙ B) where
-  fib⋆ : Pointed _
-  proj₁ fib⋆ = fiber (fst f) (pt B)
-  snd fib⋆ = (pt A) , (snd f)
-
-  fib-gen : (b : fst B) → Type _
-  fib-gen b = fiber (fst f) b
-
-  fib-proj : fib⋆ →∙ A
-  proj₁ fib-proj = fst
-  snd fib-proj = refl
-
   fib-cofib : Type _
-  fib-cofib = cofib (fst fib-proj)
+  fib-cofib = cofib {A = fiber (fst f) (pt B)} fst
 
   GaneaMap : fib-cofib → fst B
   GaneaMap (inl x) = pt B
   GaneaMap (inr x) = fst f x
   GaneaMap (push a i) = a .snd (~ i)
 
-  GaneaMap* : (b : fst B) (f : A →∙ (fst B , b)) → cofib {A = fiber (fst f) b} {B = fst A} fst → fst B
-  GaneaMap* b f (inl x) = b
-  GaneaMap* b f (inr x) = fst f x
-  GaneaMap* b f (push a i) = a .snd (~ i)
-
   GaneaFib : Type _
   GaneaFib = fiber GaneaMap (pt B)
 
-  GaneaFib→join-unc' : (x : fib-cofib) → join (fib-gen (GaneaMap x)) (GaneaMap x ≡ GaneaMap x)
-  GaneaFib→join-unc' (inl x) = inr refl
-  GaneaFib→join-unc' (inr x) = inl (x , refl)
-  GaneaFib→join-unc' (push (a , p) i) = push (a , (λ t → p (~ i ∧ t))) refl (~ i)
-  
-  GaneaFib→join-unc : (x : fib-cofib) (b : fst B) → GaneaMap x ≡ b → join (fib-gen b) (b ≡ b)
-  GaneaFib→join-unc x = J> GaneaFib→join-unc' x
+  join→GaneaFib : join (fiber (fst f) (pt B)) (Ω B .fst) → GaneaFib
+  join→GaneaFib (inl x) = inr (fst x) , snd x
+  join→GaneaFib (inr x) = (inl tt) , x
+  proj₁ (join→GaneaFib (push a b i)) = push (fst a , snd a ∙ sym b) (~ i)
+  snd (join→GaneaFib (push a b i)) j = ganea-fill₁ _ (snd a) _  (sym b) i j i1
 
-  other-gen : (b : fst B) → join (fiber (fst f) b) (b ≡ b) → GaneaFib
-  other-gen b (inl x) = (inr (fst x)) , {!snd x!}
-  other-gen b (inr x) = {!!}
-  other-gen b (push a b₁ i) = {!!}
-
-  other-fill : (a : fib⋆ .fst) (p : Ω B .fst) → (i j k : I) → fst B
-  other-fill a b i j k =
-    hfill (λ k → λ {(i = i0) → snd a j
-                   ; (i = i1) → b (j ∨ ~ k)
-                   ; (j = i0) → compPath-filler (snd a) (sym b) k i
-                   ; (j = i1) → snd B})
-          (inS (snd a (j ∨ i)))
-          k
-
-  other : join (fib⋆ .fst) (Ω B .fst) → GaneaFib
-  other (inl x) = inr (fst x) , snd x
-  other (inr x) = (inl tt) , x
-  proj₁ (other (push a b i)) = (push (fst a , snd a ∙ sym b)) (~ i) -- 
-  snd (other (push a b i)) j = other-fill a b i j i1
-
-  c1 : (i j k : I) → (a : fst A) (q : fst f a ≡ pt B) (p : q (~ i) ≡ pt B)
-    → fst B
-  c1 i j k a q p =
-    hfill (λ k
-       → λ {(i = i0) → p j -- p (j ∧ k)
-          ; (i = i1) → compPath-filler' (sym q) p k j -- p j
-          ; (j = i0) → q (k ∨ ~ i) -- pt B
-          ; (j = i1) → pt B}) -- p k})
-          (inS (p j)) -- (inS (q (~ i ∨ ~ j)))
-          k
-
-  c2 : (i k : I) → (a : fst A) (q : fst f a ≡ pt B) (p : q (~ i) ≡ pt B)
-    → join (fib⋆ .fst) (Ω B .fst)
-  c2 i k a q p =
-    hfill (λ k → λ {(i = i0) → inr p
-                   ; (i = i1) → push (a , p) (sym q ∙ p) (~ k)})
-          (inS (inr λ j → c1 i j i1 a q p)) k
-
-  GaneaFib→join : GaneaFib → join (fib⋆ .fst) (Ω B .fst)
+  GaneaFib→join : GaneaFib → join (fiber (fst f) (pt B)) (Ω B .fst)
   GaneaFib→join (inl x , p) = inr p
   GaneaFib→join (inr x , p) = inl (x , p)
-  GaneaFib→join (push (a , q) i , p) = c2 i i1 a q p
+  GaneaFib→join (push (a , q) i , p) =
+    ganea-fill₃ (fst f) (pt B) i i1 a q p
 
-  cancel : (x : GaneaFib) → other (GaneaFib→join x) ≡ x
-  cancel (inl x , y) = refl
-  cancel (inr x , y) = refl
-  cancel (push (a , q) i , p) j =
-    hcomp (λ k → λ {(i = i0) → inl tt , p
-                   ; (i = i1) → mg p k j
-                   ; (j = i0) → other (c2 i k a q p)
-                   ; (j = i1) → push (a , q) i , p})
+  GaneaFib→join→GaneaFib : (x : GaneaFib)
+    → join→GaneaFib (GaneaFib→join x) ≡ x
+  GaneaFib→join→GaneaFib (inl x , y) = refl
+  GaneaFib→join→GaneaFib (inr x , y) = refl
+  GaneaFib→join→GaneaFib (push (a , q) i , p) j =
+    hcomp (λ k
+    → λ {(i = i0) → inl tt , p
+        ; (i = i1) → main p k j
+        ; (j = i0) → join→GaneaFib (ganea-fill₃ (fst f) (pt B) i k a q p)
+        ; (j = i1) → push (a , q) i , p})
           ((push (a , q) (i ∧ j))
-          , λ k → hcomp (λ r → λ {(i = i0) → p k
-                                  ; (i = i1) → compPath-filler' (sym q) p (r ∧ (~ j)) k
-                                  ; (j = i0) → c1 i k r a q p
-                                  ; (j = i1) → p k
-                                  ; (k = i0) → q ((r ∧ ~ j) ∨ ~ i)
-                                  ; (k = i1) → snd B})
-                         (p k))
+         , λ k → hcomp (λ r
+           → λ {(i = i0) → p k
+               ; (i = i1) → compPath-filler' (sym q) p (r ∧ (~ j)) k
+               ; (j = i0) → ganea-fill₂ i k r _ q _ p
+               ; (j = i1) → p k
+               ; (k = i0) → q ((r ∧ ~ j) ∨ ~ i)
+               ; (k = i1) → snd B})
+      (p k))
     where
-    fill1 : (i j k : I) (p : fst f a ≡ pt B)
-      → fst B
-    fill1 i j k p =
-      hfill (λ k → λ {(i = i0) → compPath-filler p (sym (sym q ∙ p)) k j
-                     ; (i = i1) → q (j ∨ ~ k)
-                     ; (j = i0) → q (~ k ∧ i)
-                     ; (j = i1) → ((λ i₂ → q (~ i₂)) ∙ p) (~ k ∧ ~ i)})
-            (inS (compPath-filler (sym q) p j (~ i))) k
+    filler₁ : (i j k : I) (p : fst f a ≡ pt B) → fst B
+    filler₁ i j k p =
+      hfill (λ k
+        → λ {(i = i0) → compPath-filler p (sym (sym q ∙ p)) k j
+            ; (i = i1) → q (j ∨ ~ k)
+            ; (j = i0) → q (~ k ∧ i)
+            ; (j = i1) → ((λ i₂ → q (~ i₂)) ∙ p) (~ k ∧ ~ i)})
+       (inS (compPath-filler (sym q) p j (~ i))) k
 
-    lazy : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (q : x ≡ y) (z : A) (p : x ≡ z)
-      → PathP (λ k → Square (λ j → q (j ∨ ~ k)) refl
-                 (compPath-filler' (λ i₂ → q (~ i₂)) p (~ k)) (sym q ∙ p))
-                 (λ i _ → (sym q ∙ p) i) λ i j → compPath-filler' (sym q) p j i
-    lazy {x = x} = J> (J> h x refl (refl ∙ refl) (compPath-filler' (sym refl) refl))
+    J-lem : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (q : x ≡ y)
+      (z : A) (p : x ≡ z)
+      → PathP (λ k
+        → Square (λ j → q (j ∨ ~ k)) refl
+                  (compPath-filler' (λ i₂ → q (~ i₂)) p (~ k))
+                  (sym q ∙ p))
+               (λ i _ → (sym q ∙ p) i)
+                λ i j → compPath-filler' (sym q) p j i
+    J-lem {x = x} =
+      J> (J> J-lem-refl x refl (refl ∙ refl)
+              (compPath-filler' (sym refl) refl))
       where
-      h : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (p : x ≡ y) (q : x ≡ y) (r : p ≡ q)
-              → PathP (λ k → Square refl refl (r (~ k)) q) (λ i _ → q i) λ i j → r j i
-      h = J> (J> refl)
+      J-lem-refl : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A)
+        (p : x ≡ y) (q : x ≡ y) (r : p ≡ q)
+        → PathP (λ k → Square refl refl (r (~ k)) q)
+                 (λ i _ → q i) λ i j → r j i
+      J-lem-refl = J> (J> refl)
 
-    lazy2 : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (q : x ≡ y) (z : A) (p : x ≡ z)
-      → PathP (λ r → Square (λ i → compPath-filler' (sym q) p i r) (λ i → (sym q ∙ p) (r ∨ ~ i)) (λ j → p (r ∨ j)) refl)
+    J-lem₂ : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (q : x ≡ y) (z : A) (p : x ≡ z)
+      → PathP (λ r → Square (λ i → compPath-filler' (sym q) p i r)
+                              (λ i → (sym q ∙ p) (r ∨ ~ i))
+                              (λ j → p (r ∨ j)) refl)
         (λ j i → compPath-filler (sym q) p j (~ i))
         refl
-    lazy2 {x = x} = J> (J> λ i j k → {!lazy x refl _ refl  (~ i) k (~ j)!})
+    J-lem₂ {x = x} =
+      J> (J> λ i j k → J-lem₂-refl _ (rUnit (refl {x = x})) k i j)
+      where
+      J-lem₂-refl : ∀ {ℓ} {A : Type ℓ} {x : A} (q : x ≡ x) (r : refl ≡ q)
+        → PathP (λ k
+          → Square (λ j → r j (~ k)) (λ _ → x)
+                    (r k) λ i → q (i ∨ ~ k))
+                 refl λ i _ → q i
+      J-lem₂-refl = J> refl
 
-    help : (p : fst f a ≡ pt B)
-      → cong other (push (a , p) (sym q ∙ p))
+    main' : (p : fst f a ≡ pt B)
+      → cong join→GaneaFib (push (a , p) (sym q ∙ p))
         ≡ λ i → (push (a , q) (~ i)) , (compPath-filler' (sym q) p i)
-    proj₁ (help p i j) = push (a , λ j → fill1 i j i1 p) (~ j)
-    snd (help p i j) r =
-      hcomp (λ k → λ {(i = i0) → other-fill (a , p) (sym q ∙ p) j r k
-                     ; (i = i1) → lazy _ q _ p k r j -- compPath-filler'-filler (sym q) p j r k
+    proj₁ (main' p i j) = push (a , λ j → filler₁ i j i1 p) (~ j)
+    snd (main' p i j) r =
+      hcomp (λ k → λ {(i = i0) → ganea-fill₁ _ p _ (sym (sym q ∙ p)) j r k
+                     ; (i = i1) → J-lem _ q _ p k r j
                      ; (j = i0) → compPath-filler' (sym q) p (~ k ∧ i) r
                      ; (j = i1) → (sym q ∙ p) (r ∨ ~ (k ∨ i))
-                     ; (r = i0) → fill1 i j k p
+                     ; (r = i0) → filler₁ i j k p
                      ; (r = i1) → snd B})
-            (lazy2 _ q _ p r j i)
-    {-
-    r = i0 ⊢ 
-r = i1 ⊢ snd B
-j = i0 ⊢ p r
-j = i1 ⊢ hcomp (doubleComp-faces (λ _ → snd B) p r) (q (~ r))
-i = i0 ⊢ hcomp
-         (λ { k (j = i0) → p r
-            ; k (j = i1)
-                → hcomp (doubleComp-faces (λ _ → snd B) p (r ∨ ~ k))
-                  (q (~ (r ∨ ~ k)))
-            ; k (r = i0)
-                → compPath-filler p
-                  (λ i₂ →
-                     hcomp (doubleComp-faces (λ _ → snd B) p (~ i₂)) (q (~ (~ i₂))))
-                  k j
-            ; k (r = i1) → snd B
-            })
-         (p (r ∨ j))
-i = i1 ⊢ hcomp
-         (λ { k (r = i0) → q (~ (~ j))
-            ; k (r = i1) → p k
-            ; k (j = i0) → p (r ∧ k)
-            })
-         (q (~ r ∧ j))
-    -}
-    {-
-      hcomp (λ k → λ {(i = i0) → {!c2 j i1 a p (sym q ∙ p)!}
-                     ; (i = i1) → {!!}
-                     ; (j = i0) → {!!}
-                     ; (j = i1) → {!!}})
-            {!!} -}
-    -- other (push (a , p) (sym q ∙ p) j)
-    open import Cubical.Foundations.Path
+            (J-lem₂ _ q _ p r j i)
 
-    mg : (p : fst f a ≡ pt B)
-      → PathP (λ k → other (push (a , p) (sym q ∙ p) (~ k)) ≡ (inr a , p))
+    main : (p : fst f a ≡ pt B)
+      → PathP (λ k → join→GaneaFib (push (a , p) (sym q ∙ p) (~ k))
+                    ≡ (inr a , p))
               (λ i → push (a , q) i , compPath-filler' (sym q) p (~ i))
               refl
-    mg p = flipSquare (cong sym (help p)
+    main p = flipSquare (cong sym (main' p)
       ◁ λ j i → push (a , q) (j ∨ i)
           , compPath-filler' (sym q) p (~ (j ∨ i)))
 
-    cool : PathP (λ j → other {!c2 i i1 a q !} ≡ {!!}) {!!} {!!}
-    cool = {!j = i0 ⊢ inr a , p
-j = i1 ⊢ inl tt , sym q ∙ p
-i = i0 ⊢ other (push (a , p) (sym q ∙ p) j)
-i = i1 ⊢ push (a , q) (~ j) , compPath-filler' (sym q) p j!}
-
-
-  {-
-  Goal: join GaneaFib (Ω B .proj₁)
-———— Boundary (wanted) —————————————————————————————————————
-i = i0 ⊢ inr b
-i = i1 ⊢ inl (inr a , b)
-  -}
-  {- help a p i b
+  join→GaneaFib→join : (x : join (fiber (fst f) (pt B)) (Ω B .fst))
+    → GaneaFib→join (join→GaneaFib x) ≡ x
+  join→GaneaFib→join (inl x) = refl
+  join→GaneaFib→join (inr x) = refl
+  join→GaneaFib→join (push (a , q) p i) j =
+    main (fst f) (pt B) q p j i
     where
-    help : (a : fst A) (p : fst f a ≡ pt B)
-      → PathP (λ i → (b : (p (~ i) ≡ pt B)) → join GaneaFib (Ω B .fst))
-        inr
-        λ b → inl (inr a , b)
-    help a p = {!!} -}
- 
-    -- (sym (push {!!} {!!}) ∙∙ {!!} ∙∙ {!!}) i -- push ((inr (fst a)) , {!a!}) {!!} (~ i)
+    main : (f : fst A → fst B) (b : fst B)
+        (q : f a ≡ b) (p : b ≡ b)
+      → Path (Path (join (fiber f b) (b ≡ b)) _ _)
+        (λ i → ganea-fill₃ f b (~ i) i1 a (q ∙ sym p)
+        λ j → ganea-fill₁ _ q _ (sym p) i j i1)
+        (push (a , q) p)
+    main f = J> λ q i j
+      → hcomp (λ k → λ {(i = i0) → ganea-fill₃ f (f a) (~ j) i1
+                                       a (lUnit (sym q) k)
+                                       (side _ q k j)
+                        ; (i = i1) → push (a , refl) q j
+                        ; (j = i0) → inl (a , refl)
+                        ; (j = i1) → inr q})
+         (hcomp (λ k → λ {(i = i0) → ganea-fill₃ f (f a) (~ j) k
+                                       a (sym q) λ j₂ → q (~ j ∨ j₂)
+                        ; (i = i1) → push (a , refl) q (j ∨ ~ k)
+                        ; (j = i0) → push (a , refl) (rUnit q (~ i)) (~ k)
+                        ; (j = i1) → inr q})
+                (inr λ k → btm _ q k i j))
+       where
+       btm : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (q : x ≡ y)
+         → Cube refl refl
+                 (λ k j → ganea-fill₂ (~ j) k i1
+                            _ (sym q) _ (λ j₂ → q (~ j ∨ j₂)))
+                 (λ k j → q k)
+                 (λ k i → rUnit q (~ i) k)
+                 λ k i → q k
+       btm {x = x} =
+         J> λ k i j → ganea-fill₂ (~ j) k (~ i) x (sym refl) x refl
 
-  lem : join GaneaFib (Ω B .fst) → GaneaFib
-  lem (inl x) = x
-  lem (inr x) = inl tt , x
-  lem (push (inl x , p) b i) = (push ((pt A) , (snd f ∙ p)) ∙ sym (push ((pt A) , (snd f ∙ b)))) i , {!!}
-  lem (push (inr x , p) b i) = {!i = i0 ⊢ inr b
-i = i1 ⊢ inl (inr a , b)!}
-  lem (push (push a i₁ , p) b i) = {!!}
+
+       side : ∀ {ℓ} {A : Type ℓ} {x : A} (y : A) (p : x ≡ y)
+         → PathP (λ k → Square refl p (lUnit (sym p) k) refl)
+                  (λ i j → p (~ i ∨ j))
+                  λ j j₂ → ganea-fill₁ _ refl _ (sym p) j j₂ i1
+       side {A = A} {x = x} =
+         J> ((λ i j k → lUnit (refl {x = x}) (i ∧ ~ k) j)
+            ▷ λ k i j → filler k j i)
+         where
+         filler : I → I → I → A
+         filler k i j =
+             hcomp (λ r → λ {(i = i0) → rUnit (refl {x = x}) r j
+                            ; (i = i1) → x
+                            ; (j = i0) → x
+                            ; (j = i1) → x
+                            ; (k = i0) → rUnit (refl {x = x}) (r ∧ ~ i) j
+                            ; (k = i1) → ganea-fill₁ x refl x refl j i r})
+                   x
+
+  GaneaIso : Iso GaneaFib (join (fiber (fst f) (pt B)) (Ω B .fst))
+  fun GaneaIso = GaneaFib→join
+  inv GaneaIso = join→GaneaFib
+  rightInv GaneaIso = join→GaneaFib→join
+  leftInv GaneaIso = GaneaFib→join→GaneaFib
