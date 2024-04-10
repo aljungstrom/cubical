@@ -5,8 +5,9 @@ necessary.
 
 This file contains benchmarks for the paper:
 
-Synthetic Cohomology Theory in Cubical Agda
-
+Synthetic Integral Cohomology in Cubical Agda
+Guillaume Brunerie, Axel Ljungström, Anders Mörtberg
+Computer Science Logic (CSL) 2022
 
 Command to run the benchmarks and get timings:
 
@@ -20,12 +21,29 @@ then it should be removed before the above command is run.
 {-# OPTIONS --safe #-}
 module Cubical.Experiments.ZCohomology.Benchmarks where
 
-open import Cubical.Foundations.Everything
+open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.HLevels
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
 open import Cubical.Data.Int
+open import Cubical.Data.Sigma
+
 open import Cubical.HITs.Sn
-open import Cubical.Algebra.Group hiding (ℤ ; Bool)
+open import Cubical.HITs.KleinBottle
+open import Cubical.HITs.RPn.Base
+open import Cubical.HITs.SetTruncation
+open import Cubical.HITs.Pushout
+open import Cubical.Homotopy.Hopf
+open S¹Hopf
+open import Cubical.HITs.Truncation
+open import Cubical.HITs.Susp
+open import Cubical.HITs.S1
+
+open import Cubical.Algebra.Group
+open import Cubical.Algebra.Group.Morphisms
+open import Cubical.Algebra.Group.MorphismProperties
+
 open import Cubical.ZCohomology.Base
 open import Cubical.ZCohomology.Properties
 open import Cubical.ZCohomology.GroupStructure hiding (_+ₕ_) renaming (_+'ₕ_ to _+ₕ_)
@@ -36,20 +54,9 @@ open import Cubical.ZCohomology.Groups.Sn
 open import Cubical.ZCohomology.Groups.Wedge
 open import Cubical.ZCohomology.Groups.Torus
 open import Cubical.ZCohomology.Groups.KleinBottle
-open import Cubical.ZCohomology.Groups.WedgeOfSpheres
+open import Cubical.ZCohomology.Groups.S2wedgeS1wedgeS1
 open import Cubical.ZCohomology.Groups.RP2
 open import Cubical.ZCohomology.Groups.CP2
-open import Cubical.Data.Sigma
-
-open import Cubical.HITs.KleinBottle
-open import Cubical.HITs.RPn.Base
-open import Cubical.HITs.SetTruncation
-open import Cubical.HITs.Pushout
-open import Cubical.HITs.Hopf
-open import Cubical.HITs.Truncation
-open import Cubical.HITs.Susp
-open import Cubical.HITs.S1
-
 
 open IsGroupHom
 open Iso

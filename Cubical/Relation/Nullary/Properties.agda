@@ -12,9 +12,11 @@ module Cubical.Relation.Nullary.Properties where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Equiv
 open import Cubical.Functions.Fixpoint
 
 open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Sigma.Base using (_×_)
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.HITs.PropositionalTruncation.Base
@@ -22,17 +24,23 @@ open import Cubical.HITs.PropositionalTruncation.Base
 private
   variable
     ℓ : Level
-    A : Type ℓ
+    A B : Type ℓ
+    P : A -> Type ℓ
 
-IsoPresDiscrete : ∀ {ℓ ℓ'}{A : Type ℓ} {B : Type ℓ'} → Iso A B
+-- Functions with a section preserve discreteness.
+sectionDiscrete
+  : (f : A → B) (g : B → A) → section f g → Discrete A → Discrete B
+sectionDiscrete f g sect dA x y with dA (g x) (g y)
+... | yes p = yes (sym (sect x) ∙∙ cong f p ∙∙ sect y)
+... | no ¬p = no (λ p → ¬p (cong g p))
+
+isoPresDiscrete : Iso A B → Discrete A → Discrete B
+isoPresDiscrete e = sectionDiscrete fun inv rightInv
+  where open Iso e
+
+EquivPresDiscrete : ∀ {ℓ ℓ'}{A : Type ℓ} {B : Type ℓ'} → A ≃ B
                → Discrete A → Discrete B
-IsoPresDiscrete e dA x y with dA (Iso.inv e x) (Iso.inv e y)
-... | yes p = subst Dec (λ i → Iso.rightInv e x i ≡ Iso.rightInv e y i)
-                        (yes (cong (Iso.fun e) p))
-... | no p = subst Dec (λ i → Iso.rightInv e x i ≡ Iso.rightInv e y i)
-                   (no λ q → p (sym (Iso.leftInv e (Iso.inv e x))
-                     ∙∙ cong (Iso.inv e) q
-                     ∙∙ Iso.leftInv e (Iso.inv e y)))
+EquivPresDiscrete e = isoPresDiscrete (equivToIso e)
 
 isProp¬ : (A : Type ℓ) → isProp (¬ A)
 isProp¬ A p q i x = isProp⊥ (p x) (q x) i
@@ -41,6 +49,17 @@ Stable¬ : Stable (¬ A)
 Stable¬ ¬¬¬a a = ¬¬¬a ¬¬a
   where
   ¬¬a = λ ¬a → ¬a a
+
+StableΠ : (∀ x → Stable (P x)) -> Stable (∀ x → P x)
+StableΠ Ps e x = Ps x λ k → e λ f → k (f x)
+
+Stable→ : Stable B → Stable (A → B)
+Stable→ Bs = StableΠ (λ _ → Bs)
+
+Stable× : Stable A -> Stable B -> Stable (A × B)
+Stable× As Bs e = λ where
+  .fst → As λ k → e (k ∘ fst)
+  .snd → Bs λ k → e (k ∘ snd)
 
 fromYes : A → Dec A → A
 fromYes _ (yes a) = a
@@ -66,6 +85,17 @@ mapDec : ∀ {B : Type ℓ} → (A → B) → (¬ A → ¬ B) → Dec A → Dec 
 mapDec f _ (yes p) = yes (f p)
 mapDec _ f (no ¬p) = no (f ¬p)
 
+EquivPresDec : ∀ {ℓ ℓ'}{A : Type ℓ} {B : Type ℓ'} → A ≃ B
+          → Dec A → Dec B
+EquivPresDec p = mapDec (p .fst) (λ f → f ∘ invEq p)
+
+¬→¬∥∥ : ¬ A → ¬ ∥ A ∥₁
+¬→¬∥∥ ¬p ∣ a ∣₁ = ¬p a
+¬→¬∥∥ ¬p (squash₁ x y i) = isProp⊥ (¬→¬∥∥ ¬p x) (¬→¬∥∥ ¬p y) i
+
+Dec∥∥ : Dec A → Dec ∥ A ∥₁
+Dec∥∥ = mapDec ∣_∣₁ ¬→¬∥∥
+
 -- we have the following implications
 -- X ── ∣_∣ ─→ ∥ X ∥
 -- ∥ X ∥ ── populatedBy ─→ ⟪ X ⟫
@@ -73,13 +103,12 @@ mapDec _ f (no ¬p) = no (f ¬p)
 
 -- reexport propositional truncation for uniformity
 open Cubical.HITs.PropositionalTruncation.Base
-  using (∣_∣) public
 
-populatedBy : ∥ A ∥ → ⟪ A ⟫
+populatedBy : ∥ A ∥₁ → ⟪ A ⟫
 populatedBy {A = A} a (f , fIsConst) = h a where
-  h : ∥ A ∥ → Fixpoint f
-  h ∣ a ∣ = f a , fIsConst (f a) a
-  h (squash a b i) = 2-Constant→isPropFixpoint f fIsConst (h a) (h b) i
+  h : ∥ A ∥₁ → Fixpoint f
+  h ∣ a ∣₁ = f a , fIsConst (f a) a
+  h (squash₁ a b i) = 2-Constant→isPropFixpoint f fIsConst (h a) (h b) i
 
 notEmptyPopulated : ⟪ A ⟫ → NonEmpty A
 notEmptyPopulated {A = A} pop u = u (fixpoint (pop (h , hIsConst))) where
@@ -104,9 +133,9 @@ PStable→SplitSupport pst = pst ∘ populatedBy
 SplitSupport→Collapsible : SplitSupport A → Collapsible A
 SplitSupport→Collapsible {A = A} hst = h , hIsConst where
   h : A → A
-  h p = hst ∣ p ∣
+  h p = hst ∣ p ∣₁
   hIsConst : 2-Constant h
-  hIsConst p q i = hst (squash ∣ p ∣ ∣ q ∣ i)
+  hIsConst p q i = hst (squash₁ ∣ p ∣₁ ∣ q ∣₁ i)
 
 Collapsible→SplitSupport : Collapsible A → SplitSupport A
 Collapsible→SplitSupport f x = fixpoint (populatedBy x f)
@@ -138,9 +167,9 @@ HSeparated→isSet = Collapsible≡→isSet ∘ HSeparated→Collapsible≡
 
 isSet→HSeparated : isSet A → HSeparated A
 isSet→HSeparated setA x y = extract where
-  extract : ∥ x ≡ y ∥ → x ≡ y
-  extract ∣ p ∣ = p
-  extract (squash p q i) = setA x y (extract p) (extract q) i
+  extract : ∥ x ≡ y ∥₁ → x ≡ y
+  extract ∣ p ∣₁ = p
+  extract (squash₁ p q i) = setA x y (extract p) (extract q) i
 
 -- by the above more sufficient conditions to inhibit isSet A are given
 PStable≡→HSeparated : PStable≡ A → HSeparated A
@@ -154,6 +183,17 @@ Separated→PStable≡ st x y = Stable→PStable (st x y)
 
 Separated→isSet : Separated A → isSet A
 Separated→isSet = PStable≡→isSet ∘ Separated→PStable≡
+
+SeparatedΠ : (∀ x → Separated (P x)) -> Separated ((x : A) -> P x)
+SeparatedΠ Ps f g e i x = Ps x (f x) (g x) (λ k → e (k ∘ cong (λ f → f x))) i
+
+Separated→ : Separated B -> Separated (A → B)
+Separated→ Bs = SeparatedΠ (λ _ → Bs)
+
+Separated× : Separated A -> Separated B -> Separated (A × B)
+Separated× As Bs p q e i = λ where
+  .fst → As (fst p) (fst q) (λ k → e λ r → k (cong fst r)) i
+  .snd → Bs (snd p) (snd q) (λ k → e λ r → k (cong snd r)) i
 
 -- Proof of Hedberg's theorem: a type with decidable equality is an h-set
 Discrete→Separated : Discrete A → Separated A

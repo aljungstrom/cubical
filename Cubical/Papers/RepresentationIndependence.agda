@@ -26,8 +26,9 @@ import Cubical.Data.Sigma.Properties           as Sigma
 import Cubical.HITs.PropositionalTruncation    as PropositionalTruncation
 import Cubical.HITs.Cost.Base                  as CostMonad
 import Cubical.HITs.SetQuotients               as SetQuotients
-import Cubical.HITs.Rationals.QuoQ             as SetQuoQ
-import Cubical.HITs.Rationals.SigmaQ           as SigmaQ
+import Cubical.Data.Rationals                  as SetQuoQ
+import Cubical.Data.Rationals.MoreRationals.SigmaQ
+                                               as SigmaQ
 -- 3.1
 import Cubical.Foundations.SIP                 as SIP
 import Cubical.Structures.Axioms               as Axioms
@@ -93,14 +94,14 @@ open Equivalences renaming (propBiimpl→Equiv to prop≃) public
 
 -- 2.3 Higher Inductive Types
 -- Propositional Truncation
-open PropositionalTruncation using (∥_∥ ; map) public
+open PropositionalTruncation using (∥_∥₁ ; map) public
 open CostMonad using (Cost ; Cost≡ ; _>>=_ ; return
                            ; fib ; fibTail) public
 -- Computation
-_ : fib 20 ≡ (6765 , PropositionalTruncation.∣ 21890 ∣)
+_ : fib 20 ≡ (6765 , PropositionalTruncation.∣ 21890 ∣₁)
 _ = refl
 
-_ : fibTail 20 ≡ (6765 , PropositionalTruncation.∣ 19 ∣)
+_ : fibTail 20 ≡ (6765 , PropositionalTruncation.∣ 19 ∣₁)
 _ = refl
 
 -- Set Quotients

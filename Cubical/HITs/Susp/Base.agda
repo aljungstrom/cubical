@@ -7,29 +7,45 @@ open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Pointed
 
+open import Cubical.Data.Unit
 open import Cubical.Data.Bool
 open import Cubical.Data.Empty
 
 open import Cubical.HITs.S1
-open import Cubical.HITs.S2
+open import Cubical.HITs.S2.Base
 open import Cubical.HITs.S3
 
 open Iso
 
-data Susp {ℓ} (A : Type ℓ) : Type ℓ where
+private
+  variable
+    ℓ ℓ' : Level
+
+data Susp (A : Type ℓ) : Type ℓ where
   north : Susp A
   south : Susp A
   merid : (a : A) → north ≡ south
 
-∙Susp : ∀ {ℓ} (A : Type ℓ) → Pointed ℓ
-∙Susp A = Susp A , north
+Susp∙ : (A : Type ℓ) → Pointed ℓ
+Susp∙ A = Susp A , north
 
 -- induced function
-suspFun : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} (f : A → B)
+suspFun : {A : Type ℓ} {B : Type ℓ'} (f : A → B)
        → Susp A → Susp B
 suspFun f north = north
 suspFun f south = south
 suspFun f (merid a i) = merid (f a) i
+
+UnitIsoSuspUnit : Iso Unit (Susp Unit)
+fun UnitIsoSuspUnit _ = north
+inv UnitIsoSuspUnit _ = tt
+rightInv UnitIsoSuspUnit north = refl
+rightInv UnitIsoSuspUnit south = merid tt
+rightInv UnitIsoSuspUnit (merid tt j) k = merid tt (j ∧ k)
+leftInv UnitIsoSuspUnit _ = refl
+
+Unit≃SuspUnit : Unit ≃ Susp Unit
+Unit≃SuspUnit = isoToEquiv UnitIsoSuspUnit
 
 BoolIsoSusp⊥ : Iso Bool (Susp ⊥)
 fun BoolIsoSusp⊥ = λ {true  → north; false → south}

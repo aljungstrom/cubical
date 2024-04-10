@@ -11,7 +11,8 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Univalence
 open import Cubical.Relation.Nullary
 
-open import Cubical.Data.Int using () renaming (ℤ to Int ; discreteℤ to discreteInt ; isSetℤ to isSetInt)
+open import Cubical.Data.Int using ()
+  renaming (ℤ to Int ; discreteℤ to discreteInt ; isSetℤ to isSetInt ; 0≢1-ℤ to 0≢1-Int)
 open import Cubical.Data.Nat as ℕ using (ℕ; zero; suc)
 open import Cubical.Data.Bool as Bool using (Bool; not; notnot)
 
@@ -70,12 +71,12 @@ rec pos' neg' eq (posneg i) = eq i
 
 elim : ∀ (P : ℤ → Type l)
        → (pos' : ∀ n → P (pos n))
-       → (neg' : ∀ n → P (neg n))
-       → (λ i → P (posneg i)) [ pos' 0 ≡ neg' 0 ]
+       → (negsuc' : ∀ n → P (neg (suc n)))
        → ∀ z → P z
-elim P pos' neg' eq (pos n) = pos' n
-elim P pos' neg' eq (neg n) = neg' n
-elim P pos' neg' eq (posneg i) = eq i
+elim P pos' negsuc' (pos n) = pos' n
+elim P pos' negsuc' (neg zero) = subst P posneg (pos' zero)
+elim P pos' negsuc' (neg (suc n)) = negsuc' n
+elim P pos' negsuc' (posneg i) = subst-filler P posneg (pos' zero) i
 
 
 Int→ℤ : Int → ℤ
@@ -98,8 +99,11 @@ Int→ℤ→Int : ∀ (n : Int) → ℤ→Int (Int→ℤ n) ≡ n
 Int→ℤ→Int (Int.pos n) _ = Int.pos n
 Int→ℤ→Int (Int.negsuc n) _ = Int.negsuc n
 
+isoIntℤ : Iso Int ℤ
+isoIntℤ = iso Int→ℤ ℤ→Int ℤ→Int→ℤ Int→ℤ→Int
+
 Int≡ℤ : Int ≡ ℤ
-Int≡ℤ = isoToPath (iso Int→ℤ ℤ→Int ℤ→Int→ℤ Int→ℤ→Int)
+Int≡ℤ = isoToPath isoIntℤ
 
 discreteℤ : Discrete ℤ
 discreteℤ = subst Discrete Int≡ℤ discreteInt
@@ -213,3 +217,9 @@ instance
 instance
   fromNegℤ : HasFromNeg ℤ
   fromNegℤ = record { Constraint = λ _ → Unit ; fromNeg = λ n → neg n }
+
+
+-- ℤ is non-trivial
+
+0≢1-ℤ : ¬ 0 ≡ 1
+0≢1-ℤ p = 0≢1-Int (cong ℤ→Int p)

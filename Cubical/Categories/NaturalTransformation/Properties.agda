@@ -4,26 +4,34 @@
 module Cubical.Categories.NaturalTransformation.Properties where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism renaming (iso to iIso)
 open import Cubical.Data.Sigma
-open import Cubical.Categories.Category
+open import Cubical.Categories.Category renaming (isIso to isIsoC)
 open import Cubical.Categories.Functor.Base
-open import Cubical.Categories.Morphism renaming (isIso to isIsoC)
+open import Cubical.Categories.Functor.Properties
+open import Cubical.Categories.Morphism
+open import Cubical.Categories.Isomorphism
 open import Cubical.Categories.NaturalTransformation.Base
 
 private
   variable
-    ℓC ℓC' ℓD ℓD' : Level
+    ℓB ℓB' ℓC ℓC' ℓD ℓD' ℓE ℓE' : Level
+    C : Category ℓC ℓC'
+    D : Category ℓD ℓD'
+    F F' : Functor C D
 
 open isIsoC
 open NatIso
 open NatTrans
-open Precategory
+open Category
 open Functor
+open Iso
 
-module _ {C : Precategory ℓC ℓC'} {D : Precategory ℓD ℓD'} where
+module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} where
   private
     _⋆ᴰ_ : ∀ {x y z} (f : D [ x , y ]) (g : D [ y , z ]) → D [ x , z ]
     f ⋆ᴰ g = f ⋆⟨ D ⟩ g
@@ -44,9 +52,9 @@ module _ {C : Precategory ℓC ℓC'} {D : Precategory ℓD ℓD'} where
   module NatTransP where
 
     module _ {F G : Functor C D} where
-      open Iso
 
       -- same as Sigma version
+      NatTransΣ : Type (ℓ-max (ℓ-max ℓC ℓC') ℓD')
       NatTransΣ = Σ[ ob ∈ ((x : C .ob) → D [(F .F-ob x) , (G .F-ob x)]) ]
                      ({x y : _ } (f : C [ x , y ]) → (F .F-hom f) ⋆ᴰ (ob y) ≡ (ob x) ⋆ᴰ (G .F-hom f))
 
@@ -56,7 +64,8 @@ module _ {C : Precategory ℓC ℓC'} {D : Precategory ℓD ℓD'} where
       NatTransIsoΣ .rightInv _ = refl
       NatTransIsoΣ .leftInv _ = refl
 
-      NatTrans≡Σ = ua (isoToEquiv NatTransIsoΣ)
+      NatTrans≡Σ : NatTrans F G ≡ NatTransΣ
+      NatTrans≡Σ = isoToPath NatTransIsoΣ
 
       -- introducing paths
       NatTrans-≡-intro : ∀ {αo βo : N-ob-Type F G}
@@ -66,7 +75,8 @@ module _ {C : Precategory ℓC ℓC'} {D : Precategory ℓD ℓD'} where
                        → PathP (λ i → ({x y : C .ob} (f : C [ x , y ]) → (F .F-hom f) ⋆ᴰ (p i y) ≡ (p i x) ⋆ᴰ (G .F-hom f))) αh βh
                        → natTrans {F = F} {G} αo αh ≡ natTrans βo βh
       NatTrans-≡-intro p q i = natTrans (p i) (q i)
-    module _ {F G : Functor C D} {α β : NatTrans F G} where
+
+  module _ {F G : Functor C D} {α β : NatTrans F G} where
       open Iso
       private
         αOb = α .N-ob
@@ -88,59 +98,98 @@ module _ {C : Precategory ℓC ℓC'} {D : Precategory ℓD ℓD'} where
 
       NTPath≡PathΣ = ua NTPath≃PathΣ
 
-  module _ ⦃ isCatD : isCategory D ⦄ where
+  module _ where
     open NatTransP
 
-    -- if the target category has hom Sets, then any natural transformation is a set
-    isSetNat : ∀ {F G : Functor C D}
-             → isSet (NatTrans F G)
-    isSetNat {F} {G} α β p1 p2 i = comp (λ i → NTPath≡PathΣ {F = F} {G} {α} {β} (~ i))
-                                        (λ j → λ {(i = i0) → transport-filler NTPath≡PathΣ p1 (~ j) ;
-                                                  (i = i1) → transport-filler NTPath≡PathΣ p2 (~ j)})
-                                        (p1Σ≡p2Σ i)
-      where
-        αOb = α .N-ob
-        βOb = β .N-ob
-        αHom = α .N-hom
-        βHom = β .N-hom
+    isSetNatTrans : {F G : Functor C D} → isSet (NatTrans F G)
+    isSetNatTrans =
+      isSetRetract (fun NatTransIsoΣ) (inv NatTransIsoΣ) (leftInv NatTransIsoΣ)
+                   (isSetΣSndProp (isSetΠ (λ _ → isSetHom D))
+                                  (λ _ → isPropImplicitΠ2 (λ _ _ → isPropΠ (λ _ → isSetHom D _ _))))
 
-        -- convert to sigmas so we can reason about constituent paths separately
-        p1Σ : Σ[ p ∈ (αOb ≡ βOb) ]
-                (PathP (λ i → ({x y : _} (f : _) → F ⟪ f ⟫ ⋆ᴰ (p i y) ≡ (p i x) ⋆ᴰ G ⟪ f ⟫))
-                      αHom
-                      βHom)
-        p1Σ = transport NTPath≡PathΣ p1
 
-        p2Σ : Σ[ p ∈ (αOb ≡ βOb) ]
-                (PathP (λ i → ({x y : _} (f : _) → F ⟪ f ⟫ ⋆ᴰ (p i y) ≡ (p i x) ⋆ᴰ G ⟪ f ⟫))
-                       αHom
-                       βHom)
-        p2Σ = transport NTPath≡PathΣ p2
+-- Natural isomorphism is path when the target category is univalent.
 
-        -- type aliases
-        typeN-ob = (x : C .ob) → D [(F .F-ob x) , (G .F-ob x)]
-        typeN-hom : typeN-ob → Type _
-        typeN-hom ϕ = {x y : C .ob} (f : C [ x , y ]) → (F .F-hom f) ⋆ᴰ (ϕ y) ≡ (ϕ x) ⋆ᴰ (G .F-hom f)
+module _
+  (isUnivD : isUnivalent D)
+  {F G : Functor C D} where
 
-        -- the Ob function is a set
-        isSetN-ob : isSet ((x : C .ob) → D [(F .F-ob x) , (G .F-ob x)])
-        isSetN-ob = isOfHLevelΠ 2 λ _ → isCatD .isSetHom
+  open isUnivalent isUnivD
 
-        -- the Hom function is a set
-        isSetN-hom : (ϕ : typeN-ob) → isSet (typeN-hom ϕ)
-        isSetN-hom γ = isProp→isSet (isPropImplicitΠ λ x → isPropImplicitΠ λ y → isPropΠ λ f → isCatD .isSetHom _ _)
+  NatIsoToPath : NatIso F G → F ≡ G
+  NatIsoToPath niso =
+    Functor≡ (λ x → CatIsoToPath (_ , niso .nIso x))
+      (λ f → isoToPath-Square isUnivD _ _ _ _ (niso .trans .N-hom f))
 
-        -- in fact it's a dependent Set, which we need because N-hom depends on N-ob
-        isSetN-homP : isOfHLevelDep 2 (λ γ → {x y : C .ob} (f : C [ x , y ]) → (F .F-hom f) ⋆ᴰ (γ y) ≡ (γ x) ⋆ᴰ (G .F-hom f))
-        isSetN-homP = isOfHLevel→isOfHLevelDep 2 isSetN-hom
+  NatIso→Path→NatIso : (niso : NatIso F G) → pathToNatIso (NatIsoToPath niso) ≡ niso
+  NatIso→Path→NatIso niso = NatIso≡ (λ i x → secEq (univEquiv _ _) (_ , niso .nIso x) i .fst)
 
-        -- components of the equality
-        p1Ob≡p2Ob : fst p1Σ ≡ fst p2Σ
-        p1Ob≡p2Ob = isSetN-ob _ _ (fst p1Σ) (fst p2Σ)
+  Path→NatIso→Path : (p : F ≡ G) → NatIsoToPath (pathToNatIso p) ≡ p
+  Path→NatIso→Path p = FunctorPath≡ (λ i j x → retEq (univEquiv _ _) (λ i → p i .F-ob x) i j)
 
-        p1Hom≡p2Hom : PathP (λ i → PathP (λ j → typeN-hom (p1Ob≡p2Ob i j)) αHom βHom)
-                            (snd p1Σ) (snd p2Σ)
-        p1Hom≡p2Hom = isSetN-homP _ _ (snd p1Σ) (snd p2Σ) p1Ob≡p2Ob
+  Iso-Path-NatIso : Iso (F ≡ G) (NatIso F G)
+  Iso-Path-NatIso = iso pathToNatIso NatIsoToPath NatIso→Path→NatIso Path→NatIso→Path
 
-        p1Σ≡p2Σ : p1Σ ≡ p2Σ
-        p1Σ≡p2Σ = ΣPathP (p1Ob≡p2Ob , p1Hom≡p2Hom)
+  Path≃NatIso : (F ≡ G) ≃ NatIso F G
+  Path≃NatIso = isoToEquiv Iso-Path-NatIso
+module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} where
+  seqNatIso : {F G H : Functor C D} → NatIso F G → NatIso G H → NatIso F H
+  seqNatIso ı ı' .trans = seqTrans (ı .trans) (ı' .trans)
+  seqNatIso ı ı' .nIso x .inv = ı' .nIso x .inv ⋆⟨ D ⟩ ı .nIso x .inv
+  seqNatIso ı ı' .nIso x .sec =
+    D .⋆Assoc _ _ _
+    ∙ cong (_⋆_ D (ı' .nIso x .inv))
+      (sym (D .⋆Assoc _ _ _)
+      ∙ cong (D ∘ ı' .trans .N-ob x) (ı .nIso x .sec)
+      ∙ D .⋆IdL (ı' .trans .N-ob x))
+    ∙ ı' .nIso x .sec
+  seqNatIso ı ı' .nIso x .ret =
+    (sym (D .⋆Assoc _ _ _))
+    ∙ cong (_∘_ D (ı .nIso x .inv))
+      (D .⋆Assoc _ _ _
+      ∙ cong (D ⋆ ı .trans .N-ob x) (ı' .nIso x .ret)
+      ∙ D .⋆IdR (ı .trans .N-ob x))
+    ∙ ı .nIso x .ret
+
+  CAT⋆IdR : {F : Functor C D} → NatIso (Id ∘F F) F
+  CAT⋆IdR {F} .trans .N-ob = idTrans F .N-ob
+  CAT⋆IdR {F} .trans .N-hom = idTrans F .N-hom
+  CAT⋆IdR {F} .nIso = idNatIso F .nIso
+
+module _ {B : Category ℓB ℓB'}{C : Category ℓC ℓC'}{D : Category ℓD ℓD'} where
+  _∘ʳi_ : ∀ (K : Functor C D) → {G H : Functor B C} (β : NatIso G H)
+       → NatIso (K ∘F G) (K ∘F H)
+  _∘ʳi_ K β .trans = K ∘ʳ β .trans
+  _∘ʳi_ K β .nIso x = preserveIsosF {F = K} (β .trans .N-ob _ , β .nIso x) .snd
+
+  open Functor
+  _∘ˡi_ : ∀ (K : Functor B C) → {G H : Functor C D} (β : NatIso G H)
+       → NatIso (G ∘F K) (H ∘F K)
+  _∘ˡi_ K β .trans = β .trans ∘ˡ K
+  _∘ˡi_ K β .nIso b  = β .nIso (K ⟅ b ⟆)
+
+  CAT⋆Assoc : {E : Category ℓE ℓE'}
+            (F : Functor B C)(G : Functor C D)(H : Functor D E)
+            → NatIso (H ∘F (G ∘F F)) ((H ∘F G) ∘F F)
+  CAT⋆Assoc F G H .trans .N-ob = idTrans ((H ∘F G) ∘F F) .N-ob
+  CAT⋆Assoc F G H .trans .N-hom = idTrans ((H ∘F G) ∘F F) .N-hom
+  CAT⋆Assoc F G H .nIso = idNatIso ((H ∘F G) ∘F F) .nIso
+
+
+
+⇒^opFiso : Iso (F ⇒ F') (_^opF {C = C} {D = D} F' ⇒ F ^opF )
+N-ob (fun ⇒^opFiso x) = N-ob x
+N-hom (fun ⇒^opFiso x) f = sym (N-hom x f)
+inv ⇒^opFiso = _
+rightInv ⇒^opFiso _ = refl
+leftInv ⇒^opFiso _ = refl
+
+congNatIso^opFiso : Iso (F ≅ᶜ F') (_^opF  {C = C} {D = D} F'  ≅ᶜ F ^opF )
+trans (fun congNatIso^opFiso x) = Iso.fun ⇒^opFiso (trans x)
+inv (nIso (fun congNatIso^opFiso x) x₁) = _
+sec (nIso (fun congNatIso^opFiso x) x₁) = ret (nIso x x₁)
+ret (nIso (fun congNatIso^opFiso x) x₁) = sec (nIso x x₁)
+inv congNatIso^opFiso = _
+rightInv congNatIso^opFiso _ = refl
+leftInv congNatIso^opFiso _ = refl
+

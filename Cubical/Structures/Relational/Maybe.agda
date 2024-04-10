@@ -76,7 +76,7 @@ maybePositiveRel :
 maybePositiveRel σ .act = maybeRelAction (σ .act)
 maybePositiveRel σ .reflexive nothing = _
 maybePositiveRel σ .reflexive (just s) = σ .reflexive s
-maybePositiveRel σ .detransitive R R' {nothing} {nothing} r = ∣ nothing , _ , _ ∣
+maybePositiveRel σ .detransitive R R' {nothing} {nothing} r = ∣ nothing , _ , _ ∣₁
 maybePositiveRel σ .detransitive R R' {just s} {just u} rr' =
   Trunc.map (λ {(t , r , r') → just t , r , r'}) (σ .detransitive R R' rr')
 maybePositiveRel {S = S} {ρ = ρ} {θ = θ} σ .quo {X} R =
@@ -107,7 +107,7 @@ maybePositiveRel {S = S} {ρ = ρ} {θ = θ} σ .quo {X} R =
   isom .inv = bwd
   isom .rightInv nothing = refl
   isom .rightInv (just x) =
-    elimProp {B = λ x → fwd (bwd (just x)) ≡ just x}
+    elimProp {P = λ x → fwd (bwd (just x)) ≡ just x}
       (λ _ → isOfHLevelMaybe 0 squash/ _ _)
       (λ _ → refl)
       x

@@ -1,84 +1,47 @@
-{-# OPTIONS --postfix-projections --safe #-}
-
+{-# OPTIONS --safe #-}
 module Cubical.Categories.Presheaf.Base where
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.Equiv
-open import Cubical.HITs.PropositionalTruncation
 
 open import Cubical.Categories.Category
-open import Cubical.Categories.Functor
-open import Cubical.Categories.NaturalTransformation
-open import Cubical.Categories.Instances.Sets
+open import Cubical.Categories.Functor.Base
 open import Cubical.Categories.Instances.Functors
-
-module _ {ℓ ℓ'} where
-
-  PreShv : Precategory ℓ ℓ' → (ℓS : Level) → Precategory (ℓ-max (ℓ-max ℓ ℓ') (ℓ-suc ℓS)) (ℓ-max (ℓ-max ℓ ℓ') ℓS)
-  PreShv C ℓS = FUNCTOR (C ^op) (SET ℓS)
-
-instance
-  isCatPreShv : ∀ {ℓ ℓ'} {C : Precategory ℓ ℓ'} {ℓS}
-    → isCategory (PreShv C ℓS)
-  isCatPreShv {C = C} {ℓS} = isCatFUNCTOR (C ^op) (SET ℓS)
+open import Cubical.Categories.Instances.Sets
 
 private
   variable
-    ℓ ℓ' : Level
+    ℓ ℓ' ℓS : Level
 
-module Yoneda (C : Precategory ℓ ℓ') ⦃ C-cat : isCategory C ⦄ where
-  open Functor
-  open NatTrans
-  open Precategory C
+Presheaf : Category ℓ ℓ' → (ℓS : Level) → Type (ℓ-max (ℓ-max ℓ ℓ') (ℓ-suc ℓS))
+Presheaf C ℓS = Functor (C ^op) (SET ℓS)
 
-  yo : ob → Functor (C ^op) (SET ℓ')
-  yo x .F-ob y .fst = C [ y , x ]
-  yo x .F-ob y .snd = C-cat .isSetHom
-  yo x .F-hom f g = f ⋆⟨ C ⟩ g
-  yo x .F-id i f = ⋆IdL f i
-  yo x .F-seq f g i h = ⋆Assoc g f h i
+PresheafCategory : Category ℓ ℓ' → (ℓS : Level)
+       → Category (ℓ-max (ℓ-max ℓ ℓ') (ℓ-suc ℓS))
+                  (ℓ-max (ℓ-max ℓ ℓ') ℓS)
+PresheafCategory C ℓS = FUNCTOR (C ^op) (SET ℓS)
 
-  YO : Functor C (PreShv C ℓ')
-  YO .F-ob = yo
-  YO .F-hom f .N-ob z g = g ⋆⟨ C ⟩ f
-  YO .F-hom f .N-hom g i h = ⋆Assoc g h f i
-  YO .F-id = makeNatTransPath λ i _ → λ f → ⋆IdR f i
-  YO .F-seq f g = makeNatTransPath λ i _ → λ h → ⋆Assoc h f g (~ i)
+isUnivalentPresheafCategory : {C : Category ℓ ℓ'}
+                            → isUnivalent (PresheafCategory C ℓS)
+isUnivalentPresheafCategory = isUnivalentFUNCTOR _ _ isUnivalentSET
 
+open Category
+open Functor
 
-  module _ {x} (F : Functor (C ^op) (SET ℓ')) where
-    yo-yo-yo : NatTrans (yo x) F → F .F-ob x .fst
-    yo-yo-yo α = α .N-ob _ (id _)
+action : ∀ (C : Category ℓ ℓ') → (P : Presheaf C ℓS)
+       → {a b : C .ob} → C [ a , b ] → fst (P ⟅ b ⟆) → fst (P ⟅ a ⟆)
+action C P = P .F-hom
 
-    no-no-no : F .F-ob x .fst → NatTrans (yo x) F
-    no-no-no a .N-ob y f = F .F-hom f a
-    no-no-no a .N-hom f = funExt λ g i → F .F-seq g f i a
+-- Convenient notation for naturality
+syntax action C P f ϕ = ϕ ∘ᴾ⟨ C , P ⟩ f
 
-    yoIso : Iso (NatTrans (yo x) F) (F .F-ob x .fst)
-    yoIso .Iso.fun = yo-yo-yo
-    yoIso .Iso.inv = no-no-no
-    yoIso .Iso.rightInv b i = F .F-id i b
-    yoIso .Iso.leftInv a = makeNatTransPath (funExt λ _ → funExt rem)
-      where
-        rem : ∀ {z} (x₁ : C [ z , x ]) → F .F-hom x₁ (yo-yo-yo a) ≡ (a .N-ob z) x₁
-        rem g =
-          F .F-hom g (yo-yo-yo a)
-            ≡[ i ]⟨ a .N-hom g (~ i) (id x) ⟩
-          a .N-hom g i0 (id x)
-            ≡[ i ]⟨ a .N-ob _ (⋆IdR g i) ⟩
-          (a .N-ob _) g
-            ∎
+∘ᴾId : ∀ (C : Category ℓ ℓ') → (P : Presheaf C ℓS) → {a : C .ob}
+     → (ϕ : fst (P ⟅ a ⟆))
+     → ϕ ∘ᴾ⟨ C , P ⟩ C .id ≡ ϕ
+∘ᴾId C P ϕ i = P .F-id i ϕ
 
-    yoEquiv : NatTrans (yo x) F ≃ F .F-ob x .fst
-    yoEquiv = isoToEquiv yoIso
-
-
-  isFullYO : isFull YO
-  isFullYO x y F[f] = ∣ yo-yo-yo _ F[f] , yoIso {x} (yo y) .Iso.leftInv F[f] ∣
-
-  isFaithfulYO : isFaithful YO
-  isFaithfulYO x y f g p i =
-    hcomp
-      (λ j → λ{ (i = i0) → ⋆IdL f j; (i = i1) → ⋆IdL g j})
-      (yo-yo-yo _ (p i))
+∘ᴾAssoc : ∀ (C : Category ℓ ℓ') → (P : Presheaf C ℓS) → {a b c : C .ob}
+        → (ϕ : fst (P ⟅ c ⟆))
+        → (f : C [ b , c ])
+        → (g : C [ a , b ])
+        → ϕ ∘ᴾ⟨ C , P ⟩ (f ∘⟨ C ⟩ g) ≡ (ϕ ∘ᴾ⟨ C , P ⟩ f) ∘ᴾ⟨ C , P ⟩ g
+∘ᴾAssoc C P ϕ f g i = P .F-seq f g i ϕ

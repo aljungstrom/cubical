@@ -12,6 +12,7 @@ open import Cubical.Data.Bool.Base
 open import Cubical.Data.Sum.Base hiding (elim)
 open import Cubical.Data.Empty.Base hiding (elim)
 open import Cubical.Data.Unit.Base
+open import Cubical.Data.Sigma.Base
 
 predℕ : ℕ → ℕ
 predℕ zero = zero
@@ -42,6 +43,14 @@ elim : ∀ {ℓ} {A : ℕ → Type ℓ}
 elim a₀ _ zero = a₀
 elim a₀ f (suc n) = f n (elim a₀ f n)
 
+elim+2 : ∀ {ℓ} {A : ℕ → Type ℓ} → A 0 → A 1
+          → ((n : ℕ) → (A (suc n) → A (suc (suc n))))
+          → (n : ℕ) → A n
+elim+2 a0 a1 ind zero = a0
+elim+2 a0 a1 ind (suc zero) = a1
+elim+2 {A = A} a0 a1 ind (suc (suc n)) =
+  ind n (elim+2 {A = A} a0 a1 ind (suc n))
+
 isEven isOdd : ℕ → Bool
 isEven zero = true
 isEven (suc n) = isOdd n
@@ -59,3 +68,23 @@ isEvenT n = toType (isEven n)
 
 isOddT : ℕ → Type
 isOddT n = isEvenT (suc n)
+
+isZero : ℕ → Bool
+isZero zero = true
+isZero (suc n) = false
+
+-- exponential
+
+_^_ : ℕ → ℕ → ℕ
+m ^ 0 = 1
+m ^ (suc n) = m · m ^ n
+
+
+-- Iterated product
+_ˣ_ : ∀ {ℓ} (A : ℕ → Type ℓ) (n : ℕ) → Type ℓ
+A ˣ zero = A zero
+A ˣ suc n = (A ˣ n) × A (suc n)
+
+0ˣ : ∀ {ℓ} (A : ℕ → Type ℓ) (0A : (n : ℕ) → A n) → (n : ℕ) → A ˣ n
+0ˣ A 0A zero = 0A zero
+0ˣ A 0A (suc n) = (0ˣ A 0A n) , (0A (suc n))

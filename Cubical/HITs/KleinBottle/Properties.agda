@@ -17,10 +17,61 @@ open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Univalence
 open import Cubical.Data.Int
 open import Cubical.Data.Sigma
-open import Cubical.HITs.S1
-open import Cubical.HITs.PropositionalTruncation as PropTrunc
+open import Cubical.HITs.S1 hiding (rec)
+open import Cubical.HITs.PropositionalTruncation as PropTrunc hiding (rec)
 
 open import Cubical.HITs.KleinBottle.Base
+
+rec : ∀ {ℓ} {A : Type ℓ} (x : A)
+     (l1 l2 : x ≡ x)
+  → Square l2 l2 (sym l1) l1
+  → KleinBottle → A
+rec x l1 l2 sq point = x
+rec x l1 l2 sq (line1 i) = l1 i
+rec x l1 l2 sq (line2 i) = l2 i
+rec x l1 l2 sq (square i i₁) = sq i i₁
+
+elimSet : ∀ {ℓ} {A : KleinBottle → Type ℓ}
+  → ((x : _) → isSet (A x))
+  → (a₀ : A point)
+  → (l1 : PathP (λ i → A (line1 i)) a₀ a₀)
+  → (l2 : PathP (λ i → A (line2 i)) a₀ a₀)
+  → (x : _) → A x
+elimSet set a₀ l1 l2 point = a₀
+elimSet set a₀ l1 l2 (line1 i) = l1 i
+elimSet set a₀ l1 l2 (line2 i) = l2 i
+elimSet {A = A} set a₀ l1 l2 (square i j) = h i j
+  where
+  h : SquareP (λ i j → A (square i j)) l2 l2 (symP l1) l1
+  h = toPathP (isOfHLevelPathP' 1 (set _) _ _ _ _)
+
+elimProp : ∀ {ℓ} {A : KleinBottle → Type ℓ}
+  → ((x : _) → isProp (A x))
+  → (a₀ : A point)
+  → (x : _) → A x
+elimProp prop a₀ =
+  elimSet (λ _ → isProp→isSet (prop _))
+    a₀
+    (isProp→PathP (λ _ → prop _) _ _)
+    (isProp→PathP (λ _ → prop _) _ _)
+
+K²FunCharacIso : ∀ {ℓ} {A : KleinBottle → Type ℓ}
+  → Iso ((x : KleinBottle) → A x)
+         (Σ[ x ∈ A point ]
+           Σ[ p ∈ PathP (λ i → A (line1 i)) x x ]
+           (Σ[ q ∈ PathP (λ i → A (line2 i)) x x ]
+             SquareP (λ i j → A (square i j))
+               q q (λ i → p (~ i)) p))
+Iso.fun K²FunCharacIso f =
+  f point , cong f line1 , cong f line2 , λ i j → f (square i j)
+Iso.inv K²FunCharacIso (a , p1 , p2 , sq) point = a
+Iso.inv K²FunCharacIso (a , p1 , p2 , sq) (line1 i) = p1 i
+Iso.inv K²FunCharacIso (a , p1 , p2 , sq) (line2 i) = p2 i
+Iso.inv K²FunCharacIso (a , p1 , p2 , sq) (square i j) = sq i j
+Iso.rightInv K²FunCharacIso _ = refl
+Iso.leftInv K²FunCharacIso f =
+  funExt λ { point → refl ; (line1 i) → refl
+          ; (line2 i) → refl ; (square i i₁) → refl}
 
 loop1 : S¹ → KleinBottle
 loop1 base = point

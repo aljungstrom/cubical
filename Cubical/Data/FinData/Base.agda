@@ -5,7 +5,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 
 import Cubical.Data.Empty as ⊥
-open import Cubical.Data.Nat using (ℕ; zero; suc; _+_)
+open import Cubical.Data.Nat using (ℕ; zero; suc; _+_; _·_; +-assoc)
 open import Cubical.Data.Bool.Base
 open import Cubical.Relation.Nullary
 
@@ -17,6 +17,13 @@ private
 data Fin : ℕ → Type₀ where
   zero : {n : ℕ} → Fin (suc n)
   suc  : {n : ℕ} (i : Fin n) → Fin (suc n)
+
+-- useful patterns
+pattern one   = suc zero
+pattern two   = suc one
+pattern three = suc two
+pattern four  = suc three
+pattern five  = suc four
 
 toℕ : ∀ {n} → Fin n → ℕ
 toℕ zero    = 0
@@ -65,7 +72,6 @@ elim P fz fs {suc k} (suc fj) = fs (elim P fz fs fj)
 rec : ∀{k} → (a0 aS : A) → Fin k → A
 rec a0 aS zero = a0
 rec a0 aS (suc x) = aS
-
 
 FinVec : (A : Type ℓ) (n : ℕ) → Type ℓ
 FinVec A n = Fin n → A

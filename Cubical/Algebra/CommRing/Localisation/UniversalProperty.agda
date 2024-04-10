@@ -21,7 +21,7 @@ open import Cubical.Functions.Embedding
 
 import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Bool
-open import Cubical.Data.Nat renaming ( _+_ to _+ℕ_ ; _·_ to _·ℕ_
+open import Cubical.Data.Nat renaming ( _+_ to _+ℕ_ ; _·_ to _·ℕ_ ; _^_ to _^ℕ_
                                       ; +-comm to +ℕ-comm ; +-assoc to +ℕ-assoc
                                       ; ·-assoc to ·ℕ-assoc ; ·-comm to ·ℕ-comm)
 open import Cubical.Data.Vec
@@ -32,7 +32,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary
 
 open import Cubical.Algebra.Ring
-open import Cubical.Algebra.RingSolver.ReflectionSolving
+open import Cubical.Tactics.CommRingSolver.Reflection
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.CommRing.Localisation.Base
 
@@ -78,9 +78,9 @@ module _ (R' : CommRing ℓ) (S' : ℙ (fst R')) (SMultClosedSubset : isMultClos
   snd /1AsCommRingHom =
     makeIsRingHom
       refl
-      (λ r r' → cong [_] (≡-× (cong₂ (_+_) (sym (·Rid r)) (sym (·Rid r')))
-                              (Σ≡Prop (λ x → S' x .snd) (sym (·Lid 1r)))))
-      (λ _ _ → cong [_] (≡-× refl (Σ≡Prop (λ x → S' x .snd) (sym (·Lid 1r)))))
+      (λ r r' → cong [_] (≡-× (cong₂ (_+_) (sym (·IdR r)) (sym (·IdR r')))
+                              (Σ≡Prop (λ x → S' x .snd) (sym (·IdL 1r)))))
+      (λ _ _ → cong [_] (≡-× refl (Σ≡Prop (λ x → S' x .snd) (sym (·IdL 1r)))))
 
   S⁻¹Rˣ = S⁻¹RAsCommRing ˣ
   S/1⊆S⁻¹Rˣ : ∀ s → s ∈ S' → (s /1) ∈ S⁻¹Rˣ
@@ -95,12 +95,12 @@ module _ (R' : CommRing ℓ) (S' : ℙ (fst R')) (SMultClosedSubset : isMultClos
    B = fst B'
    open CommRingStr (snd B') renaming  ( is-set to Bset ; _·_ to _·B_ ; 1r to 1b
                                        ; _+_ to _+B_
-                                       ; ·Assoc to ·B-assoc ; ·-comm to ·B-comm
-                                       ; ·Lid to ·B-lid ; ·Rid to ·B-rid
-                                       ; ·Ldist+ to ·B-ldist-+)
+                                       ; ·Assoc to ·B-assoc ; ·Comm to ·B-comm
+                                       ; ·IdL to ·B-lid ; ·IdR to ·B-rid
+                                       ; ·DistL+ to ·B-ldist-+)
    open Units B' renaming (Rˣ to Bˣ ; RˣMultClosed to BˣMultClosed ; RˣContainsOne to BˣContainsOne)
    open RingTheory (CommRing→Ring B') renaming (·-assoc2 to ·B-assoc2)
-   open CommRingTheory B' renaming (·-commAssocl to ·B-commAssocl ; ·-commAssocSwap to ·B-commAssocSwap)
+   open CommRingTheory B' renaming (·CommAssocl to ·B-commAssocl ; ·CommAssocSwap to ·B-commAssocSwap)
 
    ψ₀ = fst ψ
    module ψ = IsRingHom (snd ψ)
@@ -118,7 +118,7 @@ module _ (R' : CommRing ℓ) (S' : ℙ (fst R')) (SMultClosedSubset : isMultClos
                         ⦃ ψS⊆Bˣ s' s'∈S' ⦄ ⦄
      ⦃ ψS⊆Bˣ (u · s) (SMultClosedSubset .multClosed u∈S' s∈S') ⦄
      where
-     -- only a few indidividual steps can be solved by the ring solver yet
+     -- only a few individual steps can be solved by the ring solver yet
      instancepath : ⦃ _ : ψ₀ s ∈ Bˣ ⦄ ⦃ _ : ψ₀ s' ∈ Bˣ ⦄
                     ⦃ _ : ψ₀ (u · s · s') ∈ Bˣ ⦄ ⦃ _ : ψ₀ (u · s) ·B ψ₀ s' ∈ Bˣ ⦄
                     ⦃ _ : ψ₀ (u · s) ∈ Bˣ ⦄
@@ -227,7 +227,7 @@ module _ (R' : CommRing ℓ) (S' : ℙ (fst R')) (SMultClosedSubset : isMultClos
      ⦃ ψS⊆Bˣ s s∈S' ⦄ ⦃ ψS⊆Bˣ s' s'∈S' ⦄ ⦃ ψS⊆Bˣ (s · s') (SMultClosedSubset .multClosed s∈S' s'∈S') ⦄
      ⦃ BˣMultClosed _ _ ⦃ ψS⊆Bˣ s s∈S' ⦄ ⦃ ψS⊆Bˣ s' s'∈S' ⦄ ⦄
      where
-     -- only a few indidividual steps can be solved by the ring solver yet
+     -- only a few individual steps can be solved by the ring solver yet
      instancepath : ⦃ _ : ψ₀ s ∈ Bˣ ⦄ ⦃ _ : ψ₀ s' ∈ Bˣ ⦄
                     ⦃ _ : ψ₀ (s · s') ∈ Bˣ ⦄ ⦃ _ : ψ₀ s ·B ψ₀ s' ∈ Bˣ ⦄
                 → ψ₀ (r · s' + r' · s) ·B ψ₀ (s · s') ⁻¹ ≡ ψ₀ r ·B ψ₀ s ⁻¹ +B ψ₀ r' ·B ψ₀ s' ⁻¹
@@ -265,7 +265,7 @@ module _ (R' : CommRing ℓ) (S' : ℙ (fst R')) (SMultClosedSubset : isMultClos
      ⦃ ψS⊆Bˣ s s∈S' ⦄ ⦃ ψS⊆Bˣ s' s'∈S' ⦄ ⦃ ψS⊆Bˣ (s · s') (SMultClosedSubset .multClosed s∈S' s'∈S') ⦄
      ⦃ BˣMultClosed _ _ ⦃ ψS⊆Bˣ s s∈S' ⦄ ⦃ ψS⊆Bˣ s' s'∈S' ⦄ ⦄
      where
-     -- only a indidividual steps can be solved by the ring solver yet
+     -- only a few individual steps can be solved by the ring solver yet
      instancepath : ⦃ _ : ψ₀ s ∈ Bˣ ⦄ ⦃ _ : ψ₀ s' ∈ Bˣ ⦄
                     ⦃ _ : ψ₀ (s · s') ∈ Bˣ ⦄ ⦃ _ : ψ₀ s ·B ψ₀ s' ∈ Bˣ ⦄
                   → ψ₀ (r · r') ·B ψ₀ (s · s') ⁻¹ ≡ (ψ₀ r ·B ψ₀ s ⁻¹) ·B (ψ₀ r' ·B ψ₀ s' ⁻¹)
@@ -297,9 +297,9 @@ module _ (R' : CommRing ℓ) (S' : ℙ (fst R')) (SMultClosedSubset : isMultClos
 
    χunique : (y : Σ[ χ' ∈ CommRingHom S⁻¹RAsCommRing B' ] fst χ' ∘ _/1 ≡ ψ₀)
            → (χ , funExt χcomp) ≡ y
-   χunique (χ' , χ'/1≡ψ) = Σ≡Prop (λ x → isSetΠ (λ _ → Bset) _ _) (RingHom≡f _ _ fχ≡fχ')
+   χunique (χ' , χ'/1≡ψ) = Σ≡Prop (λ x → isSetΠ (λ _ → Bset) _ _) (RingHom≡ fχ≡fχ')
     where
-    open RingHomRespUnits {A' = S⁻¹RAsCommRing} {B' = B'} χ'
+    open CommRingHomTheory {A' = S⁻¹RAsCommRing} {B' = B'} χ'
                           renaming (φ[x⁻¹]≡φ[x]⁻¹ to χ'[x⁻¹]≡χ'[x]⁻¹)
 
     module χ' = IsRingHom (χ' .snd)
@@ -320,7 +320,7 @@ module _ (R' : CommRing ℓ) (S' : ℙ (fst R')) (SMultClosedSubset : isMultClos
 
      ·ₗ-path : [ r , s , s∈S' ] ≡   [ r , 1r , SMultClosedSubset .containsOne ]
                                  ·ₗ [ 1r , s , s∈S' ]
-     ·ₗ-path = cong [_] (≡-× (sym (·Rid r)) (Σ≡Prop (λ x → S' x .snd) (sym (·Lid s))))
+     ·ₗ-path = cong [_] (≡-× (sym (·IdR r)) (Σ≡Prop (λ x → S' x .snd) (sym (·IdL s))))
 
      instancepath : ⦃ _ : ψ₀ s ∈ Bˣ ⦄ ⦃ _ : s /1 ∈ S⁻¹Rˣ ⦄ ⦃ _ : fst χ' (s /1) ∈ Bˣ ⦄
                   → ψ₀ r ·B ψ₀ s ⁻¹ ≡ fst χ' [ r , s , s∈S' ]
@@ -370,14 +370,13 @@ module _ (R' : CommRing ℓ) (S' : ℙ (fst R')) (SMultClosedSubset : isMultClos
    kerφ⊆annS : ∀ r → fst φ r ≡ 0a → ∃[ s ∈ S ] (s .fst) · r ≡ 0r
    surχ : ∀ a → ∃[ x ∈ R × S ] fst φ (x .fst) ·A (fst φ (x .snd .fst) ⁻¹) ⦃ φS⊆Aˣ _ (x .snd .snd) ⦄ ≡ a
 
- S⁻¹RChar : (A' : CommRing ℓ) (φ : CommRingHom R' A')
-          → PathToS⁻¹R A' φ
-          → S⁻¹RAsCommRing ≡ A'
- S⁻¹RChar A' φ cond = CommRingPath S⁻¹RAsCommRing A' .fst
-                    (S⁻¹R≃A , χ .snd)
+ S⁻¹RCharEquiv : (A' : CommRing ℓ) (φ : CommRingHom R' A')
+               → PathToS⁻¹R A' φ
+               → CommRingEquiv S⁻¹RAsCommRing A'
+ S⁻¹RCharEquiv A' φ cond = S⁻¹R≃A , χ .snd
   where
   open CommRingStr (snd A') renaming ( is-set to Aset ; 0r to 0a ; _·_ to _·A_ ; 1r to 1a
-                                      ; ·Rid to ·A-rid)
+                                      ; ·IdR to ·A-rid)
   open Units A' renaming (Rˣ to Aˣ ; RˣInvClosed to AˣInvClosed)
   open PathToS⁻¹R ⦃...⦄
   private
@@ -385,13 +384,13 @@ module _ (R' : CommRing ℓ) (S' : ℙ (fst R')) (SMultClosedSubset : isMultClos
    instance
     _ = cond
    χ = (S⁻¹RHasUniversalProp A' φ φS⊆Aˣ .fst .fst)
-   open HomTheory χ
+   open RingHomTheory χ
 
   S⁻¹R≃A : S⁻¹R ≃ A
   S⁻¹R≃A = fst χ , isEmbedding×isSurjection→isEquiv (Embχ , Surχ)
    where
    Embχ : isEmbedding (fst χ)
-   Embχ = injEmbedding squash/ Aset (ker≡0→inj λ {x} → kerχ≡0 x)
+   Embχ = injEmbedding Aset (ker≡0→inj λ {x} → kerχ≡0 x)
     where
     kerχ≡0 : (r/s : S⁻¹R) → fst χ r/s ≡ 0a → r/s ≡ 0ₗ
     kerχ≡0 = SQ.elimProp (λ _ → isPropΠ λ _ → squash/ _ _) kerχ≡[]
@@ -404,14 +403,20 @@ module _ (R' : CommRing ℓ) (S' : ℙ (fst R')) (SMultClosedSubset : isMultClos
        _ : fst φ s ∈ Aˣ
        _ = φS⊆Aˣ s s∈S'
        _ : fst φ s ⁻¹ ∈ Aˣ
-       _ = AˣInvClosed _
+       _ = AˣInvClosed (fst φ s)
 
       Σhelper : Σ[ s ∈ S ] (s .fst) · r ≡ 0r → [ r , s , s∈S' ] ≡ 0ₗ
       Σhelper ((u , u∈S') , q) = eq/ _ _ ((u , u∈S') , path)
        where
        path : u · r · 1r ≡ u · 0r · s
-       path = (λ i → ·Rid (q  i) i) ∙∙ sym (0LeftAnnihilates _)
+       path = (λ i → ·IdR (q  i) i) ∙∙ sym (0LeftAnnihilates _)
                                     ∙∙ cong (_· s) (sym (0RightAnnihilates _))
 
    Surχ : isSurjection (fst χ)
-   Surχ a = PT.rec isPropPropTrunc (λ x → PT.∣ [ x .fst ] , x .snd ∣) (surχ a)
+   Surχ a = PT.rec isPropPropTrunc (λ x → PT.∣ [ x .fst ] , x .snd ∣₁) (surχ a)
+
+
+ S⁻¹RChar : (A' : CommRing ℓ) (φ : CommRingHom R' A')
+          → PathToS⁻¹R A' φ
+          → S⁻¹RAsCommRing ≡ A'
+ S⁻¹RChar A' φ cond = uaCommRing (S⁻¹RCharEquiv A' φ cond)

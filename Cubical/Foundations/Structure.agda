@@ -10,7 +10,7 @@ private
     S : Type ℓ → Type ℓ'
 
 -- A structure is a type-family S : Type ℓ → Type ℓ', i.e. for X : Type ℓ and s : S X,
--- the pair (X , s) : TypeWithStr ℓ S means that X is equipped with a S-structure, witnessed by s.
+-- the pair (X , s) : TypeWithStr ℓ S means that X is equipped with an S-structure, witnessed by s.
 
 TypeWithStr : (ℓ : Level) (S : Type ℓ → Type ℓ') → Type (ℓ-max (ℓ-suc ℓ) ℓ')
 TypeWithStr ℓ S = Σ[ X ∈ Type ℓ ] S X
@@ -24,6 +24,10 @@ str = snd
 -- Alternative notation for typ
 ⟨_⟩ : TypeWithStr ℓ S → Type ℓ
 ⟨_⟩ = typ
+
+instance
+  mkTypeWithStr : ∀ {ℓ} {S : Type ℓ → Type ℓ'} {X} → {{S X}} → TypeWithStr ℓ S
+  mkTypeWithStr {{i}} = _ , i
 
 -- An S-structure should have a notion of S-homomorphism, or rather S-isomorphism.
 -- This will be implemented by a function ι : StrEquiv S ℓ'
@@ -41,4 +45,3 @@ EquivAction {ℓ} S = {X Y : Type ℓ} → X ≃ Y → S X ≃ S Y
 EquivAction→StrEquiv : {S : Type ℓ → Type ℓ''}
   → EquivAction S → StrEquiv S ℓ''
 EquivAction→StrEquiv α (X , s) (Y , t) e = equivFun (α e) s ≡ t
-
