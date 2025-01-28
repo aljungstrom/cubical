@@ -11,7 +11,7 @@ open import Cubical.Cohomology.EilenbergMacLane.Groups.Sn
 open import Cubical.Cohomology.EilenbergMacLane.CupProduct
 open import Cubical.Cohomology.EilenbergMacLane.Gysin
 open import Cubical.Cohomology.EilenbergMacLane.Rings.RPinf
-open import Cubical.Cohomology.EilenbergMacLane.Steenrod.sum-temp
+open import Cubical.Cohomology.EilenbergMacLane.Steenrod.sum-temp2
 
 
 open import Cubical.Homotopy.EilenbergMacLane.CupProduct
@@ -514,15 +514,15 @@ RP→EM-ℤ/2-CharacIso'-expl' (suc n) f x =
     where
     s = (⌣ₖ₂' (fst r) t (expEM₁ x (fst r)) (fst f t))
 
-RP→EM-ℤ/2-CharacIso'inv-hom⌣ : (n m : ℕ) (f : _) (g : _) (x : _)
-  → ⌣ₖ₂' n m (Iso.inv (RP→EM-ℤ/2-CharacIso' n) f x)
-              (Iso.inv (RP→EM-ℤ/2-CharacIso' m) g x)
-    ≡ Iso.inv (RP→EM-ℤ/2-CharacIso' (n + m))
-              (⌣ΠDepFinVec n m f g) x
-RP→EM-ℤ/2-CharacIso'inv-hom⌣ n m f g x =
-  cong₂ (⌣ₖ₂' n m) (RP→EM-ℤ/2-CharacIso'-expl' n f x) (RP→EM-ℤ/2-CharacIso'-expl' m g x)
-  ∙∙ {!!}
-  ∙∙ {!sym (RP→EM-ℤ/2-CharacIso'-expl' (n + m) (⌣ΠDepFinVec n m f g) x)!}
+-- RP→EM-ℤ/2-CharacIso'inv-hom⌣ : (n m : ℕ) (f : _) (g : _) (x : _)
+--   → ⌣ₖ₂' n m (Iso.inv (RP→EM-ℤ/2-CharacIso' n) f x)
+--               (Iso.inv (RP→EM-ℤ/2-CharacIso' m) g x)
+--     ≡ Iso.inv (RP→EM-ℤ/2-CharacIso' (n + m))
+--               (⌣ΠDepFinVec n m f g) x
+-- RP→EM-ℤ/2-CharacIso'inv-hom⌣ n m f g x =
+--   cong₂ (⌣ₖ₂' n m) (RP→EM-ℤ/2-CharacIso'-expl' n f x) (RP→EM-ℤ/2-CharacIso'-expl' m g x)
+--   ∙∙ {!!}
+--   ∙∙ {!sym (RP→EM-ℤ/2-CharacIso'-expl' (n + m) (⌣ΠDepFinVec n m f g) x)!}
 
 -- RP→EM-ℤ/2-CharacIso'-expl : (n : ℕ) (f : _) (x : _)
 --   → Iso.inv (RP→EM-ℤ/2-CharacIso' n) f x
@@ -542,160 +542,160 @@ RP→EM-ℤ/2-CharacIso'inv-hom⌣ n m f g x =
 --                  ∙ sym (transportRefl _))
 --   ∙ refl
 
+-- RP→EM-ℤ/2-CharacIso-hom' : (n m : ℕ) (x : _) (y : _)
+--   → Iso.inv (RP→EM-ℤ/2-CharacIso' (n + m)) (mult⌣ n m x y)
+--    ≡ λ a → ⌣ₖ₂' n m (Iso.inv (RP→EM-ℤ/2-CharacIso' n) x a)
+--                      (Iso.inv (RP→EM-ℤ/2-CharacIso' m) y a)
+-- RP→EM-ℤ/2-CharacIso-hom' zero m f g =
+--     cong (inv (RP→EM-ℤ/2-CharacIso' m)) (mult⌣₀ₗ m f g)
+--   ∙ funExt (help _ refl)
+--   where
+--   help : (t : ℤ/2 .fst) (r : fst f zero ≡ t) (x : EM ℤ/2 1)
+--     → inv (RP→EM-ℤ/2-CharacIso' m) (mult⌣₀ₗ m f g i1) x
+--     ≡ ⌣ₖ₂' zero m (fst f zero) (inv (RP→EM-ℤ/2-CharacIso' m) g x)
+--   help = ℤ/2-elim
+--     (λ r x → (funExt⁻ (cong (inv (RP→EM-ℤ/2-CharacIso' m))
+--          (toPathΠDepFinVec (EM∙ ℤ/2) _ λ k p
+--            → cong (λ t → ⌣ₖ₂ {n = zero} {m = k} t (fst g k)) r
+--             ∙ 0ₖ-⌣ₖ {G'' = ℤ/2Ring} zero k (fst g k))) x
+--       ∙ funExt⁻ (RP→EM-ℤ/2-CharacIso'inv∙ m) x)
+--       ∙ sym (subst-EM-0ₖ (+'≡+ zero m))
+--       ∙ cong (subst (EM ℤ/2) (+'≡+ zero m))
+--         (sym (0ₖ-⌣ₖ {G'' = ℤ/2Ring} zero m (inv (RP→EM-ℤ/2-CharacIso' m) g x))
+--        ∙ cong (λ t → ⌣ₖ₂ {n = zero} {m = m} t (inv (RP→EM-ℤ/2-CharacIso' m) g x))
+--               (sym r)))
+--     λ r x → funExt⁻ (cong (inv (RP→EM-ℤ/2-CharacIso' m))
+--               (toPathΠDepFinVec (EM∙ ℤ/2) _ λ k _
+--                 → cong (λ t → ⌣ₖ₂ {n = zero} {m = k} t (fst g k)) r
+--                 ∙ 1ₖ-⌣ₖ {G'' = ℤ/2Ring} k (fst g k))) x
+--       ∙ sym (transportRefl _) -- sym (subst-EM-0ₖ (+'≡+ zero m))
+--       ∙ cong (subst (EM ℤ/2) (+'≡+ zero m))
+--         (sym (1ₖ-⌣ₖ {G'' = ℤ/2Ring} m (inv (RP→EM-ℤ/2-CharacIso' m) g x))
+--        ∙ cong (λ t → ⌣ₖ₂ {n = zero} {m = m} t (inv (RP→EM-ℤ/2-CharacIso' m) g x))
+--               (sym r))
+-- RP→EM-ℤ/2-CharacIso-hom' (suc n) m f g =
+--   funExt λ x → (λ i
+--   → subst (EM ℤ/2)(+'-suc₁ (n + m))
+--          (fst
+--           (⌣RP∞'Equiv (n + m) .fst
+--            (inv (RP→EM-ℤ/2-CharacIso' (n + m))
+--             (tsa i))) x)
+--     +ₖ (sum' _+ₖ_ ⌣ₖ₂' (fst f) (fst g) ((suc n) + m)))
+--    ∙ (λ i → subst (EM ℤ/2)(+'-suc₁ (n + m))
+--          (fst (⌣RP∞'Equiv (n + m) .fst
+--            (RP→EM-ℤ/2-CharacIso-hom' n m (ΠDepFinVec↓ n (EM∙ ℤ/2) f) g i)) x)
+--     +ₖ (lem1 i))
+--    ∙ {!inv (RP→EM-ℤ/2-CharacIso' m) g x!}
+--    ∙ sym (⌣ₖ₂'-distrₗ (suc n) m
+--       (fst (⌣RP∞''Equiv n .fst  (inv (RP→EM-ℤ/2-CharacIso' n) (ΠDepFinVec↓ n (EM∙ ℤ/2) f))) x)
+--       (idfun (EM ℤ/2 (suc n)) (fst f (suc n)))
+--       (inv (RP→EM-ℤ/2-CharacIso' m) g x))
+--   where
+--   ⌣ₖ₂'-distrₗ : (n m : ℕ) (x y : EM ℤ/2 n) (z : EM ℤ/2 m)
+--     → ⌣ₖ₂' n m (x +ₖ y) z ≡ ⌣ₖ₂' n m x z +ₖ ⌣ₖ₂' n m y z
+--   ⌣ₖ₂'-distrₗ n m x y z = {!(inv (RP→EM-ℤ/2-CharacIso' m) (suc m) g x)!}
+--   lem1 : sum' _+ₖ_ ⌣ₖ₂' (fst f) (fst g) ((suc n) + m)
+--        ≡ ⌣ₖ₂' (suc n) m (fst f (suc n)) (fst g m)
+--   lem1 = {!⌣ₖ₂' (suc n) m
+--       (fst
+--        (⌣RP∞''Equiv n .fst
+--         (inv (RP→EM-ℤ/2-CharacIso' n) (ΠDepFinVec↓ n (EM∙ ℤ/2) (fst f , snd f))))
+--        x
+--        +ₖ idfun (EM ℤ/2 (suc n)) (fst f (suc n)))
+--       (inv (RP→EM-ℤ/2-CharacIso' m) g x)!}
+
+--   prs : (k : ℕ) → fst (fun (ΠDepFinVec-ind (n + m) (EM∙ ℤ/2)) (mult⌣ (suc n) m f g) .snd) k
+--                   ≡ fst (mult⌣ n m (ΠDepFinVec↓ n (EM∙ ℤ/2) f) g) k
+--   prs k = {! -- (Iso.inv (RP→EM-ℤ/2-CharacIso' m) g ?)!} -- Π↓-mult n m (EM∙ ℤ/2) (EM∙ ℤ/2) k _+ₖ_ ⌣ₖ₂' f (fst g)
+--         ∙ {!!}
+
+--   tsa : Iso.fun (ΠDepFinVec-ind (n + m) (EM∙ ℤ/2)) (mult⌣ (suc n) m f g) .snd
+--       ≡ mult⌣ n m (ΠDepFinVec↓ n (EM∙ ℤ/2) f) g
+--   tsa = toPathΠDepFinVec (EM∙ ℤ/2) _
+--     λ k p → {!!}
+
 -- -- RP→EM-ℤ/2-CharacIso-hom' : (n m : ℕ) (x : _) (y : _)
--- --   → Iso.inv (RP→EM-ℤ/2-CharacIso' (n + m)) (mult⌣ n m x y)
--- --    ≡ λ a → ⌣ₖ₂' n m (Iso.inv (RP→EM-ℤ/2-CharacIso' n) x a)
--- --                      (Iso.inv (RP→EM-ℤ/2-CharacIso' m) y a)
--- -- RP→EM-ℤ/2-CharacIso-hom' zero m f g =
--- --     cong (inv (RP→EM-ℤ/2-CharacIso' m)) (mult⌣₀ₗ m f g)
--- --   ∙ funExt (help _ refl)
+-- --   → Iso.inv (RP→EM-ℤ/2-CharacIso (n + m)) (multˣ ⌣ₖ₂' n m x y)
+-- --    ≡ λ a → ⌣ₖ₂' n m (Iso.inv (RP→EM-ℤ/2-CharacIso n) x a) (Iso.inv (RP→EM-ℤ/2-CharacIso m) y a)
+-- -- RP→EM-ℤ/2-CharacIso-hom' zero m =
+-- --   ℤ/2-elim
+-- --     (λ y → cong (inv (RP→EM-ℤ/2-CharacIso m))
+-- --               (multˣAnnₗ ⌣ₖ₂' 0ₖ (λ n m a → cong (subst (EM ℤ/2) (+'≡+ n m)) (0ₖ-⌣ₖ n m a)
+-- --                               ∙ subst-EM∙ (+'≡+ n m)  .snd) zero m y)
+-- --          ∙ cong (inv (RP→EM-ℤ/2-CharacIso m)) (sym (RP→EM-ℤ/2-CharacIso∙ m))
+-- --          ∙ Iso.leftInv (RP→EM-ℤ/2-CharacIso m) (λ _ → 0ₖ m)
+-- --          ∙ funExt λ a → sym (0ₖ-⌣ₖ₂' zero m (inv (RP→EM-ℤ/2-CharacIso m) y a)))
+-- --     λ y → cong (inv (RP→EM-ℤ/2-CharacIso m))
+-- --             (multˣIdL ⌣ₖ₂' fone (λ m a → transportRefl _ ∙ 1ₖ-⌣ₖ m a) m y)
+-- --         ∙ funExt λ a → sym (1ₖ-⌣ₖ m (inv (RP→EM-ℤ/2-CharacIso m) y a))
+-- --                       ∙ sym (transportRefl _)
+-- -- RP→EM-ℤ/2-CharacIso-hom' (suc n) m (f , y) g =
+-- --   funExt λ x → (λ i → fst (⌣RP∞''Equiv (n + m))
+-- --                             (RP→EM-ℤ/2-CharacIso-hom' n m f g i) .fst x
+-- --                          +ₖ ⌣ₖ₂' (suc n) m y (lastˣ (EM ℤ/2) m g))
+-- --              ∙∙ (λ i → subst (EM ℤ/2) (+'-suc₁ (n + m))
+-- --                           (⌣ₖ₂ {n = 1} {n + m} x
+-- --                             (⌣ₖ₂' n m (inv (RP→EM-ℤ/2-CharacIso n) f x)
+-- --                               (inv (RP→EM-ℤ/2-CharacIso m) g x)))
+-- --                +ₖ ⌣ₖ₂' (suc n) m y (lastˣ (EM ℤ/2) m g))
+-- --              ∙∙ {!subst (EM ℤ/2) (+'≡+ (suc n) m)
+-- --       (⌣ₖ₂
+-- --        (subst (EM ℤ/2) (+'-suc₁ n)
+-- --         (⌣ₖ₂ x (inv (RP→EM-ℤ/2-CharacIso n) f x)))
+-- --        (inv (RP→EM-ℤ/2-CharacIso m) g x)
+-- --        +ₖ ⌣ₖ₂ y (inv (RP→EM-ℤ/2-CharacIso m) g x))!}
+-- --                ∙ cong (subst (EM ℤ/2) (+'≡+ (suc n) m))
+-- --                    ( (sym (help' n x (inv (RP→EM-ℤ/2-CharacIso n) f x) (inv (RP→EM-ℤ/2-CharacIso m) g x) y))) -- (sym (help' n x (inv (RP→EM-ℤ/2-CharacIso n) f x) (inv (RP→EM-ℤ/2-CharacIso m) g x) y .fst))
+-- --              ∙∙ (λ i → subst (EM ℤ/2) (+'≡+ (suc n) m)
+-- --                   (⌣ₖ₂ {n = suc n} {m = m} (subst (EM ℤ/2) (+'-suc₁ n)
+-- --                      (⌣ₖ₂ {n = 1} {n} x (inv (RP→EM-ℤ/2-CharacIso n) f x)) +ₖ y)
+-- --                      (inv (RP→EM-ℤ/2-CharacIso m) g x)))
+-- --              ∙∙ λ i → ⌣ₖ₂' (suc n) m (fst (⌣RP∞''Equiv n) (inv (RP→EM-ℤ/2-CharacIso n) f) .fst x
+-- --                 +ₖ y) (inv (RP→EM-ℤ/2-CharacIso m) g x)
 -- --   where
--- --   help : (t : ℤ/2 .fst) (r : fst f zero ≡ t) (x : EM ℤ/2 1)
--- --     → inv (RP→EM-ℤ/2-CharacIso' m) (mult⌣₀ₗ m f g i1) x
--- --     ≡ ⌣ₖ₂' zero m (fst f zero) (inv (RP→EM-ℤ/2-CharacIso' m) g x)
--- --   help = ℤ/2-elim
--- --     (λ r x → (funExt⁻ (cong (inv (RP→EM-ℤ/2-CharacIso' m))
--- --          (toPathΠDepFinVec (EM∙ ℤ/2) _ λ k p
--- --            → cong (λ t → ⌣ₖ₂ {n = zero} {m = k} t (fst g k)) r
--- --             ∙ 0ₖ-⌣ₖ {G'' = ℤ/2Ring} zero k (fst g k))) x
--- --       ∙ funExt⁻ (RP→EM-ℤ/2-CharacIso'inv∙ m) x)
--- --       ∙ sym (subst-EM-0ₖ (+'≡+ zero m))
--- --       ∙ cong (subst (EM ℤ/2) (+'≡+ zero m))
--- --         (sym (0ₖ-⌣ₖ {G'' = ℤ/2Ring} zero m (inv (RP→EM-ℤ/2-CharacIso' m) g x))
--- --        ∙ cong (λ t → ⌣ₖ₂ {n = zero} {m = m} t (inv (RP→EM-ℤ/2-CharacIso' m) g x))
--- --               (sym r)))
--- --     λ r x → funExt⁻ (cong (inv (RP→EM-ℤ/2-CharacIso' m))
--- --               (toPathΠDepFinVec (EM∙ ℤ/2) _ λ k _
--- --                 → cong (λ t → ⌣ₖ₂ {n = zero} {m = k} t (fst g k)) r
--- --                 ∙ 1ₖ-⌣ₖ {G'' = ℤ/2Ring} k (fst g k))) x
--- --       ∙ sym (transportRefl _) -- sym (subst-EM-0ₖ (+'≡+ zero m))
--- --       ∙ cong (subst (EM ℤ/2) (+'≡+ zero m))
--- --         (sym (1ₖ-⌣ₖ {G'' = ℤ/2Ring} m (inv (RP→EM-ℤ/2-CharacIso' m) g x))
--- --        ∙ cong (λ t → ⌣ₖ₂ {n = zero} {m = m} t (inv (RP→EM-ℤ/2-CharacIso' m) g x))
--- --               (sym r))
--- -- RP→EM-ℤ/2-CharacIso-hom' (suc n) m f g =
--- --   funExt λ x → (λ i
--- --   → subst (EM ℤ/2)(+'-suc₁ (n + m))
--- --          (fst
--- --           (⌣RP∞'Equiv (n + m) .fst
--- --            (inv (RP→EM-ℤ/2-CharacIso' (n + m))
--- --             (tsa i))) x)
--- --     +ₖ (sum' _+ₖ_ ⌣ₖ₂' (fst f) (fst g) ((suc n) + m)))
--- --    ∙ (λ i → subst (EM ℤ/2)(+'-suc₁ (n + m))
--- --          (fst (⌣RP∞'Equiv (n + m) .fst
--- --            (RP→EM-ℤ/2-CharacIso-hom' n m (ΠDepFinVec↓ n (EM∙ ℤ/2) f) g i)) x)
--- --     +ₖ (lem1 i))
--- --    ∙ {!inv (RP→EM-ℤ/2-CharacIso' m) g x!}
--- --    ∙ sym (⌣ₖ₂'-distrₗ (suc n) m
--- --       (fst (⌣RP∞''Equiv n .fst  (inv (RP→EM-ℤ/2-CharacIso' n) (ΠDepFinVec↓ n (EM∙ ℤ/2) f))) x)
--- --       (idfun (EM ℤ/2 (suc n)) (fst f (suc n)))
--- --       (inv (RP→EM-ℤ/2-CharacIso' m) g x))
--- --   where
--- --   ⌣ₖ₂'-distrₗ : (n m : ℕ) (x y : EM ℤ/2 n) (z : EM ℤ/2 m)
--- --     → ⌣ₖ₂' n m (x +ₖ y) z ≡ ⌣ₖ₂' n m x z +ₖ ⌣ₖ₂' n m y z
--- --   ⌣ₖ₂'-distrₗ n m x y z = {!(inv (RP→EM-ℤ/2-CharacIso' m) (suc m) g x)!}
--- --   lem1 : sum' _+ₖ_ ⌣ₖ₂' (fst f) (fst g) ((suc n) + m)
--- --        ≡ ⌣ₖ₂' (suc n) m (fst f (suc n)) (fst g m)
--- --   lem1 = {!⌣ₖ₂' (suc n) m
+-- --   help' : (n : ℕ) (x : EM ℤ/2 1) (f : EM ℤ/2 n) (g : EM ℤ/2 m) (y : EM ℤ/2 (suc n))
+-- --     → (⌣ₖ₂ {n = suc n} {m = m}
+-- --         (subst (EM ℤ/2) (+'-suc₁ n)
+-- --           (⌣ₖ₂ {n = 1} {m = n} x f) +ₖ y) g
+-- --       ≡ ⌣ₖ₂ {n = suc n} {m = m} (subst (EM ℤ/2) (+'-suc₁ n) (⌣ₖ₂ {n = 1} {m = n} x f)) g
+-- --       +ₖ ⌣ₖ₂ {n = suc n} {m = m} y g)
+-- --      -- × ((g' : EM ℤ/2 m)
+-- --      --   → (subst (EM ℤ/2) (+'-suc₁ (n + m))
+-- --      --      (⌣ₖ₂ x (⌣ₖ₂' n m f g))
+-- --      --   +ₖ ⌣ₖ₂' (suc n) m y g'
+-- --      -- ≡ {!!} +ₖ {!⌣ₖ₂' (suc n) m y g'!}))
+-- --   help' n x = {!!}
+-- --     where
+-- --     c : {!!}
+-- --     c = {!!}
+-- --   main : (n m k l : ℕ) (x : EM ℤ/2 n) (y : EM ℤ/2 m) (z : EM ℤ/2 k) (w : EM ℤ/2 l)
+-- --     → subst (EM ℤ/2) {!!} (⌣ₖ₂ x {!!}) +ₖ subst (EM ℤ/2) {!lastˣ (EM ℤ/2) m !} (⌣ₖ₂ y w) ≡ {!⌣ₖ₂' (suc n) m y (lastˣ (EM ℤ/2) m g)!}
+-- --   main = {!!}
+-- -- {-
+-- -- Goal: fst
+-- --       (inv (Cubical.Cohomology.EilenbergMacLane.Rings.RPinf.help (n + m))
+-- --        (inv (RP→EM-ℤ/2-CharacIso (n + m)) (multˣ ⌣ₖ₂' n m (fst f) g)))
+-- --       x
+-- --       +ₖ
+-- --       idfun (EM ℤ/2 (suc (n + m)))
+-- --       (⌣ₖ₂' (suc n) m (snd f) (lastˣ (EM ℤ/2) m g))
+-- --       ≡
+-- --       ⌣ₖ₂' (suc n) m
 -- --       (fst
--- --        (⌣RP∞''Equiv n .fst
--- --         (inv (RP→EM-ℤ/2-CharacIso' n) (ΠDepFinVec↓ n (EM∙ ℤ/2) (fst f , snd f))))
+-- --        (inv (Cubical.Cohomology.EilenbergMacLane.Rings.RPinf.help n)
+-- --         (inv (RP→EM-ℤ/2-CharacIso n) (fst f)))
 -- --        x
--- --        +ₖ idfun (EM ℤ/2 (suc n)) (fst f (suc n)))
--- --       (inv (RP→EM-ℤ/2-CharacIso' m) g x)!}
-
--- --   prs : (k : ℕ) → fst (fun (ΠDepFinVec-ind (n + m) (EM∙ ℤ/2)) (mult⌣ (suc n) m f g) .snd) k
--- --                   ≡ fst (mult⌣ n m (ΠDepFinVec↓ n (EM∙ ℤ/2) f) g) k
--- --   prs k = {! -- (Iso.inv (RP→EM-ℤ/2-CharacIso' m) g ?)!} -- Π↓-mult n m (EM∙ ℤ/2) (EM∙ ℤ/2) k _+ₖ_ ⌣ₖ₂' f (fst g)
--- --         ∙ {!!}
-
--- --   tsa : Iso.fun (ΠDepFinVec-ind (n + m) (EM∙ ℤ/2)) (mult⌣ (suc n) m f g) .snd
--- --       ≡ mult⌣ n m (ΠDepFinVec↓ n (EM∙ ℤ/2) f) g
--- --   tsa = toPathΠDepFinVec (EM∙ ℤ/2) _
--- --     λ k p → {!!}
-
--- -- -- RP→EM-ℤ/2-CharacIso-hom' : (n m : ℕ) (x : _) (y : _)
--- -- --   → Iso.inv (RP→EM-ℤ/2-CharacIso (n + m)) (multˣ ⌣ₖ₂' n m x y)
--- -- --    ≡ λ a → ⌣ₖ₂' n m (Iso.inv (RP→EM-ℤ/2-CharacIso n) x a) (Iso.inv (RP→EM-ℤ/2-CharacIso m) y a)
--- -- -- RP→EM-ℤ/2-CharacIso-hom' zero m =
--- -- --   ℤ/2-elim
--- -- --     (λ y → cong (inv (RP→EM-ℤ/2-CharacIso m))
--- -- --               (multˣAnnₗ ⌣ₖ₂' 0ₖ (λ n m a → cong (subst (EM ℤ/2) (+'≡+ n m)) (0ₖ-⌣ₖ n m a)
--- -- --                               ∙ subst-EM∙ (+'≡+ n m)  .snd) zero m y)
--- -- --          ∙ cong (inv (RP→EM-ℤ/2-CharacIso m)) (sym (RP→EM-ℤ/2-CharacIso∙ m))
--- -- --          ∙ Iso.leftInv (RP→EM-ℤ/2-CharacIso m) (λ _ → 0ₖ m)
--- -- --          ∙ funExt λ a → sym (0ₖ-⌣ₖ₂' zero m (inv (RP→EM-ℤ/2-CharacIso m) y a)))
--- -- --     λ y → cong (inv (RP→EM-ℤ/2-CharacIso m))
--- -- --             (multˣIdL ⌣ₖ₂' fone (λ m a → transportRefl _ ∙ 1ₖ-⌣ₖ m a) m y)
--- -- --         ∙ funExt λ a → sym (1ₖ-⌣ₖ m (inv (RP→EM-ℤ/2-CharacIso m) y a))
--- -- --                       ∙ sym (transportRefl _)
--- -- -- RP→EM-ℤ/2-CharacIso-hom' (suc n) m (f , y) g =
--- -- --   funExt λ x → (λ i → fst (⌣RP∞''Equiv (n + m))
--- -- --                             (RP→EM-ℤ/2-CharacIso-hom' n m f g i) .fst x
--- -- --                          +ₖ ⌣ₖ₂' (suc n) m y (lastˣ (EM ℤ/2) m g))
--- -- --              ∙∙ (λ i → subst (EM ℤ/2) (+'-suc₁ (n + m))
--- -- --                           (⌣ₖ₂ {n = 1} {n + m} x
--- -- --                             (⌣ₖ₂' n m (inv (RP→EM-ℤ/2-CharacIso n) f x)
--- -- --                               (inv (RP→EM-ℤ/2-CharacIso m) g x)))
--- -- --                +ₖ ⌣ₖ₂' (suc n) m y (lastˣ (EM ℤ/2) m g))
--- -- --              ∙∙ {!subst (EM ℤ/2) (+'≡+ (suc n) m)
--- -- --       (⌣ₖ₂
--- -- --        (subst (EM ℤ/2) (+'-suc₁ n)
--- -- --         (⌣ₖ₂ x (inv (RP→EM-ℤ/2-CharacIso n) f x)))
--- -- --        (inv (RP→EM-ℤ/2-CharacIso m) g x)
--- -- --        +ₖ ⌣ₖ₂ y (inv (RP→EM-ℤ/2-CharacIso m) g x))!}
--- -- --                ∙ cong (subst (EM ℤ/2) (+'≡+ (suc n) m))
--- -- --                    ( (sym (help' n x (inv (RP→EM-ℤ/2-CharacIso n) f x) (inv (RP→EM-ℤ/2-CharacIso m) g x) y))) -- (sym (help' n x (inv (RP→EM-ℤ/2-CharacIso n) f x) (inv (RP→EM-ℤ/2-CharacIso m) g x) y .fst))
--- -- --              ∙∙ (λ i → subst (EM ℤ/2) (+'≡+ (suc n) m)
--- -- --                   (⌣ₖ₂ {n = suc n} {m = m} (subst (EM ℤ/2) (+'-suc₁ n)
--- -- --                      (⌣ₖ₂ {n = 1} {n} x (inv (RP→EM-ℤ/2-CharacIso n) f x)) +ₖ y)
--- -- --                      (inv (RP→EM-ℤ/2-CharacIso m) g x)))
--- -- --              ∙∙ λ i → ⌣ₖ₂' (suc n) m (fst (⌣RP∞''Equiv n) (inv (RP→EM-ℤ/2-CharacIso n) f) .fst x
--- -- --                 +ₖ y) (inv (RP→EM-ℤ/2-CharacIso m) g x)
--- -- --   where
--- -- --   help' : (n : ℕ) (x : EM ℤ/2 1) (f : EM ℤ/2 n) (g : EM ℤ/2 m) (y : EM ℤ/2 (suc n))
--- -- --     → (⌣ₖ₂ {n = suc n} {m = m}
--- -- --         (subst (EM ℤ/2) (+'-suc₁ n)
--- -- --           (⌣ₖ₂ {n = 1} {m = n} x f) +ₖ y) g
--- -- --       ≡ ⌣ₖ₂ {n = suc n} {m = m} (subst (EM ℤ/2) (+'-suc₁ n) (⌣ₖ₂ {n = 1} {m = n} x f)) g
--- -- --       +ₖ ⌣ₖ₂ {n = suc n} {m = m} y g)
--- -- --      -- × ((g' : EM ℤ/2 m)
--- -- --      --   → (subst (EM ℤ/2) (+'-suc₁ (n + m))
--- -- --      --      (⌣ₖ₂ x (⌣ₖ₂' n m f g))
--- -- --      --   +ₖ ⌣ₖ₂' (suc n) m y g'
--- -- --      -- ≡ {!!} +ₖ {!⌣ₖ₂' (suc n) m y g'!}))
--- -- --   help' n x = {!!}
--- -- --     where
--- -- --     c : {!!}
--- -- --     c = {!!}
--- -- --   main : (n m k l : ℕ) (x : EM ℤ/2 n) (y : EM ℤ/2 m) (z : EM ℤ/2 k) (w : EM ℤ/2 l)
--- -- --     → subst (EM ℤ/2) {!!} (⌣ₖ₂ x {!!}) +ₖ subst (EM ℤ/2) {!lastˣ (EM ℤ/2) m !} (⌣ₖ₂ y w) ≡ {!⌣ₖ₂' (suc n) m y (lastˣ (EM ℤ/2) m g)!}
--- -- --   main = {!!}
--- -- -- {-
--- -- -- Goal: fst
--- -- --       (inv (Cubical.Cohomology.EilenbergMacLane.Rings.RPinf.help (n + m))
--- -- --        (inv (RP→EM-ℤ/2-CharacIso (n + m)) (multˣ ⌣ₖ₂' n m (fst f) g)))
--- -- --       x
--- -- --       +ₖ
--- -- --       idfun (EM ℤ/2 (suc (n + m)))
--- -- --       (⌣ₖ₂' (suc n) m (snd f) (lastˣ (EM ℤ/2) m g))
--- -- --       ≡
--- -- --       ⌣ₖ₂' (suc n) m
--- -- --       (fst
--- -- --        (inv (Cubical.Cohomology.EilenbergMacLane.Rings.RPinf.help n)
--- -- --         (inv (RP→EM-ℤ/2-CharacIso n) (fst f)))
--- -- --        x
--- -- --        +ₖ idfun (EM ℤ/2 (suc n)) (snd f))
--- -- --       (inv (RP→EM-ℤ/2-CharacIso m) g x)
--- -- -- -}
+-- --        +ₖ idfun (EM ℤ/2 (suc n)) (snd f))
+-- --       (inv (RP→EM-ℤ/2-CharacIso m) g x)
+-- -- -}
 
 
 
 
--- -- -- RP→EM-ℤ/2-CharacIso-hom : (n m : ℕ)
--- -- --   (f : EM ℤ/2 1 → EM ℤ/2 n) (g : EM ℤ/2 1 → EM ℤ/2 m)
--- -- --   → Iso.fun (RP→EM-ℤ/2-CharacIso (n + m)) (λ x → ⌣ₖ₂' n m (f x) (g x))
--- -- --    ≡ multˣ ⌣ₖ₂' n m (Iso.fun (RP→EM-ℤ/2-CharacIso n) f)
--- -- --                 (Iso.fun (RP→EM-ℤ/2-CharacIso m) g)
--- -- -- RP→EM-ℤ/2-CharacIso-hom zero m f g = {!!}
--- -- -- RP→EM-ℤ/2-CharacIso-hom (suc n) m f g = {!!}
+-- -- RP→EM-ℤ/2-CharacIso-hom : (n m : ℕ)
+-- --   (f : EM ℤ/2 1 → EM ℤ/2 n) (g : EM ℤ/2 1 → EM ℤ/2 m)
+-- --   → Iso.fun (RP→EM-ℤ/2-CharacIso (n + m)) (λ x → ⌣ₖ₂' n m (f x) (g x))
+-- --    ≡ multˣ ⌣ₖ₂' n m (Iso.fun (RP→EM-ℤ/2-CharacIso n) f)
+-- --                 (Iso.fun (RP→EM-ℤ/2-CharacIso m) g)
+-- -- RP→EM-ℤ/2-CharacIso-hom zero m f g = {!!}
+-- -- RP→EM-ℤ/2-CharacIso-hom (suc n) m f g = {!!}

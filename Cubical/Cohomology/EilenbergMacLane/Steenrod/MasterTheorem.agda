@@ -78,6 +78,7 @@ open import Cubical.Algebra.Group.Instances.IntMod
 
 open import Cubical.Data.Fin.Arithmetic
 open import Cubical.Data.Fin.Base
+open import Cubical.Cohomology.EilenbergMacLane.Steenrod.sum-temp2
 
 
 open RingStr renaming (_+_ to _+r_)
