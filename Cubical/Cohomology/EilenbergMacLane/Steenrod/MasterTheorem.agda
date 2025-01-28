@@ -1,7 +1,7 @@
 {-# OPTIONS --safe --lossy-unification #-}
 
 {-
-This file contiains.
+This file contiains the Steenrod squares' `Master theorem'.
 -}
 
 module Cubical.Cohomology.EilenbergMacLane.Steenrod.MasterTheorem where

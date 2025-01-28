@@ -7,6 +7,9 @@ the paper:
 
 The Steenrod squares via unordered joins
 
+Note that the formalisation may differ quite a bit from the paper as
+some of the results used in the paper are only used implicitly in the
+formalisation.
 -}
 
 
@@ -20,6 +23,7 @@ open import Cubical.Cohomology.EilenbergMacLane.Steenrod.Base             as Def
 open import Cubical.Cohomology.EilenbergMacLane.Steenrod.MasterTheorem    as Master
 open import Cubical.HITs.RPn.Unordered                                    as Unordered
 open import Cubical.HITs.RPn.JoinFubini                                   as Fubini
+open import Cubical.Cohomology.EilenbergMacLane.Steenrod.Zeroth           as Zeroth
 
 module Cubical.Papers.Steenrod where
 
@@ -59,7 +63,7 @@ open Master using (S-MasterTheorem)
 open Master using (S-Cartan)
 
 -- IV. THE ZEROTH SQUARE
-
+open Zeroth.theorem using (main)
 
 -- V. UNORDERED JOINS AND THEIR FUBINI THEOREM
 -- The Fubini theorem (Lemma 35)
