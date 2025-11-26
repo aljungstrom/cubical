@@ -46,25 +46,94 @@ snd (Ω→ {A = A} {B = B} (f , p)) = ∙∙lCancel p
 Ω^→ (suc n) f = Ω→ (Ω^→ n f)
 
 {- loop space map functoriality (missing pointedness proof) -}
+Ω→∘-fill : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'}
+  (g : A →∙ B) (f⋆ : fst A) (fpt : pt A ≡ f⋆) (fl : f⋆ ≡ f⋆)
+  → I → I → I → fst B
+Ω→∘-fill g f⋆ fpt fl k i =
+  hfill
+    (λ r → λ
+      { (i = i0) → compPath-filler' (cong (g .fst) (sym fpt)) (g .snd) (~ k) r
+      ; (i = i1) → compPath-filler' (cong (g .fst) (sym fpt)) (g .snd) (~ k) r
+      ; (k = i0) → doubleCompPath-filler (sym (cong (fst g) (sym fpt) ∙ snd g))
+                                          (cong (fst g) fl)
+                                          (cong (fst g) (sym fpt) ∙ snd g) r i
+      ; (k = i1) → doubleCompPath-filler
+                     (sym (snd g)) (cong (fst g) (fpt ∙∙ fl ∙∙ sym fpt))
+                     (snd g) r i})
+    (inS (fst g (doubleCompPath-filler fpt fl (sym fpt) k i)))
+
 Ω→∘ : ∀ {ℓ ℓ' ℓ''} {A : Pointed ℓ} {B : Pointed ℓ'} {C : Pointed ℓ''}
   (g : B →∙ C) (f : A →∙ B)
   → ∀ p → Ω→ (g ∘∙ f) .fst p ≡ (Ω→ g ∘∙ Ω→ f) .fst p
-Ω→∘ g f p k i =
-  hcomp
-    (λ j → λ
-      { (i = i0) → compPath-filler' (cong (g .fst) (f .snd)) (g .snd) (~ k) j
-      ; (i = i1) → compPath-filler' (cong (g .fst) (f .snd)) (g .snd) (~ k) j
-      })
-    (g .fst (doubleCompPath-filler (sym (f .snd)) (cong (f .fst) p) (f .snd) k i))
+Ω→∘ {A = A} g f p k i =
+  Ω→∘-fill g (fst f (pt A)) (sym (snd f)) (cong (fst f) p) k i i1
+
+Ω→∘-refl : ∀ {ℓ ℓ' ℓ''} {A : Pointed ℓ} {B : Pointed ℓ'} {C : Pointed ℓ''}
+  (g : B →∙ C) (f : A →∙ B)
+  → Square (∙∙lCancel (cong (fst g) (snd f) ∙ snd g))
+            (cong (sym (snd g) ∙∙_∙∙ snd g)
+              (cong (cong (fst g)) (∙∙lCancel (snd f))) ∙ ∙∙lCancel (snd g))
+            (Ω→∘ g f refl)
+            refl
+Ω→∘-refl {A = A} {B} {C} g f =
+  Ω→∘-refl' (fst g) (pt C) (snd g) (fst f (pt A)) (sym (snd f))
+  where
+  Ω→∘-refl' : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Type ℓ'}
+    (g' : fst A → B) (b₀ : B) (gpt : g' (pt A) ≡ b₀) (f⋆ : fst A) (fpt : pt A ≡ f⋆)
+    →
+     Square (∙∙lCancel (cong g' (sym fpt) ∙ gpt))
+            ((λ i → sym gpt ∙∙ cong g' (∙∙lCancel (sym fpt) i) ∙∙ gpt) ∙ ∙∙lCancel gpt)
+            (λ i j → Ω→∘-fill (g' , gpt) f⋆ fpt refl i j i1)
+            refl
+  Ω→∘-refl' {A = A} {B} g' = J> (J> lem)
+    where
+    b = g' (snd A)
+    lem : Square (∙∙lCancel (cong g' (sym refl) ∙ refl))
+        ((λ i → sym refl ∙∙ cong g' (∙∙lCancel (sym refl) i) ∙∙ refl) ∙
+         ∙∙lCancel refl)
+        (λ i j → Ω→∘-fill (g' , refl) (pt A) refl refl i j i1) refl
+    lem k j = hcomp
+      (λ w → λ
+        { (j = i0) → (λ i → hcomp
+                       (λ r → λ
+                         { (i = i0) → compPath-filler' (refl {x = b}) refl (~ k ∧ w) r
+                         ; (i = i1) → compPath-filler' (refl {x = b}) refl (~ k ∧ w) r
+                         ; (k = i0) → doubleCompPath-filler (sym (rUnit refl w))
+                                                             (refl {x = b})
+                                                             (rUnit refl w) r i
+                         ; (k = i1) → doubleCompPath-filler
+                                        (refl {x = b}) (cong g' (rUnit (refl {x = pt A}) w))
+                                        refl r i})
+                        (g' (doubleCompPath-filler (refl {x = pt A}) refl refl (k ∧ w) i)))
+        ; (j = i1) → refl
+        ; (k = i0) → ∙∙lCancel (rUnit (λ _ → b) w) j
+        ; (k = i1) → ((λ i → sym refl ∙∙ cong g' (rUnit refl (~ i ∧ w)) ∙∙ refl) ∙ ∙∙lCancel refl) j})
+      (hcomp
+      (λ w → λ
+        { (j = i1) → refl
+        ; (k = i0) → ∙∙lCancel (λ _ → b) (j ∨ ~ w)
+        ; (k = i1) → lem' (~ w) j})
+        (refl {x = b}))
+        where
+        lem' : Square ((λ _ → refl ∙ refl {x = b}) ∙ ∙∙lCancel refl) refl
+                      (sym (rUnit (refl {x = b}))) refl
+        lem' = sym (lUnit _) ◁ λ i j → rUnit (refl {x = b}) (~ i ∧ ~ j)
+
+-- Ω→∘-refl' : ∀ {ℓ ℓ' ℓ''} {A : Pointed ℓ} {B : Type ℓ'} {C : Type ℓ''}
+--   (g : B → C) (f : fst A → B)
+--   → Square {!!} {!!}
+--             (Ω→∘ {A = A} (g , refl) (f , refl) refl)
+--             refl
+-- Ω→∘-refl' {A = A} {B} {C} = {!!}
 
 Ω→∘∙ : ∀ {ℓ ℓ' ℓ''} {A : Pointed ℓ} {B : Pointed ℓ'} {C : Pointed ℓ''}
   (g : B →∙ C) (f : A →∙ B)
   → Ω→ (g ∘∙ f) ≡ (Ω→ g ∘∙ Ω→ f)
-Ω→∘∙ g f = →∙Homogeneous≡ (isHomogeneousPath _ _) (funExt (Ω→∘ g f))
+Ω→∘∙ g f = ΣPathP ((funExt (Ω→∘ g f)) , Ω→∘-refl g f)
 
 Ω→const : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'}
           → Ω→ {A = A} {B = B} ((λ _ → pt B) , refl) ≡ ((λ _ → refl) , refl)
-Ω→const = →∙Homogeneous≡ (isHomogeneousPath _ _) (funExt λ _ → sym (rUnit _))
+Ω→const = ΣPathP ((funExt λ _ → sym (rUnit _)) , λ i j → rUnit refl (~ i ∧ ~ j))
 
 {- Ω→ is a homomorphism -}
 Ω→pres∙filler : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'} (f : A →∙ B)

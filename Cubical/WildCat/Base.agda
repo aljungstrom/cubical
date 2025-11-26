@@ -30,6 +30,28 @@ record WildCat ℓ ℓ' : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   _∘_ : ∀ {x y z} (g : Hom[ y , z ]) (f : Hom[ x , y ]) → Hom[ x , z ]
   g ∘ f = f ⋆ g
 
+-- Pentagon axiom for function composition
+pentagonHom : WildCat ℓ ℓ' → Type _
+pentagonHom C = {a b c d e : ob}
+  (f : Hom[ a , b ]) (g : Hom[ b , c ]) (h : Hom[ c , d ]) (j : Hom[ d , e ])
+  → Square (cong (_⋆ j) (⋆Assoc f g h) ∙ ⋆Assoc f (g ⋆ h) j)
+           (⋆Assoc f g (h ⋆ j))
+           (⋆Assoc (f ⋆ g) h j)
+           (cong (f ⋆_) (⋆Assoc g h j))
+  where
+  open WildCat C
+
+-- pentagonHom' : WildCat ℓ ℓ' → Type _
+-- pentagonHom' C = {a b c d e : ob}
+--   (f : Hom[ a , b ]) (g : Hom[ b , c ]) (h : Hom[ c , d ]) (j : Hom[ d , e ])
+--   → SquareP (λ i j → {!!})
+--            (cong (_⋆ j) (⋆Assoc f g h))
+--            (⋆Assoc f g (h ⋆ j))
+--            (⋆Assoc (f ⋆ g) h j)
+--            (cong (f ⋆_) (⋆Assoc g h j))
+--   where
+--   open WildCat C
+
 open WildCat
 
 -- Helpful syntax/notation
