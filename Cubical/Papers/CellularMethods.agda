@@ -237,12 +237,12 @@ SeqColim* : Sequence ℓ-zero → Type
 SeqColim* = SeqColim
 
 -- For CW complexes
-Definition-6 : CWstr → Type
-Definition-6 = realise
+Definition-7 : CWstr → Type
+Definition-7 = realise
 
-Definition-7 = CW ℓ-zero
+Definition-8 = CW ℓ-zero
 
-Definition-8 = cellMap
+Definition-9 = cellMap
 
 -- CW structures for pushouts.
 
@@ -261,11 +261,11 @@ Definition-8 = cellMap
 open import Cubical.CW.Strictification
   using (strictCWskel ; strict≡ ; strictCwMap ; strictCwMap≡)
 
-Definition-9 = CWPushout.pushoutSkel
+Definition-10 = CWPushout.pushoutSkel
 
 -- A1 not mentioned explicitly because it holds trivially by
 -- construction
-Proposition-10 = CWPushout.pushoutIsoₜ
+Proposition-11 = CWPushout.pushoutIsoₜ
 
 -- For completeness: pushouts of CW complexes are pushouts (no
 -- strictification assumptions)
@@ -277,24 +277,24 @@ CWPushout = isPushoutᶜʷ
 -- C_i -> D_i which only is defined up for i ≤ n. This is of course
 -- trivially equivalent but circumvents some of the technicalities of
 -- working with subcomplexes explicitly.
-Definition-11 = finCellApprox
+Definition-12 = finCellApprox
 
-Lemma-12 = isConnected-CW↪
+Lemma-13 = isConnected-CW↪
 
-Lemma-13 = isConnected-CW↪∞
+Lemma-14 = isConnected-CW↪∞
 
-Theorem-14 = CWmap→finCellMap
+Theorem-15 = CWmap→finCellMap
 
-Corollary-15 = isPushoutᶜʷ
+Corollary-16 = isPushoutᶜʷ
 
--- Definition 17 is included for the sake of presentation only and is
+-- Definition 18 is included for the sake of presentation only and is
 -- never actually used explicitly in the formalisation.
-Definition-17 = omitted
+Definition-18 = omitted
 
-Theorem-18 : ¬ ((C : CWstr) (D : CWstr)
+Theorem-19 : ¬ ((C : CWstr) (D : CWstr)
                (f : realise C → realise D) (m : ℕ)
                → ∥ finCellApprox C D f m ∥₀)
-Theorem-18 asm = snotz 0≡1
+Theorem-19 asm = snotz 0≡1
   where
   S¹fam : ℕ → Type
   S¹fam zero = ⊥
@@ -388,11 +388,11 @@ Theorem-18 asm = snotz 0≡1
   0≡1 i = abs (transport (cong helix (main _ _ loop refl i)) 0)
 
 
-Definition-19 = cellHom
+Definition-20 = cellHom
 
 -- Note: The same comment as the one above Definition-11 applies to
 -- the definition of n-approximations of homotopies too.
-Definition-20 = finCellHomRel
+Definition-21 = finCellHomRel
 
 -- Note: for the second cellular approximation theorem, the square in
 -- the definition of cellular n-approximations is omitted – it is only
@@ -400,41 +400,41 @@ Definition-20 = finCellHomRel
 -- never actually used later on. For the technical statement (the main
 -- part of the proof) where this square is present, see
 -- pathToCellularHomotopy-main.
-Theorem-21 = pathToCellularHomotopy
+Theorem-22 = pathToCellularHomotopy
 
 -- Corollary 22 is only included for the sake of presentation and is
 -- never used in the formalisation
-Corollary-22 = omitted
+Corollary-23 = omitted
 
 -------- 4 Cellular homology --------
-Definition-23* = ChainComplex
+Definition-24* = ChainComplex
 
-Definition-24* = ChainComplexMap
+Definition-25* = ChainComplexMap
 
-Definition-25* = ChainHomotopy
+Definition-26* = ChainHomotopy
 
-Definition-26* = homology
+Definition-27* = homology
 
-Definition-27 = SphereBouquet
+Definition-28 = SphereBouquet
 
-Proposition-28-[1] = degreeSusp
-Proposition-28-[2] = degreeComp
+Proposition-29-[1] = degreeSusp
+Proposition-29-[2] = degreeComp
 
-Proposition-29 = πₙ⋁Sⁿ≅ℤ[]
+Proposition-30 = πₙ⋁Sⁿ≅ℤ[]
 
 -- defintion of bouquet degree
 bdeg = bouquetDegree
 
-Proposition-30-[1] = bouquetDegree∙Π
-Proposition-30-[2] = bouquetDegreeSusp
-Proposition-30-[3] = bouquetDegreeComp
+Proposition-31-[1] = bouquetDegree∙Π
+Proposition-31-[2] = bouquetDegreeSusp
+Proposition-31-[3] = bouquetDegreeComp
 
-Proposition-31 = ∂∂≡0
+Proposition-32 = ∂∂≡0
 
 -- Note: To fit better into the library, the following lemma is proved
 -- for finite maps (since this is the only application). The proof is
 -- completely modular and does not rely on this finiteness assumption.
-Proposition-32 = cellHom-to-ChainHomotopy
+Proposition-33 = cellHom-to-ChainHomotopy
 
 -- For completeness, here is the final homology functor:
 on-object = H̃ᶜʷ
@@ -444,30 +444,30 @@ functoriality-[comp] = H̃ᶜʷ→comp
 
 
 ------- 5 THE HUREWICZ THEOREMS -------
-Definition-34 : ∀ {ℓ} (n : ℕ) → Type ℓ → Type (ℓ-suc ℓ)
-Definition-34 n C = ∥ isConnectedCW n C ∥₋₁
+Definition-35 : ∀ {ℓ} (n : ℕ) → Type ℓ → Type (ℓ-suc ℓ)
+Definition-35 n C = ∥ isConnectedCW n C ∥₋₁
 -- renaming
-isHurewicz_-Connected = Definition-34
+isHurewicz_-Connected = Definition-35
 
-Lemma-35-[1] = connectedCWContr
-Lemma-35-[2] = connectedCW≃SphereBouquet
+Lemma-36-[1] = connectedCWContr
+Lemma-36-[2] = connectedCW≃SphereBouquet
 
 -- The following 5 results are only included to increase readability
 -- of the proof and are only used implicitly in the formalisation.
-Lemma-35-[3] = omitted
-Proposition-36 = omitted
-Definition-37 = omitted
-Lemma-38 = omitted
-Proposition-39 = omitted
+Lemma-36-[3] = omitted
+Proposition-37 = omitted
+Definition-38 = omitted
+Lemma-39 = omitted
+Proposition-40 = omitted
 
-Theorem-39 = makeConnectedCW
+Theorem-41 = makeConnectedCW
 
-Corollary-40 : ∀ {ℓ} (n : ℕ) {C : Type ℓ}
+Corollary-42 : ∀ {ℓ} (n : ℕ) {C : Type ℓ}
   → hasCWskel C
   → isConnected (2 + n) C
   ↔ isHurewicz n -Connected C
-Corollary-40 n {C} Cstr .fst = makeConnectedCW n Cstr
-Corollary-40 n {C} Cstr' .snd =
+Corollary-42 n {C} Cstr .fst = makeConnectedCW n Cstr
+Corollary-42 n {C} Cstr' .snd =
   PT.rec isPropIsContr
     λ { ((C' , ((card , α , emp' , e') , pted , p)) , e)
       → subst (isConnected (2 + n)) (ua e)
@@ -478,19 +478,19 @@ Corollary-40 n {C} Cstr' .snd =
                 ((C' , (card , α , emp' , e') , pted , p) , e)))))
            isConnectedSphereBouquet')}
 
-Definition-42 = HurewiczHomAb
+Definition-43 = HurewiczHomAb
 
 -- The following result is included for the sake of presentation only
 -- and is only used implicitly in the proof of the Hurewicz theorem.
-Proposition-43 = omitted
+Proposition-44 = omitted
 
-Theorem-44 = HurewiczTheorem
+Theorem-45 = HurewiczTheorem
 
-Theorem-45 : (C : CW₀) (⋆ : fst C) (n : ℕ) → isConnected (3 + n) (fst C)
+Theorem-46 : (C : CW₀) (⋆ : fst C) (n : ℕ) → isConnected (3 + n) (fst C)
   → ∃[ A ∈ pSet ] ∃[ B ∈ pSet ]
      ∃[ α ∈ AbGroupHom ℤ[Fin ∣ A ∣ ] ℤ[Fin ∣ B ∣ ] ]
      AbGroupIso (π'₊₂AbGr n ((fst C) , ⋆)) (ℤ[Fin ∣ B ∣ ] /Im α)
-Theorem-45 (C , isCW) ⋆ n isc =
+Theorem-46 (C , isCW) ⋆ n isc =
   PT.rec squash₁
     (λ { record { nGens = n
                 ; nRels = m
