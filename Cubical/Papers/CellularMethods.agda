@@ -390,7 +390,7 @@ Theorem-19 asm = snotz 0≡1
 
 Definition-20 = cellHom
 
--- Note: The same comment as the one above Definition-11 applies to
+-- Note: The same comment as the one above Definition-12 applies to
 -- the definition of n-approximations of homotopies too.
 Definition-21 = finCellHomRel
 
@@ -402,7 +402,7 @@ Definition-21 = finCellHomRel
 -- pathToCellularHomotopy-main.
 Theorem-22 = pathToCellularHomotopy
 
--- Corollary 22 is only included for the sake of presentation and is
+-- Corollary 23 is only included for the sake of presentation and is
 -- never used in the formalisation
 Corollary-23 = omitted
 
