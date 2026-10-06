@@ -11,7 +11,6 @@ This file contains:
 - FinProp is equivalent to Bool.
 
 -}
-{-# OPTIONS --safe #-}
 
 module Cubical.Data.FinSet.Cardinality where
 
@@ -379,7 +378,7 @@ module _
 module _
   (X : FinSet ℓ ) where
 
-  cardAut : card (_ , isFinSetAut X) ≡ LehmerCode.factorial (card X)
+  cardAut : card (_ , isFinSetAut X) ≡ (card X !)
   cardAut = refl
 
 module _
@@ -573,8 +572,8 @@ open Iso
 Iso-∥FinSet∥₂-ℕ : Iso ∥ FinSet ℓ ∥₂ ℕ
 Iso-∥FinSet∥₂-ℕ .fun = Set.rec isSetℕ card
 Iso-∥FinSet∥₂-ℕ .inv n = ∣ 𝔽in n ∣₂
-Iso-∥FinSet∥₂-ℕ .rightInv n = card𝔽in n
-Iso-∥FinSet∥₂-ℕ {ℓ = ℓ} .leftInv =
+Iso-∥FinSet∥₂-ℕ .sec n = card𝔽in n
+Iso-∥FinSet∥₂-ℕ {ℓ = ℓ} .ret =
   Set.elim {B = λ X → ∣ 𝔽in (Set.rec isSetℕ card X) ∣₂ ≡ X}
     (λ X → isSetPathImplicit)
     (elimProp (λ X → ∣ 𝔽in (card X) ∣₂ ≡ ∣ X ∣₂) (λ X → squash₂ _ _)
@@ -627,8 +626,8 @@ module _
     Prop.elim2 (λ _ _ → isPropPropTrunc {A = _ ≃ Fin _})
       (λ p1 p2
         → ∣ equivComp (p1 ⋆ pathToEquiv (cong Fin p) ⋆ SumFin≃Fin _) (p2 ⋆ SumFin≃Fin _)
-          ⋆ lehmerEquiv ⋆ lehmerFinEquiv
-          ⋆ invEquiv (SumFin≃Fin _) ∣₁)
+          ⋆ lehmerEquiv {card Y} ⋆ lehmerFinEquiv
+          ⋆ invEquiv (SumFin≃Fin (card Y !)) ∣₁)
       (∣≃card∣ X) (∣≃card∣ Y)
   isFinSet≃Eff' (no ¬p) = 0 , ∣ uninhabEquiv (¬p ∘ cardEquiv X Y ∘ ∣_∣₁) (idfun _) ∣₁
 

@@ -2,7 +2,6 @@
  This an earlier formalization of posets using the old SIP instead of DURGs
 -}
 
-{-# OPTIONS --safe #-}
 module Cubical.Experiments.Poset where
 
 open import Cubical.Foundations.Prelude
@@ -300,10 +299,10 @@ P ≅ₚ Q = Σ[ f ∈ P ─m→ Q ] isPosetIso P Q f
         g  = equivFun (invEquiv e)
 
         sec-f-g : section f g
-        sec-f-g = Iso.rightInv (equivToIso e)
+        sec-f-g = Iso.sec (equivToIso e)
 
         ret-f-g : retract f g
-        ret-f-g = Iso.leftInv (equivToIso e)
+        ret-f-g = Iso.ret (equivToIso e)
 
     from : P ≅ₚ Q → P ≃ₚ Q
     from ((f , f-mono) , ((g , g-mono) , sec , ret)) =

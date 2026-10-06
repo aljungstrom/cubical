@@ -5,7 +5,6 @@ This file contains:
 - Definition of groupoid quotients
 
 -}
-{-# OPTIONS --cubical --no-import-sorts --safe #-}
 module Cubical.HITs.GroupoidQuotients.Base where
 
 open import Cubical.Foundations.Prelude

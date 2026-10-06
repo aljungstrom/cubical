@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Functions.Image where
 
 open import Cubical.Foundations.Prelude
@@ -30,12 +29,7 @@ module _ (f : A → B) where
   Image = Σ[ y ∈ B ] isInImage y
 
   imageInclusion : Image ↪ B
-  imageInclusion = fst ,
-    hasPropFibers→isEmbedding {f = fst}
-      λ y → isOfHLevelRetractFromIso 1 (ϕ y) isPropPropTrunc
-      where
-        ϕ : (y : B) → Iso _ _
-        ϕ y = invIso (fiberProjIso B isInImage y)
+  imageInclusion = EmbeddingΣProp isPropIsInImage
 
   restrictToImage : A → Image
   restrictToImage x = (f x) , ∣ x , refl ∣₁
@@ -88,10 +82,10 @@ module _ {ℓ₀ ℓ₁}
   imagesIso : Iso Im₀ Im₁
   imagesIso .Iso.fun = imagesCompare e₀ m₀ e₁ m₁ p
   imagesIso .Iso.inv = imagesCompare e₁ m₁ e₀ m₀ (sym p)
-  imagesIso .Iso.rightInv c =
+  imagesIso .Iso.sec c =
     invIsEq (m₁ .snd _ _)
       (imagesEmbeddingComm e₀ m₀ e₁ m₁ p _ ∙ imagesEmbeddingComm e₁ m₁ e₀ m₀ (sym p) c)
-  imagesIso .Iso.leftInv c =
+  imagesIso .Iso.ret c =
     invIsEq (m₀ .snd _ _)
       (imagesEmbeddingComm e₁ m₁ e₀ m₀ (sym p) _ ∙ imagesEmbeddingComm e₀ m₀ e₁ m₁ p c)
 

@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 
 module Cubical.Categories.Equivalence.Properties where
 
@@ -140,17 +139,17 @@ module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'}
       p : _
       p i =
         comp
-        (λ j → D [ iso-ob .rightInv x (~ j) , iso-ob .rightInv x (~ j) ])
+        (λ j → D [ iso-ob .sec x (~ j) , iso-ob .sec x (~ j) ])
         (λ j → λ
           { (i = i0) → iso-hom .rightInv _ (D .id {x = x}) (~ j)
-          ; (i = i1) → D .id {x = iso-ob .rightInv x (~ j)} })
+          ; (i = i1) → D .id {x = iso-ob .sec x (~ j)} })
         (D .id {x = x})
     w-inv .F-seq {x = x} {z = z} f g = isFullyFaithful→Faithful {F = F} fullfaith _ _ _ _ (p ∙ sym (F .F-seq _ _))
       where
       p : _
       p i =
         comp
-        (λ j → D [ iso-ob .rightInv x (~ j) , iso-ob .rightInv z (~ j) ])
+        (λ j → D [ iso-ob .sec x (~ j) , iso-ob .sec z (~ j) ])
         (λ j → λ
           { (i = i0) → iso-hom .rightInv _ (f ⋆⟨ D ⟩ g) (~ j)
           ; (i = i1) → iso-hom .rightInv _ f (~ j) ⋆⟨ D ⟩ iso-hom .rightInv _ g (~ j) })
@@ -166,36 +165,3 @@ module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'}
     w .invFunc = w-inv
     w .η = pathToNatIso w-η-path
     w .ε = pathToNatIso w-ε-path
-
-
-
--- equivalence on full subcategories defined by propositions
-module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} (F : Functor C D) (invF : WeakInverse F) where
-
-  open NatTrans
-  open _≃ᶜ_
-
-  private
-    F⁻¹ = invF .invFunc
-    ηᴱ = invF .η
-    εᴱ = invF .ε
-
-
-  ΣPropCatEquiv : {P : ℙ (ob C)} {Q : ℙ (ob D)}
-                → (presF : ∀ c → c ∈ P → F .F-ob c ∈ Q)
-                → (∀ d → d ∈ Q → F⁻¹ .F-ob d ∈ P)
-                → WeakInverse (ΣPropCatFunc {P = P} {Q = Q} F presF)
-
-  invFunc (ΣPropCatEquiv {P} {Q} _ presF⁻¹) = ΣPropCatFunc {P = Q} {Q = P} F⁻¹ presF⁻¹
-
-  N-ob (trans (η (ΣPropCatEquiv _ _))) (x , _) = ηᴱ .trans .N-ob x
-  N-hom (trans (η (ΣPropCatEquiv _ _))) f = ηᴱ .trans .N-hom f
-  inv (nIso (η (ΣPropCatEquiv _ _)) (x , _)) = ηᴱ .nIso x .inv
-  sec (nIso (η (ΣPropCatEquiv _ _)) (x , _)) = ηᴱ .nIso x .sec
-  ret (nIso (η (ΣPropCatEquiv _ _)) (x , _)) = ηᴱ .nIso x .ret
-
-  N-ob (trans (ε (ΣPropCatEquiv _ _))) (x , _) = εᴱ .trans .N-ob x
-  N-hom (trans (ε (ΣPropCatEquiv _ _))) f = εᴱ .trans .N-hom f
-  inv (nIso (ε (ΣPropCatEquiv _ _)) (x , _)) = εᴱ .nIso x .inv
-  sec (nIso (ε (ΣPropCatEquiv _ _)) (x , _)) = εᴱ .nIso x .sec
-  ret (nIso (ε (ΣPropCatEquiv _ _)) (x , _)) = εᴱ .nIso x .ret

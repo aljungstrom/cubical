@@ -1,11 +1,12 @@
 -- This is the preferred version of the integers in the library. Other
 -- versions can be found in the MoreInts directory.
-{-# OPTIONS --safe #-}
 module Cubical.Data.Int.Base where
 
-open import Cubical.Core.Everything
+open import Cubical.Foundations.Prelude
+
 open import Cubical.Data.Bool
 open import Cubical.Data.Nat hiding (_+_ ; _·_) renaming (isEven to isEvenℕ ; isOdd to isOddℕ)
+open import Cubical.Data.Fin.Base
 
 infix  8 -_
 infixl 7 _·_
@@ -40,6 +41,11 @@ isOdd (negsuc n) = isEvenℕ n
 abs : ℤ → ℕ
 abs (pos n) = n
 abs (negsuc n) = suc n
+
+sign : ℤ → ℤ
+sign (pos zero) = pos zero
+sign (pos (suc n)) = pos (suc zero)
+sign (negsuc n) = negsuc zero
 
 _ℕ-_ : ℕ → ℕ → ℤ
 a ℕ- 0 = pos a
@@ -83,3 +89,10 @@ instance
 instance
   fromNegℤ : HasFromNeg ℤ
   fromNegℤ = record { Constraint = λ _ → Unit ; fromNeg = λ n → neg n }
+
+sumFinℤ : {n : ℕ} (f : Fin n → ℤ) → ℤ
+sumFinℤ {n = n} f = sumFinGen {n = n} _+_ 0 f
+
+sumFinℤId : (n : ℕ) {f g : Fin n → ℤ}
+  → ((x : _) → f x ≡ g x) → sumFinℤ {n = n} f ≡ sumFinℤ {n = n} g
+sumFinℤId n t i = sumFinℤ {n = n} λ x → t x i

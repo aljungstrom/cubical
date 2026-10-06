@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 {-
 
     This file defines 3 equivalent formulations of when a presheaf P is
@@ -32,7 +31,8 @@ open import Cubical.HITs.PropositionalTruncation.Base
 open import Cubical.Reflection.RecordEquiv
 
 open import Cubical.Categories.Category renaming (isIso to isIsoC)
-open import Cubical.Categories.Constructions.Elements
+open import Cubical.Categories.Instances.Elements
+open import Cubical.Categories.Instances.Opposite
 open import Cubical.Categories.Functor
 open import Cubical.Categories.Instances.Functors
 open import Cubical.Categories.Instances.Sets
@@ -43,7 +43,7 @@ open import Cubical.Categories.Presheaf.Properties
 open import Cubical.Categories.Yoneda
 
 private
-  variable ℓ ℓ' : Level
+  variable ℓ ℓ' ℓS : Level
 
 open Category
 open Contravariant
@@ -56,6 +56,8 @@ open isIsoC
 -- | Lifts don't appear in practice because we usually use universal
 -- | elements instead
 module _ {ℓo}{ℓh}{ℓp} (C : Category ℓo ℓh) (P : Presheaf C ℓp) where
+  private
+    module P = PresheafNotation P
   Representation : Type (ℓ-max (ℓ-max ℓo (ℓ-suc ℓh)) (ℓ-suc ℓp))
   Representation =
     Σ[ A ∈ C .ob ] PshIso C (C [-, A ]) P
@@ -63,7 +65,7 @@ module _ {ℓo}{ℓh}{ℓp} (C : Category ℓo ℓh) (P : Presheaf C ℓp) where
   Representable : Type (ℓ-max (ℓ-max ℓo (ℓ-suc ℓh)) (ℓ-suc ℓp))
   Representable = ∥ Representation ∥₁
 
-  Elements = ∫ᴾ_ {C = C} P
+  Elements = ∫_ {C = C} P
 
   TerminalElement : Type (ℓ-max (ℓ-max ℓo ℓh) ℓp)
   TerminalElement = Terminal Elements
@@ -74,7 +76,7 @@ module _ {ℓo}{ℓh}{ℓp} (C : Category ℓo ℓh) (P : Presheaf C ℓp) where
   isUniversal : (vertex : C .ob) (element : (P ⟅ vertex ⟆) .fst)
               → Type (ℓ-max (ℓ-max ℓo ℓh) ℓp)
   isUniversal vertex element =
-    ∀ A → isEquiv λ (f : C [ A , vertex ]) → element ∘ᴾ⟨ C , P ⟩ f
+    ∀ A → isEquiv λ (f : C [ A , vertex ]) → element ∘ᴾ⟨ P ⟩ f
 
   isPropIsUniversal : ∀ vertex element → isProp (isUniversal vertex element)
   isPropIsUniversal vertex element = isPropΠ (λ _ → isPropIsEquiv _)
@@ -111,15 +113,15 @@ module _ {ℓo}{ℓh}{ℓp} (C : Category ℓo ℓh) (P : Presheaf C ℓp) where
              (lift f) .lower)
     lem = funExt (λ f i →
       (yonedaᴾ* {C = C} P (repr .fst)
-        .Iso.leftInv (repr .snd .trans) (~ i) ⟦ A ⟧)
+        .Iso.ret (repr .snd .trans) (~ i) ⟦ A ⟧)
       (lift f) .lower)
 
     anIso : Iso (C [ A , repr .fst ]) (fst (Functor.F-ob P A))
     anIso .Iso.fun f = (repr .snd .trans ⟦ A ⟧) (lift f) .lower
     anIso .Iso.inv p = repr .snd .nIso A .inv (lift p) .lower
-    anIso .Iso.rightInv b =
+    anIso .Iso.sec b =
       cong lower (funExt⁻ (repr .snd .nIso A .sec) (lift b))
-    anIso .Iso.leftInv a =
+    anIso .Iso.ret a =
       cong lower (funExt⁻ (repr .snd .nIso A .ret) (lift a))
 
   universalElementToRepresentation : UniversalElement → Representation
@@ -136,16 +138,16 @@ module _ {ℓo}{ℓh}{ℓp} (C : Category ℓo ℓh) (P : Presheaf C ℓp) where
   Representation≅UniversalElement : Iso Representation UniversalElement
   Representation≅UniversalElement .Iso.fun = representationToUniversalElement
   Representation≅UniversalElement .Iso.inv = universalElementToRepresentation
-  Representation≅UniversalElement .Iso.rightInv η =
+  Representation≅UniversalElement .Iso.sec η =
     isoFunInjective UniversalElementIsoΣ _ _
       (ΣPathP (refl , (Σ≡Prop (λ _ → isPropIsUniversal _ _)
-      (yonedaᴾ* {C = C} P (η .vertex) .Iso.rightInv (η .element)))))
-  Representation≅UniversalElement .Iso.leftInv repr =
+      (yonedaᴾ* {C = C} P (η .vertex) .Iso.sec (η .element)))))
+  Representation≅UniversalElement .Iso.ret repr =
     ΣPathP (refl ,
     (NatIso≡ (cong NatTrans.N-ob
-      (yonedaᴾ* {C = C} P (repr .fst) .Iso.leftInv (repr .snd .trans)))))
+      (yonedaᴾ* {C = C} P (repr .fst) .Iso.ret (repr .snd .trans)))))
 
-  isTerminalToIsUniversal : ∀ {η : Elementᴾ {C = C} P}
+  isTerminalToIsUniversal : ∀ {η : Σ[ x ∈ C .ob ] P.p[ x ]}
     → isTerminal Elements η → isUniversal (η .fst) (η .snd)
   isTerminalToIsUniversal {η} term A .equiv-proof ϕ .fst .fst =
     term (_ , ϕ) .fst .fst
@@ -183,10 +185,10 @@ module _ {ℓo}{ℓh}{ℓp} (C : Category ℓo ℓh) (P : Presheaf C ℓp) where
   TerminalElement≅UniversalElement : Iso TerminalElement UniversalElement
   TerminalElement≅UniversalElement .Iso.fun = terminalElementToUniversalElement
   TerminalElement≅UniversalElement .Iso.inv = universalElementToTerminalElement
-  TerminalElement≅UniversalElement .Iso.rightInv η =
+  TerminalElement≅UniversalElement .Iso.sec η =
     isoFunInjective UniversalElementIsoΣ _ _
     (ΣPathP (refl , (Σ≡Prop (λ _ → isPropIsUniversal _ _) refl)))
-  TerminalElement≅UniversalElement .Iso.leftInv η =
+  TerminalElement≅UniversalElement .Iso.ret η =
     Σ≡Prop (isPropIsTerminal Elements) refl
 
   Representation≅TerminalElement : Iso Representation TerminalElement
@@ -194,3 +196,12 @@ module _ {ℓo}{ℓh}{ℓp} (C : Category ℓo ℓh) (P : Presheaf C ℓp) where
     compIso
       Representation≅UniversalElement
       (invIso TerminalElement≅UniversalElement)
+
+module _
+  {C : Category ℓ ℓ'} (isUnivC : isUnivalent C) (P : Presheaf C ℓS) where
+  open Contravariant
+  isPropUniversalElement : isProp (UniversalElement C P)
+  isPropUniversalElement = isOfHLevelRetractFromIso 1
+    (invIso (TerminalElement≅UniversalElement C P))
+    (isPropTerminal (∫_ {C = C} P)
+    (isUnivalent∫ {F = P} isUnivC))

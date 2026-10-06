@@ -4,7 +4,6 @@ Uniqueness of identity proofs and axiom K
 
 -}
 
-{-# OPTIONS --safe #-}
 
 module Cubical.Axiom.UniquenessOfIdentity where
 
@@ -51,8 +50,8 @@ module _ {A : Type ℓ} where
 ¬UIPType {ℓ} uip =
   false≢true (cong lower (transport-uip p (lift true)))
   where
-  B = Lift {j = ℓ} Bool
-  p = cong (Lift {j = ℓ}) (ua notEquiv)
+  B = Bool*
+  p = cong (Lift ℓ) (ua notEquiv)
 
   transport-uip : (p : B ≡ B) → ∀ b → transport p b ≡ b
   transport-uip = UIP→AxiomK uip _ B _ transportRefl

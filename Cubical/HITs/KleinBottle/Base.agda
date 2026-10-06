@@ -3,10 +3,9 @@
 Definition of the Klein bottle as a HIT
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.HITs.KleinBottle.Base where
 
-open import Cubical.Core.Everything
+open import Cubical.Foundations.Prelude
 
 data KleinBottle : Type where
   point : KleinBottle

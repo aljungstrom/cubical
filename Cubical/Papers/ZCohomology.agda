@@ -14,24 +14,22 @@ Computer Science Logic (CSL) 2022
 
 -- The "--safe" flag ensures that there are no postulates or
 -- unfinished goals
-{-# OPTIONS --safe #-}
 module Cubical.Papers.ZCohomology where
 
 -- Misc.
 open import Cubical.Data.Int hiding (_+_)
 open import Cubical.Data.Nat
-open import Cubical.Foundations.Everything
 open import Cubical.HITs.S1
 open import Cubical.Data.Sum
 open import Cubical.Data.Sigma
 
 -- 2
 open import Cubical.Core.Glue                                as Glue
-import Cubical.Foundations.Prelude                           as Prelude
-import Cubical.Foundations.GroupoidLaws                      as GroupoidLaws
+open import Cubical.Foundations.Prelude                      as Prelude
+open import Cubical.Foundations.GroupoidLaws                 as GroupoidLaws
+open import Cubical.Foundations.Isomorphism
 import Cubical.Foundations.Path                              as Path
-import Cubical.Foundations.Pointed                           as Pointed
-  renaming (Pointed to Type∙)
+open import Cubical.Foundations.Pointed
 open import Cubical.HITs.S1                                  as S1
 open import Cubical.HITs.Susp                                as Suspension
 open import Cubical.HITs.Sn                                  as Sn
@@ -108,9 +106,6 @@ open Prelude using ( transport
 
 --- 2.2 Important concepts from HoTT/UF in Cubical Agda
 
--- Pointed Types
-open Pointed using (Type∙)
-
 -- The circle, 𝕊¹
 open S1 using (S¹)
 
@@ -149,7 +144,7 @@ truncPathElim : ∀ {ℓ ℓ'} {A : Type ℓ} {x y : A} (n : ℕ)
               → (q : _) → B q
 truncPathElim zero hlev ind q = hlev q .fst
 truncPathElim (suc n) {B = B} hlev ind q =
-  subst B (Iso.leftInv (Trunc.PathIdTruncIso _) q)
+  subst B (Iso.ret (Trunc.PathIdTruncIso _) q)
     (help (ΩTrunc.encode-fun ∣ _ ∣ ∣ _ ∣ q))
   where
   help : (q : _) → B (ΩTrunc.decode-fun ∣ _ ∣ ∣ _ ∣ q)
@@ -356,7 +351,7 @@ open Cup using (_⌣_)
 
 -- 4.2
 -- Lemma 14
-Lem14 : ∀ {ℓ} {A : Type∙ ℓ} (n : ℕ) (f g : A →∙ K∙ n) → fst f ≡ fst g → f ≡ g
+Lem14 : ∀ {ℓ} {A : Pointed ℓ} (n : ℕ) (f g : A →∙ K∙ n) → fst f ≡ fst g → f ≡ g
 Lem14 n f g p = Homogen.→∙Homogeneous≡ (Properties.isHomogeneousKn n) p
 
 -- Proposition 15
@@ -464,9 +459,9 @@ n=m=1 (loop i) (loop j) k = -- This hcomp is just a simple rewriting to get path
   computation = refl
 
   main : p₁ ≡ p₂
-  main = p₁                         ≡⟨ sym (Iso.leftInv t p₁) ⟩
+  main = p₁                         ≡⟨ sym (Iso.ret t p₁) ⟩
         (Iso.inv t (Iso.fun t p₁))  ≡⟨ cong (Iso.inv t) computation ⟩
-        Iso.inv t (Iso.fun t p₂)    ≡⟨ Iso.leftInv t p₂ ⟩
+        Iso.inv t (Iso.fun t p₂)    ≡⟨ Iso.ret t p₂ ⟩
         p₂ ∎
 -}
 

@@ -1,8 +1,9 @@
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-}
 
 module Cubical.Cohomology.EilenbergMacLane.Rings.KleinBottle where
 
 open import Cubical.Cohomology.EilenbergMacLane.Groups.KleinBottle
+open import Cubical.Cohomology.EilenbergMacLane.Groups.RP2
 open import Cubical.Cohomology.EilenbergMacLane.Base
 open import Cubical.Cohomology.EilenbergMacLane.CupProduct
 open import Cubical.Cohomology.EilenbergMacLane.RingStructure
@@ -28,7 +29,7 @@ open import Cubical.Foundations.Pointed.Homogeneous
 open import Cubical.Foundations.Equiv
 
 open import Cubical.Data.Nat
-open import Cubical.Data.Fin
+open import Cubical.Data.Fin hiding (FinVec)
 open import Cubical.Data.Fin.Arithmetic
 open import Cubical.Data.FinData
 open import Cubical.Data.Vec
@@ -42,11 +43,12 @@ open import Cubical.Algebra.AbGroup.Base
 open import Cubical.Algebra.CommRing.Base
 open import Cubical.Algebra.CommRing.Instances.IntMod
 open import Cubical.Algebra.CommRing.Quotient
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly-Quotient
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly-Quotient
 open import Cubical.Algebra.AbGroup.TensorProduct
 open import Cubical.Algebra.Ring
 open import Cubical.Algebra.DirectSum.DirectSumHIT.Base
+open import Cubical.Algebra.AbGroup.Instances.IntMod
 
 open import Cubical.HITs.KleinBottle renaming (rec to KleinFun)
 open import Cubical.HITs.EilenbergMacLane1
@@ -542,7 +544,7 @@ module _ where
 β²↦0 = cong H²K²→ℤ/2 cupIdΒ ∙ ℤ/2→H²K²→ℤ/2 0
   where
   ℤ/2→Ω²K₂-refl : ℤ/2→Ω²K₂ 0 ≡ refl
-  ℤ/2→Ω²K₂-refl = Iso.leftInv Iso-Ω²K₂-ℤ/2 refl
+  ℤ/2→Ω²K₂-refl = Iso.ret Iso-Ω²K₂-ℤ/2 refl
 
   cupIdΒ : _⌣_ {G'' = ℤ/2Ring} {n = 1} {m = 1} K²gen.β K²gen.β
          ≡ ∣ KleinFun (0ₖ 2) refl refl (ℤ/2→Ω²K₂ 0) ∣₂
@@ -889,7 +891,7 @@ fst ℤ/2[X,Y]/<X³,Y²,XY+X²>≅H*KleinBottle = isoToEquiv is
   is : Iso  _ _
   fun is = ℤ/2[X,Y]/I→H*Klein .fst
   inv is = H*Klein→ℤ/2[X,Y]/I
-  rightInv is = DS-Ind-Prop.f _ _ _ _
+  sec is = DS-Ind-Prop.f _ _ _ _
     (λ _ → trunc _ _)
     refl
     (λ { zero a → lem₀ a _ refl
@@ -1013,7 +1015,7 @@ fst ℤ/2[X,Y]/<X³,Y²,XY+X²>≅H*KleinBottle = isoToEquiv is
           ∙∙ cong (invEq (H²[K²,ℤ/2]≅ℤ/2* .fst)) (p ∙ sym α²↦1')
           ∙∙ retEq (H²[K²,ℤ/2]≅ℤ/2* .fst) α⌣α
 
-  leftInv is =
+  ret is =
     SQ.elimProp
       (λ _ → squash/ _ _)
       (DS-Ind-Prop.f _ _ _ _

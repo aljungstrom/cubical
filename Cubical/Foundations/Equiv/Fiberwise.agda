@@ -1,13 +1,11 @@
-{-# OPTIONS --safe #-}
 module Cubical.Foundations.Equiv.Fiberwise where
-
-open import Cubical.Core.Everything
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.HLevels
+
 open import Cubical.Data.Sigma
 
 private
@@ -38,14 +36,44 @@ module _ {A : Type ℓ} (P : A → Type ℓ') (Q : A → Type ℓ'')
   -- Thm 4.7.7 (fiberwise equivalences)
   fiberEquiv : ([tf] : isEquiv total)
                → ∀ x → isEquiv (f x)
-  fiberEquiv [tf] x .equiv-proof y = isContrRetract (fibers-total .Iso.inv) (fibers-total .Iso.fun) (fibers-total .Iso.rightInv)
+  fiberEquiv [tf] x .equiv-proof y = isContrRetract (fibers-total .Iso.inv) (fibers-total .Iso.fun) (fibers-total .Iso.sec)
                                                     ([tf] .equiv-proof (x , y))
 
   totalEquiv : (fx-equiv : ∀ x → isEquiv (f x))
                → isEquiv total
-  totalEquiv fx-equiv .equiv-proof (x , v) = isContrRetract (fibers-total .Iso.fun) (fibers-total .Iso.inv) (fibers-total .Iso.leftInv)
+  totalEquiv fx-equiv .equiv-proof (x , v) = isContrRetract (fibers-total .Iso.fun) (fibers-total .Iso.inv) (fibers-total .Iso.ret)
                                                             (fx-equiv x .equiv-proof v)
 
+module _ where
+
+private
+  fiberwiseEquiv : {A : Type ℓ} {B : A → Type ℓ'} {C : A → Type ℓ''}
+                                (E : Σ A B ≃ Σ A C)
+                                → ((S : Σ A B) → E .fst S .fst ≡ S .fst)
+                                → (a : A) → B a ≃ C a
+  fiberwiseEquiv {A = A} {B = B} {C = C} E p a = goal
+    where
+       fiberwise : (a : A) → B a → C a
+       fiberwise a b = subst C (p (a , b)) (E .fst (a , b) .snd)
+
+       total : Σ A B → Σ A C
+       total S .fst = S .fst
+       total S .snd = fiberwise (S .fst) (S .snd)
+
+       EΣ≡total : (S : Σ A B) → Σ[ q ∈ E .fst S .fst ≡ total S .fst ]
+                                  PathP (λ i → C (q i)) (E .fst S .snd) (total S .snd)
+       EΣ≡total S .fst = p S
+       EΣ≡total S .snd = subst-filler C (p S) (E .fst S .snd)
+
+       E≡total : E .fst ≡ total
+       E≡total = funExt (λ S → ΣPathP (EΣ≡total S))
+
+       eqTotal : isEquiv total
+       eqTotal = subst isEquiv E≡total (E .snd)
+
+       goal : B a ≃ C a
+       goal .fst = fiberwise a
+       goal .snd = fiberEquiv B C fiberwise eqTotal a
 
 module _ {U : Type ℓ} (_~_ : U → U → Type ℓ')
          (idTo~ : ∀ {A B} → A ≡ B → A ~ B)

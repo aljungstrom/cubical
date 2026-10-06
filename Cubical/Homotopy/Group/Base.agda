@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-}
 module Cubical.Homotopy.Group.Base where
 
 open import Cubical.Homotopy.Loopspace
@@ -14,6 +14,7 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Transport
+open import Cubical.Foundations.Structure
 
 open import Cubical.Functions.Morphism
 
@@ -116,12 +117,7 @@ fst (∙Π {A = A} {n = suc zero} (f , p) (g , q)) base = pt A
 fst (∙Π {A = A} {n = suc zero} (f , p) (g , q)) (loop j) =
   ((sym p ∙∙ cong f loop ∙∙ p) ∙ (sym q ∙∙ cong g loop ∙∙ q)) j
 snd (∙Π {A = A} {n = suc zero} (f , p) (g , q)) = refl
-fst (∙Π {A = A} {n = suc (suc n)} (f , p) (g , q)) north = pt A
-fst (∙Π {A = A} {n = suc (suc n)} (f , p) (g , q)) south = pt A
-fst (∙Π {A = A} {n = suc (suc n)} (f , p) (g , q)) (merid a j) =
-   ((sym p ∙∙ cong f (merid a ∙ sym (merid (ptSn (suc n)))) ∙∙ p)
-  ∙ (sym q ∙∙ cong g (merid a ∙ sym (merid (ptSn (suc n)))) ∙∙ q)) j
-snd (∙Π {A = A} {n = suc (suc n)} (f , p) (g , q)) = refl
+∙Π {A = A} {n = suc (suc n)} = ·Susp (S₊∙ (suc n))
 
 -Π : ∀ {ℓ} {A : Pointed ℓ} {n : ℕ}
   → (S₊∙ n →∙ A)
@@ -245,18 +241,18 @@ SphereMapΩIso : ∀ {ℓ} {A : Pointed ℓ} (n : ℕ)
          (typ (Ω (S₊∙ n →∙ A ∙)))
 fun (SphereMapΩIso n) = SphereMapΩ n
 inv (SphereMapΩIso n) = ΩSphereMap n
-fst (rightInv (SphereMapΩIso zero) f i j) false = rUnit (λ j → fst (f j) false) (~ i) j
-fst (rightInv (SphereMapΩIso {A = A} zero) f i j) true = snd (f j) (~ i)
-snd (rightInv (SphereMapΩIso {A = A} zero) f i j) k = snd (f j) (~ i ∨ k)
-rightInv (SphereMapΩIso (suc n)) = leftInv IsoΩFunSuspFun
-leftInv (SphereMapΩIso zero) f =
+fst (sec (SphereMapΩIso zero) f i j) false = rUnit (λ j → fst (f j) false) (~ i) j
+fst (sec (SphereMapΩIso {A = A} zero) f i j) true = snd (f j) (~ i)
+snd (sec (SphereMapΩIso {A = A} zero) f i j) k = snd (f j) (~ i ∨ k)
+sec (SphereMapΩIso (suc n)) = ret IsoΩFunSuspFun
+ret (SphereMapΩIso zero) f =
   ΣPathP ((funExt (λ { base → sym (snd f)
                     ; (loop i) j → doubleCompPath-filler
                                      (sym (snd f))
                                      (cong (fst f) loop)
                                      (snd f) (~ j) i}))
         , λ i j → snd f (~ i ∨ j))
-leftInv (SphereMapΩIso (suc n)) = rightInv IsoΩFunSuspFun
+ret (SphereMapΩIso (suc n)) = sec IsoΩFunSuspFun
 
 {-
 In order to show that Ω→SphereMap is an equivalence, we show that it factors
@@ -328,13 +324,13 @@ isEquiv-Ω→SphereMap zero {A = A} =
                           , λ i j → snd f (~ i ∨ j)))
             λ _ → refl))
 isEquiv-Ω→SphereMap (suc zero) {A = A} =
-  isoToIsEquiv (iso _ invFun sec λ p → sym (rUnit p))
+  isoToIsEquiv (iso _ invFun sec' λ p → sym (rUnit p))
   where
   invFun : S₊∙ 1 →∙ A → typ (Ω A)
   invFun (f , p) = sym p ∙∙ cong f loop ∙∙ p
 
-  sec : section (Ω→SphereMap 1) invFun
-  sec (f , p) =
+  sec' : section (Ω→SphereMap 1) invFun
+  sec' (f , p) =
     ΣPathP ((funExt (λ { base → sym p
                        ; (loop i) j → doubleCompPath-filler
                                         (sym p) (cong f loop) p (~ j) i}))
@@ -422,8 +418,8 @@ IsoSphereMapΩ-pres∙Π n =
   morphLemmas.isMorphInv _∙_ ∙Π (Ω→SphereMap (suc n))
     (isHom-Ω→SphereMap n)
     (SphereMap→Ω (suc n))
-    (leftInv (IsoSphereMapΩ (suc n)))
-    (rightInv (IsoSphereMapΩ (suc n)))
+    (ret (IsoSphereMapΩ (suc n)))
+    (sec (IsoSphereMapΩ (suc n)))
 
 -- It is useful to define the ``Group Structure'' on (S₊∙ n →∙ A)
 -- before doing it on π'. These will be the equivalents of the
@@ -576,23 +572,23 @@ snd (∙Π-lCancel {A = A} {n = suc n} f i) = refl
         → (f g h : S₊∙ (suc n) →∙ A)
         → ∙Π f (∙Π g h) ≡ ∙Π (∙Π f g) h
 ∙Π-assoc {n = n} f g h =
-     sym (leftInv (IsoSphereMapΩ (suc n)) (∙Π f (∙Π g h)))
+     sym (ret (IsoSphereMapΩ (suc n)) (∙Π f (∙Π g h)))
   ∙∙ cong (Ω→SphereMap (suc n)) (IsoSphereMapΩ-pres∙Π n f (∙Π g h)
                 ∙∙ cong (SphereMap→Ω (suc n) f ∙_) (IsoSphereMapΩ-pres∙Π n g h)
                 ∙∙ ∙assoc (SphereMap→Ω (suc n) f) (SphereMap→Ω (suc n) g) (SphereMap→Ω (suc n) h)
                 ∙∙ cong (_∙ SphereMap→Ω (suc n) h) (sym (IsoSphereMapΩ-pres∙Π n f g))
                 ∙∙ sym (IsoSphereMapΩ-pres∙Π n (∙Π f g) h))
-  ∙∙ leftInv (IsoSphereMapΩ (suc n)) (∙Π (∙Π f g) h)
+  ∙∙ ret (IsoSphereMapΩ (suc n)) (∙Π (∙Π f g) h)
 
 ∙Π-comm : ∀ {ℓ} {A : Pointed ℓ} {n : ℕ}
         → (f g : S₊∙ (suc (suc n)) →∙ A)
         → ∙Π f g ≡ ∙Π g f
 ∙Π-comm {A = A} {n = n} f g =
-     sym (leftInv (IsoSphereMapΩ (suc (suc n))) (∙Π f g))
+     sym (ret (IsoSphereMapΩ (suc (suc n))) (∙Π f g))
   ∙∙ cong (Ω→SphereMap (suc (suc n))) (IsoSphereMapΩ-pres∙Π (suc n) f g
   ∙∙ EH _ _ _
   ∙∙ sym (IsoSphereMapΩ-pres∙Π (suc n) g f))
-  ∙∙ leftInv (IsoSphereMapΩ (suc (suc n))) (∙Π g f)
+  ∙∙ ret (IsoSphereMapΩ (suc (suc n))) (∙Π g f)
 
 {- π'' as a group -}
 1π' : ∀ {ℓ} (n : ℕ) {A : Pointed ℓ} → π' n A
@@ -645,6 +641,40 @@ fst (π'Gr≅πGr n A) = setTruncIso (IsoSphereMapΩ (suc n))
 snd (π'Gr≅πGr n A) =
   makeIsGroupHom (sElim2 (λ _ _ → isSetPathImplicit)
     λ p q i → ∣ IsoSphereMapΩ-pres∙Π n p q i ∣₂)
+
+-- Proof that π'Gr preserves universe lifts
+π'GrLiftIso : ∀ {ℓ} (ℓ' : Level) {A : Pointed ℓ} (n : ℕ)
+  → GroupIso (π'Gr n (Lift∙ ℓ' A)) (π'Gr n A)
+fun (fst (π'GrLiftIso ℓ' n)) =
+  sMap λ f → (λ x → lower (fst f x))
+            , (cong lower (snd f))
+inv (fst (π'GrLiftIso ℓ' n)) =
+  sMap λ f → (λ x → lift (fst f x))
+            , (cong lift (snd f))
+sec (fst (π'GrLiftIso ℓ' n)) =
+  sElim (λ _ → isSetPathImplicit) λ f → refl
+ret (fst (π'GrLiftIso ℓ' n)) =
+  sElim (λ _ → isSetPathImplicit) λ f → refl
+snd (π'GrLiftIso ℓ' zero) =
+  makeIsGroupHom (sElim2 (λ _ _ → isSetPathImplicit)
+    λ f g → cong ∣_∣₂ (ΣPathP ((funExt
+     λ { base → refl
+       ; (loop i) j → (cong-∙ lower (Ω→ f .fst loop) (Ω→ g .fst loop)
+        ∙ cong₂ _∙_
+          (cong-∙∙ lower (sym (snd f)) (cong (fst f) loop) (snd f))
+          (cong-∙∙ lower (sym (snd g)) (cong (fst g) loop) (snd g))) j i})
+       , refl)))
+snd (π'GrLiftIso ℓ' {A = A} (suc n)) =
+  makeIsGroupHom (sElim2 (λ _ _ → isSetPathImplicit)
+    λ f g → cong ∣_∣₂ (ΣPathP ((funExt (
+      λ { north → refl
+        ; south → refl
+        ; (merid a i) j
+       → (cong-∙ lower (Ω→ f .fst (σS a)) (Ω→ g .fst (σS a))
+        ∙ cong₂ _∙_
+          (cong-∙∙ lower (sym (snd f)) (cong (fst f) (σS a)) (snd f))
+          (cong-∙∙ lower (sym (snd g)) (cong (fst g) (σS a)) (snd g))) j i}))
+      , refl)))
 
 {- Proof of πₙ(ΩA) = πₙ₊₁(A) -}
 Iso-πΩ-π : ∀ {ℓ} {A : Pointed ℓ} (n : ℕ)
@@ -962,11 +992,11 @@ v         f∘_      v
         → π' (suc n) A → π' (suc n) B
 π'∘∙fun n f = sMap (f ∘∙_)
 
-GroupHomπ≅π'PathP : ∀ {ℓ ℓ'} (A : Pointed ℓ) (B : Pointed ℓ') (n : ℕ)
-  → GroupHom (πGr n A) (πGr n B) ≡ GroupHom (π'Gr n A) (π'Gr n B)
-GroupHomπ≅π'PathP A B n i =
+GroupHomπ≅π'PathP : ∀ {ℓ ℓ'} (A : Pointed ℓ) (B : Pointed ℓ') (n m : ℕ)
+  → GroupHom (πGr n A) (πGr m B) ≡ GroupHom (π'Gr n A) (π'Gr m B)
+GroupHomπ≅π'PathP A B n m i =
   GroupHom (fst (GroupPath _ _) (GroupIso→GroupEquiv (π'Gr≅πGr n A)) (~ i))
-           (fst (GroupPath _ _) (GroupIso→GroupEquiv (π'Gr≅πGr n B)) (~ i))
+           (fst (GroupPath _ _) (GroupIso→GroupEquiv (π'Gr≅πGr m B)) (~ i))
 
 πFun : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'} (n : ℕ) (f : A →∙ B)
      → π (suc n) A → π (suc n) B
@@ -983,7 +1013,7 @@ snd (πHom n f) =
 π'∘∙Hom' : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'} (n : ℕ) (f : A →∙ B)
         → GroupHom (π'Gr n A) (π'Gr n B)
 π'∘∙Hom' {A = A} {B = B} n f =
-  transport (λ i → GroupHomπ≅π'PathP A B n i)
+  transport (λ i → GroupHomπ≅π'PathP A B n n i)
             (πHom n f)
 
 π'∘∙Hom'≡π'∘∙fun : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'}
@@ -996,7 +1026,7 @@ snd (πHom n f) =
             (transportRefl (fun (IsoSphereMapΩ (suc n)) g) i)) i))
      ∙ sym (funExt⁻ (cong fst (Ω^→≈post∘∙ n f))
                     (fun (IsoSphereMapΩ (suc n)) g))
-     ∙ cong (f ∘∙_) (leftInv (IsoSphereMapΩ (suc n)) g)))
+     ∙ cong (f ∘∙_) (ret (IsoSphereMapΩ (suc n)) g)))
 
 π'∘∙Hom : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'} (n : ℕ) (f : A →∙ B)
        → GroupHom (π'Gr n A) (π'Gr n B)
@@ -1011,9 +1041,17 @@ snd (π'∘∙Hom {A = A} {B = B} n f) = isHom∘∙
                                    (π'Gr n B .snd))
                 (π'∘∙Hom' n f .snd)
 
+GroupHomπ≅π'PathP-hom : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'}
+  (n : ℕ) (f : A →∙ B)
+  → PathP (λ i → GroupHomπ≅π'PathP A B n n i) (πHom n f) (π'∘∙Hom n f)
+GroupHomπ≅π'PathP-hom {A = A} {B = B} n f =
+  (λ j → transp (λ i → GroupHomπ≅π'PathP A B n n (i ∧ j)) (~ j)
+                 (πHom n f))
+  ▷ Σ≡Prop (λ _ → isPropIsGroupHom _ _) (π'∘∙Hom'≡π'∘∙fun n f)
+
 -- post composition with an equivalence induces an
 -- isomorphism of homotopy groups
-π'eqFun : ∀ {ℓ} {A : Pointed ℓ} {B : Pointed ℓ} (n : ℕ)
+π'eqFun : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'} (n : ℕ)
       → A ≃∙ B
       → (π' (suc n) A) → π' (suc n) B
 π'eqFun n p = π'∘∙fun n (≃∙map p)
@@ -1031,39 +1069,66 @@ invEquiv∙idEquiv∙≡idEquiv : ∀ {ℓ} {A : Pointed ℓ}
 invEquiv∙idEquiv∙≡idEquiv = ΣPathP ((Σ≡Prop (λ _ → isPropIsEquiv _) refl) , (sym (lUnit refl)))
 
 π'eqFunIsEquiv :
-  ∀ {ℓ} {A : Pointed ℓ} {B : Pointed ℓ} (n : ℕ)
+  ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'} (n : ℕ)
       → (e : A ≃∙ B)
       → isEquiv (π'eqFun n e)
-π'eqFunIsEquiv {B = B} n =
-  Equiv∙J (λ A e → isEquiv (π'eqFun n e))
-    (subst isEquiv (sym (π'eqFun-idEquiv n))
+π'eqFunIsEquiv {ℓ = ℓ} {ℓ'} {A} {B} n e =
+  subst isEquiv
+    (funExt (sElim (λ _ → isSetPathImplicit)
+             (λ f → cong ∣_∣₂
+             (ΣPathP (refl
+               , (cong-∙ lower (cong (lift ∘ (fst (fst e))) (snd f)) _))))))
+    (πA≃πB .snd)
+  where
+  e' : Lift∙ ℓ' A ≃∙ Lift∙ ℓ B
+  e' = Lift∙≃Lift∙ e
+
+  main : ∀ {ℓ} {A B : Pointed ℓ} (n : ℕ)
+      → (e : A ≃∙ B)
+      → isEquiv (π'eqFun n e)
+  main {B = B} n =
+    Equiv∙J (λ A e → isEquiv (π'eqFun n e))
+     (subst isEquiv (sym (π'eqFun-idEquiv n))
       (idIsEquiv (π' (suc n) B)))
 
-π'eqFunIsHom : ∀ {ℓ} {A B : Pointed ℓ}(n : ℕ)
+  πA≃πB : π' (suc n) A ≃ π' (suc n) B
+  πA≃πB =
+    compEquiv (invEquiv (isoToEquiv (fst (π'GrLiftIso _ n))))
+     (compEquiv (_ , main n e')
+       (isoToEquiv (fst (π'GrLiftIso _ n))))
+
+π'eqFunIsHom : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'} (n : ℕ)
       → (e : A ≃∙ B)
       → IsGroupHom (π'Gr n A .snd) (π'eqFun n e)
                     (π'Gr n B .snd)
-π'eqFunIsHom {B = B} n =
-  Equiv∙J (λ A e → IsGroupHom (π'Gr n A .snd) (π'eqFun n e) (π'Gr n B .snd))
+π'eqFunIsHom {ℓ = ℓ} {ℓ'} {A} {B} n e =
+  subst (λ ϕ → IsGroupHom (π'Gr n A .snd)
+                         ϕ (π'Gr n B .snd))
+        (funExt (sElim (λ _ → isSetPathImplicit)
+          (λ f → cong ∣_∣₂ (ΣPathP
+            (refl
+           , cong-∙ lower (cong (lift ∘ (fst (fst e))) (snd f)) _)))))
+        (compGroupHom
+          (GroupIso→GroupHom (invGroupIso (π'GrLiftIso _ n)))
+         (compGroupHom (_ , main n e')
+          (GroupIso→GroupHom (π'GrLiftIso _ n))) .snd)
+  where
+  e' : Lift∙ ℓ' A ≃∙ Lift∙ ℓ B
+  e' = Lift∙≃Lift∙ e
+
+  main : ∀ {ℓ} {A B : Pointed ℓ} (n : ℕ)
+      → (e : A ≃∙ B)
+      → IsGroupHom (π'Gr n A .snd) (π'eqFun n e)
+                    (π'Gr n B .snd)
+  main {B = B} n =
+    Equiv∙J (λ A e → IsGroupHom (π'Gr n A .snd) (π'eqFun n e) (π'Gr n B .snd))
     (subst (λ x → IsGroupHom (π'Gr n B .snd) x (π'Gr n B .snd))
       (sym (π'eqFun-idEquiv n))
       (makeIsGroupHom λ _ _ → refl))
 
-π'GrIso : ∀ {ℓ} {A : Pointed ℓ} {B : Pointed ℓ} (n : ℕ)
-      → A ≃∙ B
-      → GroupIso (π'Gr n A) (π'Gr n B)
-fun (fst (π'GrIso n e)) = π'eqFun n e
-inv (fst (π'GrIso n e)) = π'eqFun n (invEquiv∙ e)
-rightInv (fst (π'GrIso {B = B} n e)) =
-  Equiv∙J (λ A e → (f : _) → π'eqFun n e (π'eqFun n (invEquiv∙ e) f) ≡ f)
-    (λ f → (λ i → π'eqFun-idEquiv n i (π'eqFun n (invEquiv∙idEquiv∙≡idEquiv i) f))
-    ∙ funExt⁻ (π'eqFun-idEquiv n) f)
-    e
-leftInv (fst (π'GrIso n e)) =
-  Equiv∙J (λ A e → (f : _) → π'eqFun n (invEquiv∙ e)  (π'eqFun n e f) ≡ f)
-    (λ f → (λ i → π'eqFun n (invEquiv∙idEquiv∙≡idEquiv i) (π'eqFun-idEquiv n i f))
-          ∙ funExt⁻ (π'eqFun-idEquiv n) f)
-    e
+π'GrIso : {ℓ ℓ' : Level} {A : Pointed ℓ} {B : Pointed ℓ'} (n : ℕ)
+  (e : A ≃∙ B) → GroupIso (π'Gr n A) (π'Gr n B)
+fst (π'GrIso n e) = setTruncIso (pre∘∙equiv e)
 snd (π'GrIso n e) = π'eqFunIsHom n e
 
 π'Iso : ∀ {ℓ} {A : Pointed ℓ} {B : Pointed ℓ} (n : ℕ)
@@ -1081,3 +1146,61 @@ snd (fst (πIso e n)) =
     (setTruncIso
       (equivToIso (_ , isEquivΩ^→ (suc n) (≃∙map e) (snd (fst e)))))
 snd (πIso e n) = snd (πHom n (≃∙map e))
+
+hGroupoidπ₁ : ∀ {ℓ} (A : hGroupoid ℓ) → ⟨ A ⟩ → Group ℓ
+fst (hGroupoidπ₁ A a) = a ≡ a
+1g (snd (hGroupoidπ₁ A a)) = refl
+GroupStr._·_ (snd (hGroupoidπ₁ A a)) = _∙_
+inv (snd (hGroupoidπ₁ A a)) = sym
+is-set (isSemigroup (isMonoid (isGroup (snd (hGroupoidπ₁ A a))))) = snd A a a
+·Assoc (isSemigroup (isMonoid (isGroup (snd (hGroupoidπ₁ A a))))) = ∙assoc
+·IdR (isMonoid (isGroup (snd (hGroupoidπ₁ A a)))) = sym ∘ rUnit
+·IdL (isMonoid (isGroup (snd (hGroupoidπ₁ A a)))) = sym ∘ lUnit
+·InvR (isGroup (snd (hGroupoidπ₁ A a))) = rCancel
+·InvL (isGroup (snd (hGroupoidπ₁ A a))) = lCancel
+
+-- Adjunction
+sphereFunIso : ∀ {ℓ} {A : Pointed ℓ} (n : ℕ)
+  → Iso (S₊∙ n →∙ (Path (fst A) (pt A) (pt A) , refl)) (S₊∙ (suc n) →∙ A)
+sphereFunIso zero = compIso IsoBool→∙ (invIso (IsoSphereMapΩ 1))
+sphereFunIso (suc n) = ΩSuspAdjointIso
+
+--
+∙Π∘∙ : ∀ {ℓ ℓ'} {A : Pointed ℓ} {B : Pointed ℓ'}
+  (n : ℕ) (f g : S₊∙ (suc n) →∙ A) (h : A →∙ B)
+  → h ∘∙ ∙Π f g ≡ ∙Π (h ∘∙ f) (h ∘∙ g)
+∙Π∘∙ {A = A} n f g h =
+     cong (h ∘∙_) (cong₂ ∙Π (sym (Iso.sec (sphereFunIso n) f))
+                            (sym (Iso.sec (sphereFunIso n) g)))
+  ∙∙ lem2 n (Iso.inv (sphereFunIso n) f) (Iso.inv (sphereFunIso n) g)
+  ∙∙ cong₂ (λ f g → ∙Π (h ∘∙ f) (h ∘∙ g))
+           (Iso.sec (sphereFunIso n) f)
+           (Iso.sec (sphereFunIso n) g)
+  where
+  lem : ∀ {ℓ} {A : Type ℓ} {x y : A} (p : x ≡ y) → Square p refl (refl ∙ p) refl
+  lem p = lUnit p ◁ λ i j → (refl ∙ p) (i ∨ j)
+
+  mainEq : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} (f : A → B) (a : A) (b : B)
+    (fp : f a ≡ b) (l1 l2 : a ≡ a)
+    → Square (cong f ((l1 ∙ refl) ∙ (l2 ∙ refl)))
+             ((sym (refl ∙ fp) ∙∙ cong f l1 ∙∙ (refl ∙ fp))
+            ∙ (sym (refl ∙ fp) ∙∙ cong f l2 ∙∙ (refl ∙ fp)))
+              fp fp
+  mainEq f a = J> λ l1 l2 → cong-∙ f _ _
+    ∙ cong₂ _∙_ (cong-∙ f l1 refl  ∙ cong₃ _∙∙_∙∙_ (rUnit refl) refl (rUnit refl))
+                (cong-∙ f l2 refl ∙ cong₃ _∙∙_∙∙_ (rUnit refl) refl (rUnit refl))
+
+  lem2 : (n : ℕ) (f g : S₊∙ n →∙ Ω A)
+    → (h ∘∙ ∙Π (Iso.fun (sphereFunIso n) f) (Iso.fun (sphereFunIso n) g))
+    ≡ ∙Π (h ∘∙ Iso.fun (sphereFunIso n) f) (h ∘∙ Iso.fun (sphereFunIso n) g)
+  fst (lem2 zero f g i) base = snd h i
+  fst (lem2 zero f g i) (loop i₁) =
+    mainEq (fst h) _ _ (snd h) (fst f false) (fst g false) i i₁
+  fst (lem2 (suc n) f g i) north = snd h i
+  fst (lem2 (suc n) f g i) south = snd h i
+  fst (lem2 (suc n) f g i) (merid a i₁) =
+    mainEq (fst h) _ _ (snd h)
+      (cong (Iso.fun (sphereFunIso (suc n)) f .fst) (σS a))
+      (cong (Iso.fun (sphereFunIso (suc n)) g .fst) (σS a)) i i₁
+  snd (lem2 zero f g i) j = lem (snd h) j i
+  snd (lem2 (suc n) f g i) j = lem (snd h) j i

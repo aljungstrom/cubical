@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-}
 
 {- This file contains properties of K(G,n) for G of order 2
 (in particular of ℤ/2) -}
@@ -45,6 +45,7 @@ open import Cubical.HITs.RPn.Base
 
 open import Cubical.Algebra.CommRing.Base
 open import Cubical.Algebra.Group.Instances.IntMod
+open import Cubical.Algebra.AbGroup.Instances.IntMod
 open import Cubical.Algebra.CommRing.Instances.IntMod
 open import Cubical.Algebra.AbGroup.Base
 open import Cubical.Algebra.AbGroup.TensorProduct
@@ -220,9 +221,6 @@ module EM2 {ℓ : Level} (G : AbGroup ℓ)
   symConstEM-refl {n = suc zero} = transportRefl refl
   symConstEM-refl {n = suc (suc n)} = transportRefl refl
 
-ℤ/2 : AbGroup ℓ-zero
-ℤ/2 = Group→AbGroup (ℤGroup/ 2) +ₘ-comm
-
 private
   module EMZ/2 = EM2 ℤ/2 -Const-ℤ/2
 
@@ -264,8 +262,6 @@ symConst-ℤ/2-refl = EMZ/2.symConstEM-refl
 EM₁-ℤ/2→RP∞'-emloop : (g : ℤ/2 .fst) → RP∞'∙ ℓ-zero ≡ RP∞'∙ ℓ-zero
 EM₁-ℤ/2→RP∞'-emloop (zero , p) = refl
 EM₁-ℤ/2→RP∞'-emloop (suc zero , p) = Σ≡Prop (isPropIsRP∞ ℓ-zero) (ua notEquiv)
-EM₁-ℤ/2→RP∞'-emloop (suc (suc g) , p) =
-  ⊥.rec (¬-<-zero (<-k+-cancel {k = 2} p))
 
 EM₁-ℤ/2→RP∞' : EM ℤ/2 1 → RP∞' ℓ-zero
 EM₁-ℤ/2→RP∞' =
@@ -305,14 +301,14 @@ equiv-proof (snd EM₁-ℤ/2≃RP∞') =
     help-iso : Iso (RP∞'∙ ℓ-zero ≡ RP∞'∙ ℓ-zero) (Bool ≡ Bool)
     Iso.fun help-iso = cong fst
     Iso.inv help-iso p = Σ≡Prop (isPropIsRP∞ ℓ-zero) p
-    Iso.rightInv help-iso p = refl
-    Iso.leftInv help-iso p =
+    Iso.sec help-iso p = refl
+    Iso.ret help-iso p =
       ΣSquareSet (λ _ → isProp→isSet (isPropIsRP∞ ℓ-zero _))
         λ i j → fst (p j)
 
   main : cong EM₁-ℤ/2→RP∞' ≡ (λ x → (Iso.inv iso₂ (Iso.inv iso₁ x)))
-  main = funExt λ x → cong (cong EM₁-ℤ/2→RP∞') (sym (Iso.rightInv iso₁ x))
-                     ∙ sym (Iso.leftInv iso₂ _)
+  main = funExt λ x → cong (cong EM₁-ℤ/2→RP∞') (sym (Iso.sec iso₁ x))
+                     ∙ sym (Iso.ret iso₂ _)
                      ∙ cong (Iso.inv iso₂) (compute (Iso.inv iso₁ x))
     where
     compute : (x : Bool) → Iso.fun iso₂ (cong EM₁-ℤ/2→RP∞' (Iso.fun iso₁ x)) ≡ x

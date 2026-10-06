@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --no-import-sorts --safe #-}
 
 module Cubical.Data.Nat.Omniscience where
 

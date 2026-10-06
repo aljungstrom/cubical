@@ -3,7 +3,6 @@
 Constant structure: _ ↦ A
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Structures.Relational.Constant where
 
 open import Cubical.Foundations.Prelude
@@ -53,5 +52,5 @@ module _ (A : hSet ℓ') where
     isom : Iso _ _
     isom .fun = _
     isom .inv = [_]
-    isom .rightInv _ = refl
-    isom .leftInv = elimProp (λ _ → squash/ _ _) (λ a → refl)
+    isom .sec _ = refl
+    isom .ret = elimProp (λ _ → squash/ _ _) (λ a → refl)

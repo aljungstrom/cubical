@@ -1,4 +1,3 @@
-{-# OPTIONS --cubical --no-import-sorts --safe #-}
 
 module Cubical.Axiom.Omniscience where
 
@@ -75,8 +74,8 @@ module WLPO≃ where
   total≡points P = isoToPath λ where
     .fun → points P
     .inv → total P
-    .rightInv never → isPropΠ (λ x → isProp¬ ⟨ P x ⟩) _ never
-    .leftInv α≡f → isSet→ isSetBool P (const false) _ α≡f
+    .sec never → isPropΠ (λ x → isProp¬ ⟨ P x ⟩) _ never
+    .ret α≡f → isSet→ isSetBool P (const false) _ α≡f
 
 WLPO≡WLPO' : WLPO A ≡ WLPO' A
 WLPO≡WLPO' {A = A} i = (P : A → 𝟚) → Dec (WLPO≃.total≡points P (~ i))

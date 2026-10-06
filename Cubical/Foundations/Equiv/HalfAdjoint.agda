@@ -7,7 +7,6 @@ Half adjoint equivalences ([HAEquiv])
 - Cong is an equivalence ([congEquiv])
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Foundations.Equiv.HalfAdjoint where
 
 open import Cubical.Foundations.Prelude
@@ -41,8 +40,8 @@ record isHAEquiv {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} (f : A → B) : Type 
   isHAEquiv→Iso : Iso A B
   Iso.fun isHAEquiv→Iso = f
   Iso.inv isHAEquiv→Iso = g
-  Iso.rightInv isHAEquiv→Iso = rinv
-  Iso.leftInv isHAEquiv→Iso = linv
+  Iso.sec isHAEquiv→Iso = rinv
+  Iso.ret isHAEquiv→Iso = linv
 
   isHAEquiv→isEquiv : isEquiv f
   isHAEquiv→isEquiv .equiv-proof y = (g y , rinv y) , isCenter where
@@ -72,8 +71,8 @@ iso→HAEquiv e = f , isHAEquivf
   where
     f = Iso.fun e
     g = Iso.inv e
-    ε = Iso.rightInv e
-    η = Iso.leftInv e
+    ε = Iso.sec e
+    η = Iso.ret e
 
     Hfa≡fHa : (f : A → A) → (H : ∀ a → f a ≡ a) → ∀ a → H (f a) ≡ cong f (H a)
     Hfa≡fHa f H = J (λ f p → ∀ a → funExt⁻ (sym p) (f a) ≡ cong f (funExt⁻ (sym p) a))
@@ -109,18 +108,18 @@ congIso {x = x} {y} e = goal
   goal : Iso (x ≡ y) (Iso.fun e x ≡ Iso.fun e y)
   fun goal   = cong (iso→HAEquiv e .fst)
   inv goal p = sym (linv x) ∙∙ cong g p ∙∙ linv y
-  rightInv goal p i j =
+  sec goal p i j =
     hcomp (λ k → λ { (i = i0) → iso→HAEquiv e .fst
                                   (doubleCompPath-filler (sym (linv x)) (cong g p) (linv y) k j)
                    ; (i = i1) → rinv (p j) k
                    ; (j = i0) → com x i k
                    ; (j = i1) → com y i k })
           (iso→HAEquiv e .fst (g (p j)))
-  leftInv goal p i j =
+  ret goal p i j =
     hcomp (λ k → λ { (i = i1) → p j
-                   ; (j = i0) → Iso.leftInv e x (i ∨ k)
-                   ; (j = i1) → Iso.leftInv e y (i ∨ k) })
-          (Iso.leftInv e (p j) i)
+                   ; (j = i0) → Iso.ret e x (i ∨ k)
+                   ; (j = i1) → Iso.ret e y (i ∨ k) })
+          (Iso.ret e (p j) i)
 
 invCongFunct : {x : A} (e : Iso A B) (p : Iso.fun e x ≡ Iso.fun e x) (q : Iso.fun e x ≡ Iso.fun e x)
              → Iso.inv (congIso e) (p ∙ q) ≡ Iso.inv (congIso e) p ∙ Iso.inv (congIso e) q
@@ -135,7 +134,7 @@ invCongFunct {x = x} e p q = helper (Iso.inv e) _ _ _
              ∙ λ i → rUnit (cong f p) i ∙ rUnit (cong f q) i
 
 invCongRefl : {x : A} (e : Iso A B) → Iso.inv (congIso {x = x} {y = x} e) refl ≡ refl
-invCongRefl {x = x} e = (λ i → (λ j → Iso.leftInv e x (i ∨ ~ j)) ∙∙ refl ∙∙ (λ j → Iso.leftInv e x (i ∨ j))) ∙ sym (rUnit refl)
+invCongRefl {x = x} e = (λ i → (λ j → Iso.ret e x (i ∨ ~ j)) ∙∙ refl ∙∙ (λ j → Iso.ret e x (i ∨ j))) ∙ sym (rUnit refl)
 
 module _ {ℓ'' ℓ'''} {A : Type ℓ} {A' : Type ℓ'}
   {B : A → Type ℓ''} {B' : A' → Type ℓ'''}
@@ -146,13 +145,13 @@ module _ {ℓ'' ℓ'''} {A : Type ℓ} {A' : Type ℓ'}
   Iso.fun ΠIso g x =
     subst B' (isHAEquiv.rinv (snd e') x) (Iso.fun (f _) (g (Iso.inv e x)))
   Iso.inv ΠIso g x = Iso.inv (f _) (g (Iso.fun e x))
-  Iso.rightInv ΠIso g =
+  Iso.sec ΠIso g =
     funExt λ x
     → cong (subst B' (isHAEquiv.rinv (snd e') x))
-              (Iso.rightInv (f (Iso.inv e x)) _)
+              (Iso.sec (f (Iso.inv e x)) _)
      ∙ (λ j → transp (λ k → B' (isHAEquiv.rinv (snd e') x (k ∨ j))) j
                  (g (isHAEquiv.rinv (snd e') x j)))
-  Iso.leftInv ΠIso g =
+  Iso.ret ΠIso g =
     funExt λ x
      → cong (Iso.inv (f x))
          ((λ j → subst B' (isHAEquiv.com (snd e') x (~ j))
@@ -161,4 +160,4 @@ module _ {ℓ'' ℓ'''} {A : Type ℓ} {A' : Type ℓ'}
         ∙ λ j → transp (λ k → B' (fst e' (isHAEquiv.linv (snd e') x (j ∨ k)))) j
                         (Iso.fun (f (isHAEquiv.linv (snd e') x j))
                           (g (isHAEquiv.linv (snd e') x j))))
-     ∙ Iso.leftInv (f x) (g x)
+     ∙ Iso.ret (f x) (g x)

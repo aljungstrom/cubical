@@ -1,18 +1,26 @@
-{-# OPTIONS --safe #-}
 module Cubical.HITs.SmashProduct.Base where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Pointed
 open import Cubical.Foundations.Isomorphism
-open import Cubical.HITs.Pushout.Base
-open import Cubical.Data.Unit
-open import Cubical.Data.Sigma
-open import Cubical.HITs.Wedge
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Pointed.Homogeneous
 open import Cubical.Foundations.Path
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Transport
+open import Cubical.Foundations.Equiv
+
+open import Cubical.Data.Unit
+open import Cubical.Data.Sigma
+open import Cubical.Data.Nat
+open import Cubical.Data.Fin
+
+open import Cubical.HITs.Pushout.Base
+open import Cubical.HITs.Wedge
+open import Cubical.HITs.Susp renaming (toSusp to σ)
+open import Cubical.HITs.Join
+
+open import Cubical.Homotopy.Loopspace
 
 data Smash {ℓ ℓ'} (A : Pointed ℓ) (B : Pointed ℓ') : Type (ℓ-max ℓ ℓ') where
   basel : Smash A B
@@ -58,13 +66,16 @@ commK (gluer b x) = refl
 
 --- Alternative definition
 
-i∧ : {A : Pointed ℓ} {B : Pointed ℓ'} → A ⋁ B → (typ A) × (typ B)
-i∧ {A = A , ptA} {B = B , ptB} (inl x) = x , ptB
-i∧ {A = A , ptA} {B = B , ptB} (inr x) = ptA , x
-i∧ {A = A , ptA} {B = B , ptB} (push tt i) = ptA , ptB
-
 _⋀_ : Pointed ℓ → Pointed ℓ' → Type (ℓ-max ℓ ℓ')
-A ⋀ B = Pushout {A = (A ⋁ B)} (λ _ → tt) i∧
+A ⋀ B = Pushout {A = (A ⋁ B)} (λ _ → tt) ⋁↪
+
+_⋀∙_ : Pointed ℓ → Pointed ℓ' → Pointed (ℓ-max ℓ ℓ')
+A ⋀∙ B = (A ⋀ B) , (inl tt)
+
+-- iterated products
+⋀^ : (n : ℕ) (A : Fin (suc n) → Pointed ℓ) → Pointed ℓ
+⋀^ zero A = A fzero
+⋀^ (suc n) A = ⋀^ n (predFinFamily∙ A) ⋀∙ (A flast)
 
 ⋀comm→ : A ⋀ B → B ⋀ A
 ⋀comm→ (inl x) = inl x
@@ -84,11 +95,8 @@ A ⋀ B = Pushout {A = (A ⋁ B)} (λ _ → tt) i∧
 ⋀CommIso : Iso (A ⋀ B) (B ⋀ A)
 Iso.fun ⋀CommIso = ⋀comm→
 Iso.inv ⋀CommIso = ⋀comm→
-Iso.rightInv ⋀CommIso = ⋀comm→²
-Iso.leftInv ⋀CommIso = ⋀comm→²
-
-_⋀∙_ : Pointed ℓ → Pointed ℓ' → Pointed (ℓ-max ℓ ℓ')
-A ⋀∙ B = (A ⋀ B) , (inl tt)
+Iso.sec ⋀CommIso = ⋀comm→²
+Iso.ret ⋀CommIso = ⋀comm→²
 
 ⋀comm→∙ : A ⋀∙ B →∙ B ⋀∙ A
 fst ⋀comm→∙ = ⋀comm→
@@ -140,6 +148,7 @@ SmashAdjIso→≡SmashAdjIso→J : (f : _)
    ≡ SmashAdjIso→J {A = A} {B = B} (fst f) _ (snd f)
 SmashAdjIso→≡SmashAdjIso→J {A = A} {B = B} {C = C} (f , p) = help _ p
   where
+
   help : (c : fst C) (fp : f (inl tt) ≡ c)
     → SmashAdjIso→ {A = A} {B = B} {C = fst C , c} (f , fp)
      ≡ SmashAdjIso→J {A = A} {B = B} {C = fst C} f c fp
@@ -158,6 +167,22 @@ SmashAdjIso→≡SmashAdjIso→J {A = A} {B = B} {C = C} (f , p) = help _ p
                      ; (k = i1) → f (snd (A ⋀∙ B))})
             (SmashAdjIso→-push-push f j k i1)
 
+  is₁ : Iso (A →∙ (B →∙ C ∙))
+    (Σ[ f ∈ (fst A → fst B → fst C) ]
+      Σ[ l ∈ ((x : fst A) → f x (pt B) ≡ pt C) ]
+        Σ[ r ∈ ((b : fst B) → f (pt A) b ≡ pt C) ]
+          PathP (λ i → r (snd B) i ≡ snd C) (l (snd A)) refl)
+  Iso.fun is₁ f = (λ x y → f .fst x .fst y)
+                , (λ x → f .fst x .snd)
+                , (λ x i → f .snd i .fst x)
+                , λ i j → f .snd i .snd j
+  fst (fst (Iso.inv is₁ (f , l , r , p)) x) = f x
+  snd (fst (Iso.inv is₁ (f , l , r , p)) x) = l x
+  fst (snd (Iso.inv is₁ (f , l , r , p)) i) b = r b i
+  snd (snd (Iso.inv is₁ (f , l , r , p)) i) j = p i j
+  Iso.sec is₁ _ = refl
+  Iso.ret is₁ _ = refl
+
 SmashAdjIso : Iso ((A ⋀∙ B) →∙ C) (A →∙ (B →∙ C ∙))
 SmashAdjIso {A = A} {B = B} {C = C} = mainIso
   where
@@ -169,6 +194,7 @@ SmashAdjIso {A = A} {B = B} {C = C} = mainIso
                   ; (j = i1) → p (~ i) .snd (~ r)})
          (inS c) k
 
+
   from : (c : fst C) → (A →∙ (B →∙ (fst C , c) ∙)) → ((A ⋀∙ B) →∙ (fst C , c))
   fst (from c (f , p)) (inl x) = c
   fst (from c (f , p)) (inr (a , b)) = f a .fst b
@@ -176,6 +202,33 @@ SmashAdjIso {A = A} {B = B} {C = C} = mainIso
   fst (from c (f , p)) (push (inr x) i) = p (~ i) .fst x
   fst (from c (f , p)) (push (push a j) i) = fill₁ c (f , p) i j i1
   snd (from c (f , p)) = refl
+
+  is₃ : Iso ((A ⋀∙ B) →∙ C)
+    (Σ[ f ∈ (fst A → fst B → fst C) ]
+      Σ[ p ∈ singl (snd C) ]
+        Σ[ l ∈ ((x : fst A) → f x (pt B) ≡ fst p) ]
+        Σ[ r ∈ ((b : fst B) → f (pt A) b ≡ fst p) ]
+          l (pt A) ≡ r (pt B))
+  fst (Iso.fun is₃ f) x y = fst f (inr (x , y))
+  fst (fst (snd (Iso.fun is₃ f))) = fst f (inl tt)
+  snd (fst (snd (Iso.fun is₃ f))) = sym (snd f)
+  fst (snd (snd (Iso.fun is₃ f))) x = cong (fst f) (sym (push (inl x)))
+  fst (snd (snd (snd (Iso.fun is₃ f)))) x = cong (fst f) (sym (push (inr x)))
+  snd (snd (snd (snd (Iso.fun is₃ f)))) i j = fst f (push (push tt i) (~ j))
+  fst (Iso.inv is₃ (f , (c* , p) , l , r , q)) (inl x) = c*
+  fst (Iso.inv is₃ (f , (c* , p) , l , r , q)) (inr (x , y)) = f x y
+  fst (Iso.inv is₃ (f , (c* , p) , l , r , q)) (push (inl x) i) = l x (~ i)
+  fst (Iso.inv is₃ (f , (c* , p) , l , r , q)) (push (inr x) i) = r x (~ i)
+  fst (Iso.inv is₃ (f , (c* , p) , l , r , q)) (push (push a j) i) = q j (~ i)
+  snd (Iso.inv is₃ (f , (c* , p) , l , r , q)) = sym p
+  Iso.sec is₃ _ = refl
+  Iso.ret is₃ f =
+    ΣPathP ((funExt (λ { (inl x) → refl
+                       ; (inr x) → refl
+                       ; (push (inl x) i) → refl
+                       ; (push (inr x) i) → refl
+                       ; (push (push a i₁) i) → refl}))
+                       , refl)
 
   to : ((A ⋀∙ B) →∙ C) → (A →∙ (B →∙ C ∙))
   to (f , p) = SmashAdjIso→J f (pt C) p
@@ -262,8 +315,8 @@ SmashAdjIso {A = A} {B = B} {C = C} = mainIso
   mainIso : Iso ((A ⋀∙ B) →∙ C) (A →∙ (B →∙ C ∙))
   Iso.fun mainIso = SmashAdjIso→ -- to
   Iso.inv mainIso = from (pt C)
-  Iso.rightInv mainIso f = SmashAdjIso→≡SmashAdjIso→J (from _ f) ∙ from-to f
-  Iso.leftInv mainIso f = cong (from (pt C)) (SmashAdjIso→≡SmashAdjIso→J f)
+  Iso.sec mainIso f = SmashAdjIso→≡SmashAdjIso→J (from _ f) ∙ from-to f
+  Iso.ret mainIso f = cong (from (pt C)) (SmashAdjIso→≡SmashAdjIso→J f)
                         ∙ to-from (fst f) _ (snd f)
 
 private
@@ -296,19 +349,74 @@ snd (SmashAdj≃∙ {C = C}) =
     SmashAdjIso→≡SmashAdjIso→J (const∙ _ C)
   ∙ SmashAdjIso→∙ (λ _ → pt C) _
 
+-- induction priciples for maps into pointed types
 ⋀→∙Homogeneous≡ : isHomogeneous C
   → {f g : (A ⋀∙ B) →∙ C}
   → ((x : fst A) (y : fst B) → fst f (inr (x , y)) ≡ fst g (inr (x , y)))
   → f ≡ g
 ⋀→∙Homogeneous≡ C {f = f} {g = g} p =
-     sym (Iso.leftInv SmashAdjIso f)
+     sym (Iso.ret SmashAdjIso f)
   ∙∙ cong (Iso.inv SmashAdjIso) main
-  ∙∙ Iso.leftInv SmashAdjIso g
+  ∙∙ Iso.ret SmashAdjIso g
   where
   main : Iso.fun SmashAdjIso f ≡ Iso.fun SmashAdjIso g
   main =
     →∙Homogeneous≡ (isHomogeneous→∙ C)
       (funExt λ x → →∙Homogeneous≡ C (funExt (p x)))
+
+prod→⋀^ : (n : ℕ) (A : Fin (suc n) → Pointed ℓ)
+  → prodFinFamily n (fst ∘ A) → ⋀^ n A .fst
+prod→⋀^ zero A x = x
+prod→⋀^ (suc n) A x =
+  inr ((prod→⋀^ n (predFinFamily∙ A) (fst x)) , (snd x))
+
+⋀→Homogeneous≡ : {A B : Pointed ℓ} {D : Type ℓ'}
+  → {f g : A ⋀ B → D}
+  → (isHomogeneous (D , f (inl tt)))
+  → ((x : _) (y : _) → f (inr (x , y)) ≡ g (inr (x , y)))
+  → f ≡ g
+⋀→Homogeneous≡ {A = A} {B} {D} {f = f} {g} hom p = cong fst f^≡g^
+  where
+  f^ g^ : A ⋀∙ B →∙ (D , f (inl tt))
+  f^ = f , refl
+  g^ = g , (cong g (push (inr (pt B)))
+        ∙∙ sym (p (pt A) (pt B))
+        ∙∙ cong f (sym (push (inr (pt B)))))
+
+  f^≡g^ : f^ ≡ g^
+  f^≡g^ = ⋀→∙Homogeneous≡ hom p
+
+⋀^→Homogeneous≡ : (n : ℕ) (A : Fin (suc n) → Pointed ℓ) {B : Type ℓ'}
+  → {f g : ⋀^ n A .fst → B}
+  → isHomogeneous (B , f (⋀^ n A .snd))
+  → ((x : _) → f (prod→⋀^ n A x) ≡ g (prod→⋀^ n A x))
+  → f ≡ g
+⋀^→Homogeneous≡ zero A hom ind = funExt ind
+⋀^→Homogeneous≡ (suc n) A {B = B} {f = f} {g} hom ind =
+  ⋀→Homogeneous≡ hom λ x y
+    → funExt⁻ (⋀^→Homogeneous≡ n (predFinFamily∙ A)
+        {f = λ x → f (inr (x , y))} {g = λ x → g (inr (x , y))}
+        (subst (isHomogeneous ∘ (B ,_))
+          (cong f (push (inr y))) hom )
+        λ _ → ind _) x
+
+⋀^→Homogeneous : (n : ℕ) (A : Fin (suc n) → Pointed ℓ) (B : Pointed ℓ')
+  → (isHomogeneous B)
+  → (f g : ⋀^ n A →∙ B)
+  → ((x : _) → f .fst (prod→⋀^ n A x) ≡ g .fst (prod→⋀^ n A x))
+  → f ≡ g
+⋀^→Homogeneous zero A B ishom f g ind = →∙Homogeneous≡ ishom (funExt ind)
+⋀^→Homogeneous (suc n) A B ishom f g ind =
+  ⋀→∙Homogeneous≡ ishom λ x y i
+    → ⋀^→Homogeneous n (predFinFamily∙ A) B ishom
+        (f' y) (g' y) (λ x → ind (x , y)) i .fst x
+  where
+  module _ (y : A flast .fst) where
+    f' g' : ⋀^ n (predFinFamily∙ A) →∙ B
+    f' = (λ x → f .fst (inr (x , y)))
+       , cong (fst f) (sym (push (inr y))) ∙ snd f
+    g' = (λ x → g .fst (inr (x , y)))
+       , cong (fst g) (sym (push (inr y))) ∙ snd g
 
 _⋀→_ : (f : A →∙ C) (g : B →∙ D) → A ⋀ B → C ⋀ D
 (f ⋀→ g) (inl tt) = inl tt
@@ -346,6 +454,34 @@ _⋀∙→refl_ : ∀ {ℓ ℓ'} {C : Type ℓ} {D : Type ℓ'}
 fst (f ⋀∙→refl g) = f ⋀→refl g
 snd (f ⋀∙→refl g) = refl
 
+
+⋀≃ : ∀ {ℓ ℓ'} {A B : Pointed ℓ} {C D : Pointed ℓ'}
+  → (f : A ≃∙ B) (g : C ≃∙ D)
+  → (A ⋀ C) ≃ (B ⋀ D)
+⋀≃ {ℓ = ℓ} {ℓ'} {B = B} {D = D} f g = _ , ⋀≃-isEq f g
+  where
+  help : (x : _) → (idfun∙ B ⋀→ idfun∙ D) x ≡ x
+  help (inl x) = refl
+  help (inr x) = refl
+  help (push (inl x) i) j = rUnit (push (inl x)) (~ j) i
+  help (push (inr x) i) j = rUnit (push (inr x)) (~ j) i
+  help (push (push a i) j) k =
+    hcomp (λ r → λ {(i = i0) → rUnit (push (inl (snd B))) (~ k ∧ r) j
+                   ; (i = i1) → rUnit (push (inr (snd D))) (~ k ∧ r) j
+                   ; (j = i0) → inl tt
+                   ; (j = i1) → inr (snd B , snd D)
+                   ; (k = i1) → push (push tt i) j})
+           (push (push tt i) j)
+
+  ⋀≃-isEq : {A : Pointed ℓ} {C : Pointed ℓ'}
+    (f : A ≃∙ B) (g : C ≃∙ D) → isEquiv (≃∙map f ⋀→ ≃∙map g)
+  ⋀≃-isEq {C = C} =
+    Equiv∙J (λ A f → (g : C ≃∙ D)
+                   → isEquiv (≃∙map f ⋀→ ≃∙map g))
+     (Equiv∙J (λ _ g → isEquiv (idfun∙ _ ⋀→ ≃∙map g))
+       (subst isEquiv (sym (funExt help)) (idIsEquiv _)))
+
+
 ⋀→Smash : A ⋀ B → Smash A B
 ⋀→Smash (inl x) = basel
 ⋀→Smash (inr (x , x₁)) = proj x x₁
@@ -369,26 +505,26 @@ Smash→⋀ (gluer b i) = push (inr b) (~ i)
 module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Pointed ℓ'') where
 
   -- HIT corresponding to A ⋀ B ⋀ C
-  data ⋀×3 : Type (ℓ-max ℓ (ℓ-max ℓ' ℓ'')) where
-    base : ⋀×3
-    proj : typ A → typ B → typ C → ⋀×3
+  data ⋀×2 : Type (ℓ-max ℓ (ℓ-max ℓ' ℓ'')) where
+    base : ⋀×2
+    proj : typ A → typ B → typ C → ⋀×2
 
     gluel : (x : typ A) (y : typ B) → proj x y (pt C) ≡ base
     gluem : (x : typ A) (z : typ C) → proj x (pt B) z ≡ base
     gluer : (y : typ B) (z : typ C) → proj (pt A) y z ≡ base
 
     gluel≡gluem : (a : typ A) → gluel a (pt B) ≡ gluem a (pt C)
-    gluel≡gluer : (y : typ B) → Path (Path (⋀×3) _ _) (gluel (pt A) y) (gluer y (pt C))
+    gluel≡gluer : (y : typ B) → Path (Path (⋀×2) _ _) (gluel (pt A) y) (gluer y (pt C))
     gluem≡gluer : (z : typ C) → gluem (pt A) z ≡ gluer (pt B) z
 
     coh : Cube (gluel≡gluer (snd B)) (gluem≡gluer (pt C))
                (gluel≡gluem (pt A)) (λ _ → gluer (snd B) (pt C))
                refl refl
 
-  -- Step 1 (main step): show A ⋀ (B ⋀ C) ≃ ⋀×3 A B C
+  -- Step 1 (main step): show A ⋀ (B ⋀ C) ≃ ⋀×2 A B C
 
   -- some fillers needed for the maps back and forth
-  filler₁ : typ B → (i j k : I) → ⋀×3
+  filler₁ : typ B → (i j k : I) → ⋀×2
   filler₁ a i j r =
     hfill (λ k → λ {(i = i0) → gluer a (pt C) (j ∧ k)
                    ; (i = i1) → base
@@ -397,7 +533,7 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
        (inS (gluel≡gluer a j i))
        r
 
-  filler₂ : typ C → (i j k : I) → ⋀×3
+  filler₂ : typ C → (i j k : I) → ⋀×2
   filler₂ c i j r =
     hfill (λ k → λ {(i = i0) → gluer (pt B) c (j ∧ k)
                     ; (i = i1) → base
@@ -437,7 +573,7 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
           (inS (push (push tt i) j))
           r
 
-  coh-filler : (i j k r : I) → ⋀×3
+  coh-filler : (i j k r : I) → ⋀×2
   coh-filler i j k r =
     hfill (λ r → λ {(i = i0) → filler₁ (pt B) j k r
                    ; (i = i1) → filler₂ (pt C) j k r
@@ -461,60 +597,60 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
           (inS (push (push tt j) (~ k)))
           r
 
-  ⋀→⋀×3 : A ⋀ (B ⋀∙ C) → ⋀×3
-  ⋀→⋀×3 (inl x) = base
-  ⋀→⋀×3 (inr (x , inl y)) = base
-  ⋀→⋀×3 (inr (x , inr (y , z))) = proj x y z
-  ⋀→⋀×3 (inr (x , push (inl a) i)) = gluel x a (~ i)
-  ⋀→⋀×3 (inr (x , push (inr b) i)) = gluem x b (~ i)
-  ⋀→⋀×3 (inr (x , push (push a i) j)) = gluel≡gluem x i (~ j)
-  ⋀→⋀×3 (push (inl x) i) = base
-  ⋀→⋀×3 (push (inr (inl x)) i) = base
-  ⋀→⋀×3 (push (inr (inr (x , y))) i) = gluer x y (~ i)
-  ⋀→⋀×3 (push (inr (push (inl x) i)) j) = filler₁ x (~ i) (~ j) i1
-  ⋀→⋀×3 (push (inr (push (inr x) i)) j) = filler₂ x (~ i) (~ j) i1
-  ⋀→⋀×3 (push (inr (push (push a i) j)) k) = coh-filler i (~ j) (~ k) i1
-  ⋀→⋀×3 (push (push a i₁) i) = base
+  ⋀→⋀×2 : A ⋀ (B ⋀∙ C) → ⋀×2
+  ⋀→⋀×2 (inl x) = base
+  ⋀→⋀×2 (inr (x , inl y)) = base
+  ⋀→⋀×2 (inr (x , inr (y , z))) = proj x y z
+  ⋀→⋀×2 (inr (x , push (inl a) i)) = gluel x a (~ i)
+  ⋀→⋀×2 (inr (x , push (inr b) i)) = gluem x b (~ i)
+  ⋀→⋀×2 (inr (x , push (push a i) j)) = gluel≡gluem x i (~ j)
+  ⋀→⋀×2 (push (inl x) i) = base
+  ⋀→⋀×2 (push (inr (inl x)) i) = base
+  ⋀→⋀×2 (push (inr (inr (x , y))) i) = gluer x y (~ i)
+  ⋀→⋀×2 (push (inr (push (inl x) i)) j) = filler₁ x (~ i) (~ j) i1
+  ⋀→⋀×2 (push (inr (push (inr x) i)) j) = filler₂ x (~ i) (~ j) i1
+  ⋀→⋀×2 (push (inr (push (push a i) j)) k) = coh-filler i (~ j) (~ k) i1
+  ⋀→⋀×2 (push (push a i₁) i) = base
 
-  ⋀×3→⋀ : ⋀×3 → A ⋀ (B ⋀∙ C)
-  ⋀×3→⋀ base = inl tt
-  ⋀×3→⋀ (proj x x₁ x₂) = inr (x , inr (x₁ , x₂))
-  ⋀×3→⋀ (gluel x y i) =
+  ⋀×2→⋀ : ⋀×2 → A ⋀ (B ⋀∙ C)
+  ⋀×2→⋀ base = inl tt
+  ⋀×2→⋀ (proj x x₁ x₂) = inr (x , inr (x₁ , x₂))
+  ⋀×2→⋀ (gluel x y i) =
     ((λ i → inr (x , (push (inl y) (~ i)))) ∙ sym (push (inl x))) i
-  ⋀×3→⋀ (gluem x z i) =
+  ⋀×2→⋀ (gluem x z i) =
     ((λ i → inr (x , (push (inr z) (~ i)))) ∙ sym (push (inl x))) i
-  ⋀×3→⋀ (gluer y z i) = push (inr (inr (y , z))) (~ i)
-  ⋀×3→⋀ (gluel≡gluem a i j) =
+  ⋀×2→⋀ (gluer y z i) = push (inr (inr (y , z))) (~ i)
+  ⋀×2→⋀ (gluel≡gluem a i j) =
     ((λ k → inr (a , (push (push tt i) (~ k)))) ∙ sym (push (inl a))) j
-  ⋀×3→⋀ (gluel≡gluer b i j) = filler₃ b i j i1
-  ⋀×3→⋀ (gluem≡gluer c i j) = filler₄ c i j i1
-  ⋀×3→⋀ (coh i j k) = coh-filler₂ i j k i1
+  ⋀×2→⋀ (gluel≡gluer b i j) = filler₃ b i j i1
+  ⋀×2→⋀ (gluem≡gluer c i j) = filler₄ c i j i1
+  ⋀×2→⋀ (coh i j k) = coh-filler₂ i j k i1
 
   -- fillers for cancellation
-  gluel-fill : (x : typ A) (b : typ B) (i j k : I) → ⋀×3
+  gluel-fill : (x : typ A) (b : typ B) (i j k : I) → ⋀×2
   gluel-fill x y i j k =
     hfill (λ k → λ {(i = i0) → gluel x y (~ k)
                    ; (i = i1) → base
                    ; (j = i0) →
-                      ⋀→⋀×3 (compPath-filler'
+                      ⋀→⋀×2 (compPath-filler'
                         (λ i → (inr (x , (push (inl y) (~ i)))))
                         (sym (push (inl x))) k i)
                    ; (j = i1) → gluel x y (i ∨ ~ k) })
           (inS base)
           k
 
-  gluem-fill : (x : typ A) (z : typ C) (i j k : I) → ⋀×3
+  gluem-fill : (x : typ A) (z : typ C) (i j k : I) → ⋀×2
   gluem-fill x z i j k =
     hfill (λ k → λ {(i = i0) → gluem x z (~ k)
                    ; (i = i1) → base
-                   ; (j = i0) → ⋀→⋀×3 (compPath-filler'
+                   ; (j = i0) → ⋀→⋀×2 (compPath-filler'
                                   (λ i → (inr (x , (push (inr z) (~ i)))))
                                   (sym (push (inl x))) k i)
                    ; (j = i1) → gluem x z (i ∨ ~ k)})
           (inS base)
           k
 
-  gluel≡gluer₁ : (y : typ B) (i j r k : I) → ⋀×3
+  gluel≡gluer₁ : (y : typ B) (i j r k : I) → ⋀×2
   gluel≡gluer₁ y i j r k =
     hfill (λ k → λ {(r = i0) → base
                      ; (r = i1) → gluer y (snd C) (i ∧ k)
@@ -526,7 +662,7 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
            k
 
 
-  gluem≡gluer₁ : (y : typ C) (i j r k : I) → ⋀×3
+  gluem≡gluer₁ : (y : typ C) (i j r k : I) → ⋀×2
   gluem≡gluer₁ z i j r k =
     hfill (λ k → λ {(i = i0) → gluem≡gluer z j (~ r)
                    ; (i = i1) → gluer (snd B) z (~ r ∨ k)
@@ -537,33 +673,33 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
               (inS (gluem≡gluer z (j ∨ i) (~ r)))
               k
 
-  gluel≡gluer₂ : (y : typ B) (k i j r : I) → ⋀×3
+  gluel≡gluer₂ : (y : typ B) (k i j r : I) → ⋀×2
   gluel≡gluer₂ y k i j r =
     hfill (λ r → λ {(i = i0) → gluel≡gluer y (k ∧ j) (~ r)
                    ; (i = i1) → base
-                   ; (j = i0) → ⋀→⋀×3 (filler₃ y k i r)
+                   ; (j = i0) → ⋀→⋀×2 (filler₃ y k i r)
                    ; (j = i1) → gluel≡gluer y k (i ∨ ~ r)
                    ; (k = i0) → gluel-fill (pt A) y i j r
                    ; (k = i1) → gluel≡gluer₁ y i j r i1})
            (inS base)
            r
 
-  gluem≡gluer₂ : (y : typ C) (k i j r : I) → ⋀×3
+  gluem≡gluer₂ : (y : typ C) (k i j r : I) → ⋀×2
   gluem≡gluer₂ y k i j r =
     hfill (λ r → λ {(i = i0) → gluem≡gluer y (k ∧ j) (~ r)
                    ; (i = i1) → base
-                   ; (j = i0) → ⋀→⋀×3 (filler₄ y k i r)
+                   ; (j = i0) → ⋀→⋀×2 (filler₄ y k i r)
                    ; (j = i1) → gluem≡gluer y k (i ∨ ~ r)
                    ; (k = i0) → gluem-fill (pt A) y i j r
                    ; (k = i1) → gluem≡gluer₁ y i j r i1})
            (inS base)
            r
 
-  gluel≡gluem-fill : (a : typ A) (i j k r : I) → ⋀×3
+  gluel≡gluem-fill : (a : typ A) (i j k r : I) → ⋀×2
   gluel≡gluem-fill a i j k r =
     hfill (λ r → λ {(i = i0) → gluel≡gluem a k (~ r)
                    ; (i = i1) → base
-                   ; (j = i0) → ⋀→⋀×3 (compPath-filler'
+                   ; (j = i0) → ⋀→⋀×2 (compPath-filler'
                       (λ i → inr (a , push (push tt k) (~ i))) (sym (push (inl a))) r i)
                    ; (j = i1) → gluel≡gluem a k (i ∨ ~ r)
                    ; (k = i0) → gluel-fill a (pt B) i j r
@@ -571,23 +707,23 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
            (inS base)
            r
 
-  ⋀×3→⋀→⋀×3 : (x : ⋀×3) → ⋀→⋀×3 (⋀×3→⋀ x) ≡ x
-  ⋀×3→⋀→⋀×3 base = refl
-  ⋀×3→⋀→⋀×3 (proj x x₁ x₂) = refl
-  ⋀×3→⋀→⋀×3 (gluel x y i) j = gluel-fill x y i j i1
-  ⋀×3→⋀→⋀×3 (gluem x z i) j = gluem-fill x z i j i1
-  ⋀×3→⋀→⋀×3 (gluer y z i) = refl
-  ⋀×3→⋀→⋀×3 (gluel≡gluem a k i) j = gluel≡gluem-fill a i j k i1
-  ⋀×3→⋀→⋀×3 (gluel≡gluer y k i) j = gluel≡gluer₂ y k i j i1
-  ⋀×3→⋀→⋀×3 (gluem≡gluer z k i) j = gluem≡gluer₂ z k i j i1
-  ⋀×3→⋀→⋀×3 (coh i j k) r =
+  ⋀×2→⋀→⋀×2 : (x : ⋀×2) → ⋀→⋀×2 (⋀×2→⋀ x) ≡ x
+  ⋀×2→⋀→⋀×2 base = refl
+  ⋀×2→⋀→⋀×2 (proj x x₁ x₂) = refl
+  ⋀×2→⋀→⋀×2 (gluel x y i) j = gluel-fill x y i j i1
+  ⋀×2→⋀→⋀×2 (gluem x z i) j = gluem-fill x z i j i1
+  ⋀×2→⋀→⋀×2 (gluer y z i) = refl
+  ⋀×2→⋀→⋀×2 (gluel≡gluem a k i) j = gluel≡gluem-fill a i j k i1
+  ⋀×2→⋀→⋀×2 (gluel≡gluer y k i) j = gluel≡gluer₂ y k i j i1
+  ⋀×2→⋀→⋀×2 (gluem≡gluer z k i) j = gluem≡gluer₂ z k i j i1
+  ⋀×2→⋀→⋀×2 (coh i j k) r =
     hcomp (λ l → λ {(i = i0) → gluel≡gluer₂ (snd B) j k r l
                    ; (i = i1) → gluem≡gluer₂ (pt C) j k r l
                    ; (j = i0) → gluel≡gluem-fill (pt A) k r i l
                    ; (j = i1) → coh-lem l i k r
                    ; (k = i0) → coh i (j ∧ r) (~ l)
                    ; (k = i1) → base
-                   ; (r = i0) → ⋀→⋀×3 (coh-filler₂ i j k l)
+                   ; (r = i0) → ⋀→⋀×2 (coh-filler₂ i j k l)
                    ; (r = i1) → coh i j (k ∨ ~ l)})
           base
     where
@@ -691,7 +827,7 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
                    ; (i = i1) → filler₅ j k i1
                    ; (j = i1) → push (inr (inr (a , (snd C)))) ((~ r ∧ ~ i) ∧ ~ k)
                    ; (j = i0) → filler₆ (pt A) a i k i1
-                   ; (k = i0) → ⋀×3→⋀ (filler₁ a i j r)
+                   ; (k = i0) → ⋀×2→⋀ (filler₁ a i j r)
                    ; (k = i1) → push (inr (push (inl a) (~ i))) (~ j) })
       (inS (ll-fill₁ a i j k i1))
       r
@@ -702,30 +838,30 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
                    ; (i = i1) → filler₅ j k i1
                    ; (j = i1) → push (inr (inr (pt B , a))) ((~ r ∧ ~ i) ∧ ~ k)
                    ; (j = i0) → filler₇ (pt A) a i k i1
-                   ; (k = i0) → ⋀×3→⋀ (filler₂ a i j r)
+                   ; (k = i0) → ⋀×2→⋀ (filler₂ a i j r)
                    ; (k = i1) → push (inr (push (inr a) (~ i))) (~ j) })
       (inS (lr-fill₁ a i j k i1))
       r
 
-  ⋀→⋀×3→⋀ : (x : A ⋀ (B ⋀∙ C))
-    → ⋀×3→⋀ (⋀→⋀×3 x) ≡ x
-  ⋀→⋀×3→⋀ (inl x) = refl
-  ⋀→⋀×3→⋀ (inr (x , inl x₁)) = push (inl x)
-  ⋀→⋀×3→⋀ (inr (x , inr x₁)) = refl
-  ⋀→⋀×3→⋀ (inr (x , push (inl a) i)) j = filler₆ x a (~ i) j i1
-  ⋀→⋀×3→⋀ (inr (x , push (inr b) i)) j = filler₇ x b (~ i) j i1
-  ⋀→⋀×3→⋀ (inr (x , push (push a r) i)) j = filler₈ x (~ i) j r i1
-  ⋀→⋀×3→⋀ (push (inl x) i) j = push (inl x) (j ∧ i)
-  ⋀→⋀×3→⋀ (push (inr (inl x)) i) j = filler₅ (~ i) j i1
-  ⋀→⋀×3→⋀ (push (inr (inr x)) i) j = push (inr (inr x)) i
-  ⋀→⋀×3→⋀ (push (inr (push (inl x) i)) j) k = ll-fill₂ x (~ i) (~ j) k i1
-  ⋀→⋀×3→⋀ (push (inr (push (inr x) i)) j) k = lr-fill₂ x (~ i) (~ j) k i1
-  ⋀→⋀×3→⋀ (push (inr (push (push a r) i)) j) k =
+  ⋀→⋀×2→⋀ : (x : A ⋀ (B ⋀∙ C))
+    → ⋀×2→⋀ (⋀→⋀×2 x) ≡ x
+  ⋀→⋀×2→⋀ (inl x) = refl
+  ⋀→⋀×2→⋀ (inr (x , inl x₁)) = push (inl x)
+  ⋀→⋀×2→⋀ (inr (x , inr x₁)) = refl
+  ⋀→⋀×2→⋀ (inr (x , push (inl a) i)) j = filler₆ x a (~ i) j i1
+  ⋀→⋀×2→⋀ (inr (x , push (inr b) i)) j = filler₇ x b (~ i) j i1
+  ⋀→⋀×2→⋀ (inr (x , push (push a r) i)) j = filler₈ x (~ i) j r i1
+  ⋀→⋀×2→⋀ (push (inl x) i) j = push (inl x) (j ∧ i)
+  ⋀→⋀×2→⋀ (push (inr (inl x)) i) j = filler₅ (~ i) j i1
+  ⋀→⋀×2→⋀ (push (inr (inr x)) i) j = push (inr (inr x)) i
+  ⋀→⋀×2→⋀ (push (inr (push (inl x) i)) j) k = ll-fill₂ x (~ i) (~ j) k i1
+  ⋀→⋀×2→⋀ (push (inr (push (inr x) i)) j) k = lr-fill₂ x (~ i) (~ j) k i1
+  ⋀→⋀×2→⋀ (push (inr (push (push a r) i)) j) k =
     hcomp (λ s → λ {(i = i0) → filler₅ (~ j) k i1
                    ; (i = i1) → push (inr (inr (snd B , snd C))) (j ∨ ~ s ∧ ~ k)
                    ; (j = i0) → push (inr (inr (pt B , pt C))) ((~ s ∧ i) ∧ ~ k)
                    ; (j = i1) → filler₈ (pt A) (~ i) k r i1
-                   ; (k = i0) → ⋀×3→⋀ (coh-filler r (~ i) (~ j) s)
+                   ; (k = i0) → ⋀×2→⋀ (coh-filler r (~ i) (~ j) s)
                    ; (k = i1) → push (inr (push (push tt r) i)) j
                    ; (r = i0) → ll-fill₂ (pt B) (~ i) (~ j) k s
                    ; (r = i1) → lr-fill₂ (pt C) (~ i) (~ j) k s })
@@ -746,7 +882,7 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
                    ; (r = i0) → btm-fill (~ i) (~ j) k s
                    ; (r = i1) → btm-fill (~ i) (~ j) k s})
                      (filler₅ (~ j) (i ∨ k) i1)))
-  ⋀→⋀×3→⋀ (push (push a i) j) k =
+  ⋀→⋀×2→⋀ (push (push a i) j) k =
     hcomp (λ r → λ {(i = i0) → push (inl (pt A)) (k ∧ j ∨ ~ r)
                    ; (i = i1) → filler₅ (~ j) k r
                    ; (j = i0) → push (push tt i) (k ∧ ~ r)
@@ -756,17 +892,17 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
           (push (push tt (~ j ∧ i)) k)
 
   -- The main result of step 1
-  Iso-⋀-⋀×3 : Iso (A ⋀ (B ⋀∙ C)) ⋀×3
-  Iso.fun Iso-⋀-⋀×3 = ⋀→⋀×3
-  Iso.inv Iso-⋀-⋀×3 = ⋀×3→⋀
-  Iso.rightInv Iso-⋀-⋀×3 = ⋀×3→⋀→⋀×3
-  Iso.leftInv Iso-⋀-⋀×3 = ⋀→⋀×3→⋀
+  Iso-⋀-⋀×2 : Iso (A ⋀ (B ⋀∙ C)) ⋀×2
+  Iso.fun Iso-⋀-⋀×2 = ⋀→⋀×2
+  Iso.inv Iso-⋀-⋀×2 = ⋀×2→⋀
+  Iso.sec Iso-⋀-⋀×2 = ⋀×2→⋀→⋀×2
+  Iso.ret Iso-⋀-⋀×2 = ⋀→⋀×2→⋀
 
 module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Pointed ℓ'') where
-  -- Step 2: show that ⋀×3 A B C ≃ ⋀×3 C A B
+  -- Step 2: show that ⋀×2 A B C ≃ ⋀×2 C A B
 
   -- some fillers
-  permute-fill→ : (i j k r : I) → ⋀×3 C A B
+  permute-fill→ : (i j k r : I) → ⋀×2 C A B
   permute-fill→ i j k r =
     hfill (λ r → λ {(i = i0) → gluem≡gluer (snd B) (~ j ∨ ~ r) k
                    ; (i = i1) → gluel≡gluem (pt C) j k
@@ -777,7 +913,7 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
           (inS (coh j (~ i) k))
           r
 
-  permute-fill← : (i j k r : I) → ⋀×3 A B C
+  permute-fill← : (i j k r : I) → ⋀×2 A B C
   permute-fill← i j k r =
     hfill (λ r → λ {(i = i0) → gluel≡gluem (snd A) (~ j) k
                    ; (i = i1) → gluel≡gluer (pt B) (~ j ∨ ~ r) k
@@ -788,16 +924,16 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
           (inS (coh (~ j) i k))
           r
 
-  ⋀×3-permuteFun : ⋀×3 A B C → ⋀×3 C A B
-  ⋀×3-permuteFun base = base
-  ⋀×3-permuteFun (proj x x₁ x₂) = proj x₂ x x₁
-  ⋀×3-permuteFun (gluel x y i) = gluer x y i
-  ⋀×3-permuteFun (gluem x z i) = gluel z x i
-  ⋀×3-permuteFun (gluer y z i) = gluem z y i
-  ⋀×3-permuteFun (gluel≡gluem a i j) = gluel≡gluer a (~ i) j
-  ⋀×3-permuteFun (gluel≡gluer y i j) = gluem≡gluer y (~ i) j
-  ⋀×3-permuteFun (gluem≡gluer z i j) = gluel≡gluem z i j
-  ⋀×3-permuteFun (coh i j k) =
+  ⋀×2-permuteFun : ⋀×2 A B C → ⋀×2 C A B
+  ⋀×2-permuteFun base = base
+  ⋀×2-permuteFun (proj x x₁ x₂) = proj x₂ x x₁
+  ⋀×2-permuteFun (gluel x y i) = gluer x y i
+  ⋀×2-permuteFun (gluem x z i) = gluel z x i
+  ⋀×2-permuteFun (gluer y z i) = gluem z y i
+  ⋀×2-permuteFun (gluel≡gluem a i j) = gluel≡gluer a (~ i) j
+  ⋀×2-permuteFun (gluel≡gluer y i j) = gluem≡gluer y (~ i) j
+  ⋀×2-permuteFun (gluem≡gluer z i j) = gluel≡gluem z i j
+  ⋀×2-permuteFun (coh i j k) =
     hcomp (λ r → λ {(i = i0) → gluem≡gluer (snd B) (~ j ∨ ~ r) k
                    ; (i = i1) → gluel≡gluem (pt C) j k
                    ; (j = i0) → gluel≡gluer (pt A) (~ i) k
@@ -806,36 +942,36 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
                    ; (k = i1) → base})
           (coh j (~ i) k)
 
-  ⋀×3-permuteInv : ⋀×3 C A B → ⋀×3 A B C
-  ⋀×3-permuteInv base = base
-  ⋀×3-permuteInv (proj x x₁ x₂) = proj x₁ x₂ x
-  ⋀×3-permuteInv (gluel x y i) = gluem y x i
-  ⋀×3-permuteInv (gluem x z i) = gluer z x i
-  ⋀×3-permuteInv (gluer y z i) = gluel y z i
-  ⋀×3-permuteInv (gluel≡gluem a i j) = gluem≡gluer a i j
-  ⋀×3-permuteInv (gluel≡gluer y i j) = gluel≡gluem y (~ i) j
-  ⋀×3-permuteInv (gluem≡gluer z i j) = gluel≡gluer z (~ i) j
-  ⋀×3-permuteInv (coh i j k) = permute-fill← i j k i1
+  ⋀×2-permuteInv : ⋀×2 C A B → ⋀×2 A B C
+  ⋀×2-permuteInv base = base
+  ⋀×2-permuteInv (proj x x₁ x₂) = proj x₁ x₂ x
+  ⋀×2-permuteInv (gluel x y i) = gluem y x i
+  ⋀×2-permuteInv (gluem x z i) = gluer z x i
+  ⋀×2-permuteInv (gluer y z i) = gluel y z i
+  ⋀×2-permuteInv (gluel≡gluem a i j) = gluem≡gluer a i j
+  ⋀×2-permuteInv (gluel≡gluer y i j) = gluel≡gluem y (~ i) j
+  ⋀×2-permuteInv (gluem≡gluer z i j) = gluel≡gluer z (~ i) j
+  ⋀×2-permuteInv (coh i j k) = permute-fill← i j k i1
 
-  ⋀×3-permuteIso : Iso (⋀×3 A B C) (⋀×3 C A B)
-  Iso.fun ⋀×3-permuteIso = ⋀×3-permuteFun
-  Iso.inv ⋀×3-permuteIso = ⋀×3-permuteInv
-  Iso.rightInv ⋀×3-permuteIso base = refl
-  Iso.rightInv ⋀×3-permuteIso (proj x x₁ x₂) = refl
-  Iso.rightInv ⋀×3-permuteIso (gluel x y i) = refl
-  Iso.rightInv ⋀×3-permuteIso (gluem x z i) = refl
-  Iso.rightInv ⋀×3-permuteIso (gluer y z i) = refl
-  Iso.rightInv ⋀×3-permuteIso (gluel≡gluem a i i₁) = refl
-  Iso.rightInv ⋀×3-permuteIso (gluel≡gluer y x x₁) = refl
-  Iso.rightInv ⋀×3-permuteIso (gluem≡gluer z i i₁) = refl
-  Iso.rightInv ⋀×3-permuteIso (coh i j k) r =
+  ⋀×2-permuteIso : Iso (⋀×2 A B C) (⋀×2 C A B)
+  Iso.fun ⋀×2-permuteIso = ⋀×2-permuteFun
+  Iso.inv ⋀×2-permuteIso = ⋀×2-permuteInv
+  Iso.sec ⋀×2-permuteIso base = refl
+  Iso.sec ⋀×2-permuteIso (proj x x₁ x₂) = refl
+  Iso.sec ⋀×2-permuteIso (gluel x y i) = refl
+  Iso.sec ⋀×2-permuteIso (gluem x z i) = refl
+  Iso.sec ⋀×2-permuteIso (gluer y z i) = refl
+  Iso.sec ⋀×2-permuteIso (gluel≡gluem a i i₁) = refl
+  Iso.sec ⋀×2-permuteIso (gluel≡gluer y x x₁) = refl
+  Iso.sec ⋀×2-permuteIso (gluem≡gluer z i i₁) = refl
+  Iso.sec ⋀×2-permuteIso (coh i j k) r =
     hcomp (λ l → λ { (i = i0) → gluel≡gluer (snd A) j k
                     ; (i = i1) → gluem≡gluer (snd B) (j ∧ (r ∨ l)) k
                     ; (j = i0) → gluel≡gluem (snd C) i k
                     ; (j = i1) → gluem≡gluer (snd B) (~ i ∨ (l ∨ r)) k
                     ; (k = i0) → proj (snd C) (snd A) (snd B)
                     ; (k = i1) → base
-                    ; (r = i0) → ⋀×3-permuteFun (permute-fill← i j k l)
+                    ; (r = i0) → ⋀×2-permuteFun (permute-fill← i j k l)
                     ; (r = i1) → coh i j k})
      (hcomp (λ l → λ { (i = i0) → gluel≡gluer (snd A) j k
                     ; (i = i1) → gluem≡gluer (snd B) (j ∧ (~ l ∨ r)) k
@@ -846,22 +982,22 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
                     ; (r = i0) → permute-fill→ (~ j) i k l
                     ; (r = i1) → coh i j k})
            (coh i j k))
-  Iso.leftInv ⋀×3-permuteIso base = refl
-  Iso.leftInv ⋀×3-permuteIso (proj x x₁ x₂) = refl
-  Iso.leftInv ⋀×3-permuteIso (gluel x y i) = refl
-  Iso.leftInv ⋀×3-permuteIso (gluem x z i) = refl
-  Iso.leftInv ⋀×3-permuteIso (gluer y z i) = refl
-  Iso.leftInv ⋀×3-permuteIso (gluel≡gluem a i i₁) = refl
-  Iso.leftInv ⋀×3-permuteIso (gluel≡gluer y x x₁) = refl
-  Iso.leftInv ⋀×3-permuteIso (gluem≡gluer z i i₁) = refl
-  Iso.leftInv ⋀×3-permuteIso (coh i j k) r =
+  Iso.ret ⋀×2-permuteIso base = refl
+  Iso.ret ⋀×2-permuteIso (proj x x₁ x₂) = refl
+  Iso.ret ⋀×2-permuteIso (gluel x y i) = refl
+  Iso.ret ⋀×2-permuteIso (gluem x z i) = refl
+  Iso.ret ⋀×2-permuteIso (gluer y z i) = refl
+  Iso.ret ⋀×2-permuteIso (gluel≡gluem a i i₁) = refl
+  Iso.ret ⋀×2-permuteIso (gluel≡gluer y x x₁) = refl
+  Iso.ret ⋀×2-permuteIso (gluem≡gluer z i i₁) = refl
+  Iso.ret ⋀×2-permuteIso (coh i j k) r =
     hcomp (λ l → λ { (i = i0) → gluel≡gluer (snd B) (j ∧ (l ∨ r)) k
                     ; (i = i1) → gluem≡gluer (snd C) j k
                     ; (j = i0) → gluel≡gluem (snd A) i k
                     ; (j = i1) → gluel≡gluer (snd B) (i ∨ (l ∨ r)) k
                     ; (k = i0) → proj (pt A) (pt B) (pt C)
                     ; (k = i1) → base
-                    ; (r = i0) → ⋀×3-permuteInv (permute-fill→ i j k l)
+                    ; (r = i0) → ⋀×2-permuteInv (permute-fill→ i j k l)
                     ; (r = i1) → coh i j k})
      (hcomp (λ l → λ { (i = i0) → gluel≡gluer (snd B) (j ∧ (~ l ∨ r)) k
                     ; (i = i1) → gluem≡gluer (snd C) j k
@@ -877,11 +1013,11 @@ module _ {ℓ ℓ' ℓ'' : Level} (A : Pointed ℓ) (B : Pointed ℓ') (C : Poin
 SmashAssocIso : Iso (A ⋀ (B ⋀∙ C)) ((A ⋀∙ B) ⋀ C)
 SmashAssocIso {A = A} {B = B} {C = C} =
   compIso
-    (Iso-⋀-⋀×3 A B C)
+    (Iso-⋀-⋀×2 A B C)
     (compIso
-      (⋀×3-permuteIso A B C)
+      (⋀×2-permuteIso A B C)
       (compIso
-        (invIso (Iso-⋀-⋀×3 C A B))
+        (invIso (Iso-⋀-⋀×2 C A B))
         ⋀CommIso))
 
 SmashAssocEquiv∙ : A ⋀∙ (B ⋀∙ C) ≃∙ (A ⋀∙ B) ⋀∙ C
@@ -985,3 +1121,343 @@ module ⋀-fun≡' {C : Type ℓ} (f g : A ⋀ B → C)
 
     main : (x : _) → f x ≡ g x
     main = ⋀-fun≡ {A = A} {B = B} f g p pr lp lem
+
+-- Suspension of a smash product is a join
+module _ {ℓ ℓ' : Level} {A : Pointed ℓ} {B : Pointed ℓ'} where
+ private
+   sm-fillᵣ : ∀ {ℓ} {A : Type ℓ} {x* : A} (y* : A) (p* : x* ≡ y*)
+     (y : A) → (p : x* ≡ y)
+       → sym p* ≡ (sym p* ∙∙ p ∙∙ sym p)
+   sm-fillᵣ y* p* y p j i =
+     hcomp (λ r → λ {(i = i0) → p* r
+                    ; (i = i1) → p (~ r ∧ j)
+                    ; (j = i0) → p* (~ i ∧ r)
+                    ; (j = i1) → doubleCompPath-filler
+                                   (sym p*) p (sym p) r i})
+       (p (i ∧ j))
+
+   sm-fillₗ : ∀ {ℓ} {A : Type ℓ} {x* : A} (y* : A) (p* : x* ≡ y*)
+        (y : A) (p : x* ≡ y)
+     → p* ≡ (p ∙∙ sym p ∙∙ p*)
+   sm-fillₗ y* p* y p j i =
+       hcomp (λ r → λ {(i = i0) → p (~ r ∧ j)
+                      ; (i = i1) → p* r
+                      ; (j = i0) → p* (r ∧ i)
+                      ; (j = i1) → doubleCompPath-filler
+                                     p (sym p) p* r i})
+         (p (~ i ∧ j))
+
+   sm-fillₗᵣ≡ : ∀ {ℓ} {A : Type ℓ} {x* : A} (y* : A) (p* : x* ≡ y*)
+     → sm-fillₗ _ (sym p*) _ (sym p*) ≡ sm-fillᵣ _ p* _ p*
+   sm-fillₗᵣ≡ = J> refl
+
+ SuspSmash→Join : Susp (A ⋀ B) → (join (typ A) (typ B))
+ SuspSmash→Join north = inr (pt B)
+ SuspSmash→Join south = inl (pt A)
+ SuspSmash→Join (merid (inl x) i) =
+   push (pt A) (pt B) (~ i)
+ SuspSmash→Join (merid (inr (x , b)) i) =
+   (sym (push x (pt B)) ∙∙ push x b ∙∙ sym (push (pt A) b)) i
+ SuspSmash→Join (merid (push (inl x) j) i) =
+   sm-fillₗ {A = join (typ A) (typ B)} _
+     (sym (push (pt A) (pt B))) _ (sym (push x (pt B))) j i
+ SuspSmash→Join (merid (push (inr x) j) i) =
+   sm-fillᵣ {A = join (typ A) (typ B)} _
+     (push (pt A) (pt B)) _  (push (pt A) x) j i
+ SuspSmash→Join (merid (push (push a k) j) i) =
+   sm-fillₗᵣ≡ _ (push (pt A) (pt B)) k j i
+
+ Join→SuspSmash : join (typ A) (typ B) → Susp (A ⋀ B)
+ Join→SuspSmash (inl x) = north
+ Join→SuspSmash (inr x) = south
+ Join→SuspSmash (push a b i) = merid (inr (a , b)) i
+
+ Join→SuspSmash→Join : (x : join (typ A) (typ B))
+   → SuspSmash→Join (Join→SuspSmash x) ≡ x
+ Join→SuspSmash→Join (inl x) = sym (push x (pt B))
+ Join→SuspSmash→Join (inr x) = push (pt A) x
+ Join→SuspSmash→Join (push a b i) j =
+   doubleCompPath-filler
+     (sym (push a (pt B))) (push a b) (sym (push (pt A) b)) (~ j) i
+
+ SuspSmash→Join→SuspSmash : (x : Susp (A ⋀ B))
+   → Join→SuspSmash (SuspSmash→Join x) ≡ x
+ SuspSmash→Join→SuspSmash north = sym (merid (inr (pt A , pt B)))
+ SuspSmash→Join→SuspSmash south = merid (inr (pt A , pt B))
+ SuspSmash→Join→SuspSmash (merid a i) j =
+   hcomp (λ r
+     → λ {(i = i0) → merid (inr (pt A , pt B)) (~ j ∨ ~ r)
+         ; (i = i1) → merid (inr (pt A , pt B)) (j ∧ r)
+         ; (j = i0) → Join→SuspSmash (SuspSmash→Join (merid a i))
+         ; (j = i1) → doubleCompPath-filler
+                        (sym (merid (inr (pt A , pt B))))
+                        (merid a)
+                        (sym (merid (inr (pt A , pt B)))) (~ r) i})
+       (f₁₂ j .fst a i)
+   where
+   f₁ f₂ : A ⋀∙ B →∙ (Path (Susp (A ⋀ B)) south north
+                     , sym (merid (inr (snd A , snd B))))
+   (fst f₁) a i = Join→SuspSmash (SuspSmash→Join (merid a i))
+   snd f₁ = refl
+   (fst f₂) a =
+        sym (merid (inr (pt A , pt B)))
+     ∙∙ merid a
+     ∙∙ sym (merid (inr (pt A , pt B)))
+   snd f₂ = cong₂ (λ x y → sym x ∙∙ y ∙∙ sym x)
+             refl (cong merid (push (inl (pt A))))
+          ∙ doubleCompPath≡compPath
+             (sym (merid (inr (pt A , pt B)))) _ _
+          ∙ cong₂ _∙_ refl (rCancel (merid (inr (pt A , pt B))))
+          ∙ sym (rUnit _)
+
+   f₁₂ : f₁ ≡ f₂
+   f₁₂ = ⋀→∙Homogeneous≡ (isHomogeneousPath _ _)
+     λ x y → cong-∙∙ Join→SuspSmash
+                    (sym (push x (pt B)))
+                    (push x y)
+                    (sym (push (pt A) y))
+           ∙ (λ i → sym (merid ((sym (push (inl x))
+                               ∙ push (inl (pt A))) i))
+                  ∙∙ merid (inr (x , y))
+                  ∙∙ sym (merid ((sym (push (inr y))
+                               ∙ push (inl (pt A))) i)))
+
+ SmashJoinIso : Iso (Susp (A ⋀ B)) (join (typ A) (typ B))
+ Iso.fun SmashJoinIso = SuspSmash→Join
+ Iso.inv SmashJoinIso = Join→SuspSmash
+ Iso.sec SmashJoinIso = Join→SuspSmash→Join
+ Iso.ret SmashJoinIso = SuspSmash→Join→SuspSmash
+
+-- Suspension commutes with smash products
+module _ {ℓ ℓ' : Level} {A : Pointed ℓ} {B : Pointed ℓ'} where
+
+  -- some fillers
+  merid-fill : typ A → I → I → I → Susp (A ⋀ B)
+  merid-fill a i j k =
+    hfill (λ k → λ {(i = i0) → north
+                   ; (i = i1) → merid (push (inl a) k) j
+                   ; (j = i0) → north
+                   ; (j = i1) → merid (inl tt) i})
+          (inS (merid (inl tt) (i ∧ j))) k
+
+  inl-fill₁ : typ A → I → I → I → (Susp∙ (typ A)) ⋀ B
+  inl-fill₁ a i j k =
+    hfill (λ k → λ {(i = i0) → inl tt
+                   ; (i = i1) → inr (σ A a j , snd B)
+                   ; (j = i0) → push (push tt k) i
+                   ; (j = i1) → push (push tt k) i})
+           (inS (push (inl (σ A a j)) i)) k
+
+  inl-fill : typ A → I → I → I → (Susp∙ (typ A)) ⋀ B
+  inl-fill a i j k =
+    hfill (λ k → λ {(i = i0) → inl tt
+                   ; (i = i1) → doubleCompPath-filler
+                                   (push (inr (snd B)))
+                                   (λ i₂ → inr (σ A a i₂ , snd B))
+                                   (sym (push (inr (snd B)))) k j
+                   ; (j = i0) → push (inr (snd B)) (~ k ∧ i)
+                   ; (j = i1) → push (inr (snd B)) (~ k ∧ i)})
+          (inS (inl-fill₁ a i j i1)) k
+
+  inr-fill₁ : typ B → I → I → I → (Susp∙ (typ A)) ⋀ B
+  inr-fill₁ b i j k =
+    hfill (λ k → λ {(i = i0) → inl tt
+                   ; (i = i1) → inr (rCancel (merid (pt A)) (~ k) j , b)
+                   ; (j = i0) → push (inr b) i
+                   ; (j = i1) → push (inr b) i})
+          (inS (push (inr b) i)) k
+
+  inr-fill : typ B → I → I → I → (Susp∙ (typ A)) ⋀ B
+  inr-fill b i j k =
+    hfill (λ k → λ {(i = i0) → inl tt
+                   ; (i = i1) → doubleCompPath-filler
+                                   (push (inr b))
+                                   (λ i₂ → inr (σ A (pt A) i₂ , b))
+                                   (sym (push (inr b))) k j
+                   ; (j = i0) → push (inr b) (~ k ∧ i)
+                   ; (j = i1) → push (inr b) (~ k ∧ i)})
+          (inS (inr-fill₁ b i j i1)) k
+
+  SuspL→Susp⋀ : (Susp∙ (typ A)) ⋀ B → Susp (A ⋀ B)
+  SuspL→Susp⋀ (inl x) = north
+  SuspL→Susp⋀ (inr (north , y)) = north
+  SuspL→Susp⋀ (inr (south , y)) = south
+  SuspL→Susp⋀ (inr (merid a i , y)) = merid (inr (a , y)) i
+  SuspL→Susp⋀ (push (inl north) i) = north
+  SuspL→Susp⋀ (push (inl south) i) = merid (inl tt) i
+  SuspL→Susp⋀ (push (inl (merid a j)) i) = merid-fill a i j i1
+  SuspL→Susp⋀ (push (inr x) i) = north
+  SuspL→Susp⋀ (push (push a i₁) i) = north
+
+  Susp⋀→SuspL : Susp (A ⋀ B) → (Susp∙ (typ A)) ⋀ B
+  Susp⋀→SuspL north = inl tt
+  Susp⋀→SuspL south = inl tt
+  Susp⋀→SuspL (merid (inl x) i) = inl tt
+  Susp⋀→SuspL (merid (inr (x , y)) i) =
+    (push (inr y) ∙∙ (λ i → inr (σ A x i , y)) ∙∙ sym (push (inr y))) i
+  Susp⋀→SuspL (merid (push (inl x) i₁) i) = inl-fill x i₁ i i1
+  Susp⋀→SuspL (merid (push (inr x) i₁) i) = inr-fill x i₁ i i1
+  Susp⋀→SuspL (merid (push (push a k) j) i) =
+    hcomp (λ r → λ {(i = i0) → inl-fill (snd A) j i r
+                   ; (i = i1) → inr-fill (snd B) j i r
+                   ; (j = i0) → inl tt
+                   ; (j = i1) → doubleCompPath-filler
+                                   (push (inr (pt B)))
+                                   (λ i₂ → inr (σ A (pt A) i₂ , (pt B)))
+                                   (sym (push (inr (pt B)))) r i
+                   ; (k = i0) → inl-fill (snd A) j i r
+                   ; (k = i1) → inr-fill (snd B) j i r})
+      (hcomp (λ r → λ {(i = i0) → push (push tt (r ∨ k)) j
+                      ; (i = i1) → push (push tt (r ∨ k)) j
+                      ; (j = i0) → inl tt
+                      ; (j = i1) → inr (rCancel (merid (pt A))
+                                                 (~ r ∧ k) i , pt B)
+                      ; (k = i0) → inl-fill₁ (snd A) j i r
+                      ; (k = i1) → inr-fill₁ (snd B) j i r})
+         (hcomp (λ r → λ {(i = i0) → push (push tt k) j
+                         ; (i = i1) → push (push tt k) j
+                         ; (j = i0) → inl tt
+                         ; (j = i1) → inr (rCancel (merid (pt A))
+                                                    (~ r ∨ k) i , pt B)
+                         ; (k = i0) → push (inl (rCancel (merid (pt A))
+                                                          (~ r) i)) j
+                         ; (k = i1) → push (inr (snd B)) j})
+                   (push (push tt k) j)))
+
+  SuspSmashCommIso : Iso (Susp∙ (typ A) ⋀ B) (Susp (A ⋀ B))
+  Iso.fun SuspSmashCommIso = SuspL→Susp⋀
+  Iso.inv SuspSmashCommIso = Susp⋀→SuspL
+  Iso.sec SuspSmashCommIso north = refl
+  Iso.sec SuspSmashCommIso south = merid (inl tt)
+  Iso.sec SuspSmashCommIso (merid a i) j =
+    hcomp (λ r → λ {(i = i0) → north
+                   ; (i = i1) → merid (inl tt) (j ∧ r)
+                   ; (j = i0) → f₁≡f₂ (~ r) .fst a i
+                   ; (j = i1) → compPath-filler
+                                  (merid a) (sym (merid (inl tt))) (~ r) i })
+           (f₂ .fst a i)
+    where
+    f₁ f₂ : (A ⋀∙ B) →∙ Ω (Susp∙ (A ⋀ B))
+    fst f₁ x = cong SuspL→Susp⋀ (cong Susp⋀→SuspL (merid x))
+    snd f₁ = refl
+    fst f₂ = σ (A ⋀∙ B)
+    snd f₂ = rCancel (merid (inl tt))
+
+    inr' : (Susp (typ A)) × (typ B) → (Susp∙ (typ A)) ⋀ B
+    inr' = inr
+
+    f₁≡f₂ : f₁ ≡ f₂
+    f₁≡f₂ =
+      ⋀→∙Homogeneous≡ (isHomogeneousPath _ _)
+          λ x y
+       →  cong (cong SuspL→Susp⋀) (cong (push (inr y) ∙∙_∙∙ sym (push (inr y)))
+            (cong-∙ (λ x → inr' (x , y)) (merid x) (sym (merid (pt A)))))
+       ∙∙ cong-∙∙ SuspL→Susp⋀ (push (inr y))
+            (cong (λ x → inr' (x , y)) (merid x)
+           ∙ cong (λ x → inr' (x , y)) (sym (merid (pt A)))) (sym (push (inr y)))
+          ∙∙ (sym (rUnit _)
+           ∙ cong-∙ SuspL→Susp⋀
+              (λ i → inr' (merid x i , y)) (λ i → inr' (merid (pt A) (~ i) , y))
+           ∙ cong (merid (inr (x , y)) ∙_)
+              λ j i → merid (push (inr y) (~ j)) (~ i) )
+  Iso.ret SuspSmashCommIso =
+    ⋀-fun≡ _ _ refl
+      (λ x → main (snd x) (fst x))
+      (λ { north i j → sₙ i j i1
+         ; south i j → sₛ i j i1
+         ; (merid a k) i j → cube a j k i})
+      λ x i j → push (inr x) (i ∧ j)
+    where
+    inr' : Susp (typ A) × (typ B) → (Susp∙ (typ A)) ⋀ B
+    inr' = inr
+    sₙ : I → I → I → (Susp∙ (typ A)) ⋀ B
+    sₙ i j k =
+      hfill (λ k → λ {(i = i0) → inl tt
+                     ; (i = i1) → push (inr (pt B)) (j ∨ ~ k)
+                     ; (j = i0) → push (inr (pt B)) (i ∧ ~ k)
+                     ; (j = i1) → push (inl north) i})
+            (inS (push (push tt (~ j)) i))
+            k
+
+    sₛ : I → I → I → (Susp∙ (typ A)) ⋀ B
+    sₛ i j k =
+      hfill (λ k → λ {(i = i0) → inl tt
+                     ; (i = i1) → compPath-filler
+                                    (push (inr (pt B)))
+                                    (λ i → inr (merid (pt A) i , pt B)) k j
+                     ; (j = i0) → inl tt
+                     ; (j = i1) → push (inl (merid (pt A) k)) i})
+            (inS (sₙ i j i1))
+            k
+
+    filler : fst A → fst B → I → I → I → (Susp∙ (typ A)) ⋀ B
+    filler a y i j k =
+     hfill (λ k → λ {(i = i0) → push (inr y) j
+                    ; (i = i1) → compPath-filler
+                                   (push (inr y))
+                                   (λ i₁ → inr (merid (pt A) i₁ , y)) k j
+                    ; (j = i0) → Susp⋀→SuspL (SuspL→Susp⋀ (inr (merid a i , y)))
+                    ; (j = i1) → inr (compPath-filler
+                                        (merid a)
+                                        (sym (merid (pt A))) (~ k) i , y)})
+           (inS (doubleCompPath-filler
+                  (push (inr y))
+                  (λ i₁ → inr' (σ A a i₁ , y))
+                  (sym (push (inr y))) (~ j) i)) k
+
+    cube₁ : (a : typ A)
+      → Cube (λ k i → Iso.inv SuspSmashCommIso (merid-fill a k i i1))
+              (λ k i → inl-fill a k i i1)
+              (λ _ _ → inl tt)
+              refl
+              (λ _ _ → inl tt)
+              λ _ _ → inl tt
+    cube₁ a j k i =
+      hcomp (λ r → λ {(i = i0) → inl tt
+                     ; (i = i1) → inl tt
+                     ; (j = i0) → Iso.inv SuspSmashCommIso (merid-fill a k i r)
+                     ; (j = i1) → inl-fill a k i i1
+                     ; (k = i0) → inl tt
+                     ; (k = i1) → inl-fill a (j ∨ r) i i1})
+             (inl-fill a (j ∧ k) i i1)
+
+    cube : (a : typ A)
+      → Cube (λ k i → Iso.inv SuspSmashCommIso
+                         (Iso.fun SuspSmashCommIso (push (inl (merid a k)) i)))
+              (λ k i → push (inl (merid a k)) i)
+              (λ j i → sₙ i j i1) (λ j i → sₛ i j i1)
+              (λ j k → inl tt) (λ j k → filler a (pt B) k j i1)
+    cube a = (λ j k i → cube₁ a j i k) ◁
+     (λ j k i →
+      hcomp (λ r
+        → λ {(i = i0) → inl tt
+            ; (i = i1) → filler a (pt B) k j r
+            ; (j = i0) → inl-fill a i k i1
+            ; (j = i1) → push (inl (compPath-filler
+                           (merid a) (sym (merid (pt A))) (~ r) k)) i
+            ; (k = i0) → sₙ i j i1
+            ; (k = i1) → sₛ i j r})
+       (hcomp (λ r
+         → λ {(i = i0) → inl tt
+             ; (i = i1) → doubleCompPath-filler
+                             (push (inr (pt B)))
+                             (λ i₁ → inr' (σ A a i₁ , (pt B)))
+                             (sym (push (inr (pt B)))) (~ j ∧ r) k
+             ; (j = i0) → inl-fill a i k r
+             ; (j = i1) → push (inl (σ A a k)) i
+             ; (k = i0) → sₙ i j r
+             ; (k = i1) → sₙ i j r})
+         (hcomp (λ r
+           → λ {(i = i0) → inl tt
+               ; (i = i1) → inl-fill₁ a i k r
+               ; (j = i0) → inl-fill₁ a i k r
+               ; (j = i1) → push (inl (σ A a k)) i
+               ; (k = i0) → push (push tt (r ∧ (~ j))) i
+               ; (k = i1) → push (push tt (r ∧ (~ j))) i})
+       (push (inl (σ A a k)) i))))
+
+    main : (y : typ B) (x : Susp (typ A))
+      → Susp⋀→SuspL (SuspL→Susp⋀ (inr (x , y))) ≡ inr (x , y)
+    main y north = push (inr y)
+    main y south = push (inr y) ∙ λ i → inr (merid (pt A) i , y)
+    main y (merid a i) j = filler a y i j i1

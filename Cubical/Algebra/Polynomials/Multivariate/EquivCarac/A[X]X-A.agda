@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-}
 module Cubical.Algebra.Polynomials.Multivariate.EquivCarac.A[X]X-A where
 
 open import Cubical.Foundations.Prelude
@@ -18,10 +18,10 @@ open import Cubical.Algebra.CommRing.FGIdeal
 open import Cubical.Algebra.CommRing.Quotient
 
 open import Cubical.Algebra.CommRing.Instances.Int renaming (ℤCommRing to ℤCR)
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly
      renaming (PolyCommRing to A[X1,···,Xn] ; Poly to A[x1,···,xn])
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly-Quotient
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly-notationZ
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly-Quotient
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly-notationZ
 
 open import Cubical.Relation.Nullary
 
@@ -166,7 +166,7 @@ module Properties-Equiv-QuotientXn-A
 
   A[X]→A : CommRingHom A[X] Ar
   fst A[X]→A = A[x]→A
-  snd A[X]→A = makeIsRingHom A[x]→A-pres1 A[x]→A-pres+ A[x]→A-pres·
+  snd A[X]→A = makeIsCommRingHom A[x]→A-pres1 A[x]→A-pres+ A[x]→A-pres·
 
   A[x]→A-cancel : (k : Fin 1) → A[x]→A (<Xkʲ> Ar 1 0 1 k) ≡ 0A
   A[x]→A-cancel zero = refl
@@ -241,9 +241,9 @@ module _
     is : Iso (A[x1,···,xn]/<xkʲ> Ar 1 0 1) A
     fun is = A[x]/x→A
     inv is = A→A[x]/x
-    rightInv is = e-sect
-    leftInv is = e-retr
+    sec is = e-sect
+    ret is = e-retr
   snd Equiv-A[X]/X-A = snd A[X]/X→A
 
 Equiv-ℤ[X]/X-ℤ : RingEquiv (CommRing→Ring ℤ[X]/X) (CommRing→Ring ℤCR)
-Equiv-ℤ[X]/X-ℤ = Equiv-A[X]/X-A ℤCR
+Equiv-ℤ[X]/X-ℤ = CommRingEquiv→RingEquiv $ Equiv-A[X]/X-A ℤCR

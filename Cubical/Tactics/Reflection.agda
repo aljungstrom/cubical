@@ -1,5 +1,4 @@
 -- SPDX-License-Identifier: BSD-3-Clause
-{-# OPTIONS --safe #-}
 module Cubical.Tactics.Reflection where
 
 {- Utilities common to different reflection solvers.
@@ -64,7 +63,7 @@ unapply-path tm = reduce tm >>= λ where
     dom ← newMeta (def (quote Type) [])
     l ← newMeta dom
     r ← newMeta dom
-    unify tm (def (quote Type) (varg dom ∷ varg l ∷ varg r ∷ []))
+    unify tm (def (quote Type) (dom v∷ l v∷ r v∷ []))
     wait-for-type l
     wait-for-type r
     returnTC (just (dom , l , r))

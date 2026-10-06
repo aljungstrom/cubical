@@ -1,6 +1,5 @@
-{-# OPTIONS --safe #-}
 module Cubical.Experiments.CohomologyGroups where
-
+{-
 open import Cubical.Experiments.ZCohomologyOld.Base
 open import Cubical.Experiments.ZCohomologyOld.Properties
 open import Cubical.Experiments.ZCohomologyOld.MayerVietorisUnreduced
@@ -68,8 +67,8 @@ diagonalIso {A = A} B {C = C} ψ ϕ issurj ker→diag diag→ker = BijectionIsoT
   bijIso : BijectionIso A C
   map' bijIso = compGroupHom fstProj (compGroupHom (map ψ) ϕ)
   inj bijIso a inker = pRec (isSetCarrier A _ _)
-                             (λ {(a' , id) → (cong fst (sym (leftInv ψ (a , GroupStr.0g (snd A))) ∙∙ cong ψ⁻ id ∙∙ leftInv ψ (a' , a')))
-                                           ∙ cong snd (sym (leftInv ψ (a' , a')) ∙∙ cong ψ⁻ (sym id) ∙∙ leftInv ψ (a , GroupStr.0g (snd A)))})
+                             (λ {(a' , id) → (cong fst (sym (ret ψ (a , GroupStr.0g (snd A))) ∙∙ cong ψ⁻ id ∙∙ ret ψ (a' , a')))
+                                           ∙ cong snd (sym (ret ψ (a' , a')) ∙∙ cong ψ⁻ (sym id) ∙∙ ret ψ (a , GroupStr.0g (snd A)))})
                              (ker→diag _ inker)
   surj bijIso c =
     pRec isPropPropTrunc
@@ -84,7 +83,7 @@ diagonalIso {A = A} B {C = C} ψ ϕ issurj ker→diag diag→ker = BijectionIsoT
                                                                            ∙∙ cong (fst (ψ⁻ b) A.+_) (GroupStr.invl (snd A) _)
                                                                            ∙∙ GroupStr.rid (snd A) _
                                                                         , (GroupStr.lid (snd A) _)))
-                                        ∙∙ rightInv ψ b)
+                                        ∙∙ sec ψ b)
                            ∙∙ id) ∣₁ })
          (issurj c)
 
@@ -113,8 +112,8 @@ H¹-S¹≅ℤ =
   module K = MV Unit Unit (S₊ 0) (λ _ → tt) (λ _ → tt)
 
   surjHelper :  (x : Int) (x₁ : S₊ 0) → x -[ 0 ]ₖ 0 ≡ S0→Int (x , x) x₁
-  surjHelper x true = Iso.leftInv (Iso-Kn-ΩKn+1 0) x
-  surjHelper x false = Iso.leftInv (Iso-Kn-ΩKn+1 0) x
+  surjHelper x true = Iso.ret (Iso-Kn-ΩKn+1 0) x
+  surjHelper x false = Iso.ret (Iso-Kn-ΩKn+1 0) x
 
   helper : (F : S₊ 0 → Int) (f g : ∥ (Unit → Int) ∥₂)
            (id : GroupHom.fun (K.Δ 0) (f , g) ≡ ∣ F ∣₂)
@@ -138,3 +137,4 @@ H¹-S¹≅ℤ =
             → Σ[ x ∈ Int ] (inv H⁰-S⁰≅ℤ×ℤ (x , x))
              ≡ GroupHom.fun (K.Δ 0) (∣ f ∣₂ , ∣ g ∣₂)
     helper2 f g = (f _ -[ 0 ]ₖ g _) , cong ∣_∣₂ (funExt λ {true → refl ; false → refl})
+-}

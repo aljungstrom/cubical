@@ -19,7 +19,7 @@
  -}
 
 
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-}
 module Cubical.Algebra.CommRing.Localisation.PullbackSquare where
 
 open import Cubical.Foundations.Prelude
@@ -54,7 +54,7 @@ open import Cubical.Algebra.CommRing.Ideal
 open import Cubical.Algebra.CommRing.FGIdeal
 open import Cubical.Algebra.CommRing.RadicalIdeal
 
-open import Cubical.Tactics.CommRingSolver.Reflection
+open import Cubical.Tactics.CommRingSolver
 
 open import Cubical.HITs.SetQuotients as SQ
 open import Cubical.HITs.PropositionalTruncation as PT
@@ -73,7 +73,7 @@ private
 
 module _ (R' : CommRing ℓ) (f g : (fst R')) where
 
- open IsRingHom
+ open IsCommRingHom
  open isMultClosedSubset
  open CommRingTheory R'
  open RingTheory (CommRing→Ring R')
@@ -131,13 +131,8 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
                         , eq/ _ _ ((1r , powersFormMultClosedSubset (f · g) .containsOne)
                         , path n)
     where
-    useSolver1 : ∀ a b → 1r · (a · b) · 1r ≡ a · b
-    useSolver1 = solve R'
-    useSolver2 : ∀ a → a ≡ (1r · 1r) · (1r · a)
-    useSolver2 = solve R'
-
     path : (n : ℕ) → 1r · (f ^ n · g ^ n) · 1r ≡ (1r · 1r) · (1r · ((f · g) ^ n))
-    path n = useSolver1 _ _ ∙ sym (^-ldist-· f g n) ∙ useSolver2 _
+    path n = solve! R' ∙ sym (^-ldist-· f g n) ∙ solve! R'
 
   χ₂ : CommRingHom R[1/ g ]AsCommRing R[1/ (f · g) ]AsCommRing
   χ₂ = R[1/g]HasUniversalProp _ /1ᶠᵍAsCommRingHom unitHelper .fst .fst
@@ -148,13 +143,8 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
                         , eq/ _ _ ((1r , powersFormMultClosedSubset (f · g) .containsOne)
                               , path n)
     where
-    useSolver1 : ∀ a b → 1r · (a · b) · 1r ≡ b · a
-    useSolver1 = solve R'
-    useSolver2 : ∀ a → a ≡ (1r · 1r) · (1r · a)
-    useSolver2 = solve R'
-
     path : (n : ℕ) → 1r · (g ^ n · f ^ n) · 1r ≡ (1r · 1r) · (1r · ((f · g) ^ n))
-    path n = useSolver1 _ _ ∙ sym (^-ldist-· f g n) ∙ useSolver2 _
+    path n = solve! R' ∙ sym (^-ldist-· f g n) ∙ solve! R'
 
 
 
@@ -283,7 +273,7 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
                                ≡ a · b · transport refl c · transport refl d
       transpHelper a b c d i = a · b · transportRefl c (~ i) · transportRefl d (~ i)
       useSolver : ∀ a b c d → a · b · c · d ≡ a · (b · c) · (1r · d)
-      useSolver = solve R'
+      useSolver _ _ _ _ = solve! R'
 
 
     exponentHelper : Σ[ m ∈ ℕ ] s ≡ (f · g) ^ m
@@ -327,7 +317,7 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
 
        where
        useSolver : ∀ a b c d → a · b · (c · d) ≡ d · a · b · c
-       useSolver = solve R'
+       useSolver _ _ _ _ = solve! R'
 
      -- critical exponent
      2n+m = n +ℕ (n +ℕ m)
@@ -351,21 +341,11 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
       z/1≡x/fⁿ : (z /1ᶠ) ≡ [ x , f ^ n , ∣ n , refl ∣₁ ]
       z/1≡x/fⁿ = eq/ _ _ ((f ^ (n +ℕ m) , ∣ n +ℕ m , refl ∣₁) , path)
        where
-       useSolver1 : ∀ x y α₀ α₁ fⁿ⁺ᵐ gⁿ⁺ᵐ fⁿ
-                  → fⁿ⁺ᵐ · (α₀ · x · fⁿ⁺ᵐ + α₁ · y · gⁿ⁺ᵐ) · fⁿ
-                  ≡ fⁿ⁺ᵐ · (α₀ · x · (fⁿ · fⁿ⁺ᵐ)) + α₁ · (y · fⁿ · (fⁿ⁺ᵐ · gⁿ⁺ᵐ))
-       useSolver1 = solve R'
-
-       useSolver2 : ∀ x α₀ α₁ fⁿ⁺ᵐ g²ⁿ⁺ᵐ f²ⁿ⁺ᵐ
-                  → fⁿ⁺ᵐ · (α₀ · x · f²ⁿ⁺ᵐ) + α₁ · (x · fⁿ⁺ᵐ · g²ⁿ⁺ᵐ)
-                  ≡ fⁿ⁺ᵐ · x · (α₀ · f²ⁿ⁺ᵐ + α₁ · g²ⁿ⁺ᵐ)
-       useSolver2 = solve R'
-
        path : f ^ (n +ℕ m) · z · f ^ n ≡ f ^ (n +ℕ m) · x · 1r
        path =
            f ^ (n +ℕ m) · z · f ^ n
 
-         ≡⟨ useSolver1 _ _ _ _ _ _ _ ⟩
+         ≡⟨ solve! R' ⟩
 
            f ^ (n +ℕ m) · (α₀ · x · (f ^ n · f ^ (n +ℕ m))) + α₁ · (y · f ^ n · (f ^ (n +ℕ m) · g ^ (n +ℕ m)))
 
@@ -392,7 +372,7 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
 
            f ^ (n +ℕ m) · (α₀ · x · (f ^ 2n+m)) + α₁ · (x · f ^ (n +ℕ m) · g ^ 2n+m)
 
-         ≡⟨ useSolver2 _ _ _ _ _ _ ⟩
+         ≡⟨ solve! R' ⟩
 
            f ^ (n +ℕ m) · x · (α₀ · f ^ 2n+m + α₁ · g ^ 2n+m)
 
@@ -403,21 +383,11 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
       z/1≡y/gⁿ : (z /1ᵍ) ≡ [ y , g ^ n , ∣ n , refl ∣₁ ]
       z/1≡y/gⁿ = eq/ _ _ ((g ^ (n +ℕ m) , ∣ n +ℕ m , refl ∣₁) , path)
        where
-       useSolver1 : ∀ x y α₀ α₁ fⁿ⁺ᵐ gⁿ⁺ᵐ gⁿ
-                  → gⁿ⁺ᵐ · (α₀ · x · fⁿ⁺ᵐ + α₁ · y · gⁿ⁺ᵐ) · gⁿ
-                  ≡ α₀ · (x · gⁿ · (fⁿ⁺ᵐ · gⁿ⁺ᵐ)) + gⁿ⁺ᵐ · (α₁ · y · (gⁿ · gⁿ⁺ᵐ))
-       useSolver1 = solve R'
-
-       useSolver2 : ∀ y α₀ α₁ gⁿ⁺ᵐ g²ⁿ⁺ᵐ f²ⁿ⁺ᵐ
-                  → α₀ · (y · f²ⁿ⁺ᵐ · gⁿ⁺ᵐ) + gⁿ⁺ᵐ · (α₁ · y · g²ⁿ⁺ᵐ)
-                  ≡ gⁿ⁺ᵐ · y · (α₀ · f²ⁿ⁺ᵐ + α₁ · g²ⁿ⁺ᵐ)
-       useSolver2 = solve R'
-
        path : g ^ (n +ℕ m) · z · g ^ n ≡ g ^ (n +ℕ m) · y · 1r
        path =
            g ^ (n +ℕ m) · z · g ^ n
 
-         ≡⟨ useSolver1 _ _ _ _ _ _ _ ⟩
+         ≡⟨ solve! R' ⟩
 
            α₀ · (x · g ^ n · (f ^ (n +ℕ m) · g ^ (n +ℕ m))) + g ^ (n +ℕ m) · (α₁ · y · (g ^ n · g ^ (n +ℕ m)))
 
@@ -444,7 +414,7 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
 
            α₀ · (y · f ^ 2n+m · g ^ (n +ℕ m)) + g ^ (n +ℕ m) · (α₁ · y · g ^ 2n+m)
 
-         ≡⟨ useSolver2 _ _ _ _ _ _ ⟩
+         ≡⟨ solve! R' ⟩
 
            g ^ (n +ℕ m) · y · (α₀ · f ^ 2n+m + α₁ · g ^ 2n+m)
 
@@ -520,7 +490,7 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
   /1χComm x = eq/ _ _ ((1r , powersFormMultClosedSubset (f · g) .containsOne) , refl)
 
   /1χHomComm : /1ᵍAsCommRingHom ⋆ χ₂ ≡ /1ᶠAsCommRingHom ⋆ χ₁
-  /1χHomComm = RingHom≡ (funExt /1χComm)
+  /1χHomComm = CommRingHom≡ (funExt /1χComm)
 
  fgSquare : 1r ∈ ⟨f,g⟩
           → isPullback _ fgCospan /1ᵍAsCommRingHom /1ᶠAsCommRingHom /1χHomComm
@@ -531,16 +501,16 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
 
   applyEqualizerLemma : ∀ a → ∃![ χa ∈ R ] (χa /1ᶠ ≡ fst φ a) × (χa /1ᵍ ≡ fst ψ a)
   applyEqualizerLemma a =
-    equalizerLemma 1∈⟨f,g⟩ (fst φ a) (fst ψ a) (cong (_$r a) (sym ψχ₂≡φχ₁))
+    equalizerLemma 1∈⟨f,g⟩ (fst φ a) (fst ψ a) (cong (_$cr a) (sym ψχ₂≡φχ₁))
 
   χ : CommRingHom A R'
   fst χ a = applyEqualizerLemma a .fst .fst
-  snd χ = makeIsRingHom
+  snd χ = makeIsCommRingHom
        (cong fst (applyEqualizerLemma 1r .snd (1r , 1Coh)))
         (λ x y → cong fst (applyEqualizerLemma (x + y) .snd (_ , +Coh x y)))
          (λ x y → cong fst (applyEqualizerLemma (x · y) .snd (_ , ·Coh x y)))
    where
-   open IsRingHom
+   open IsCommRingHom
    1Coh : (1r /1ᶠ ≡ fst φ 1r) × (1r /1ᵍ ≡ fst ψ 1r)
    1Coh = (sym (φ .snd .pres1)) , sym (ψ .snd .pres1)
 
@@ -568,19 +538,19 @@ module _ (R' : CommRing ℓ) (f g : (fst R')) where
 
 
   χCoh : (ψ ≡ χ ⋆ /1ᵍAsCommRingHom) × (φ ≡ χ ⋆ /1ᶠAsCommRingHom)
-  fst χCoh = RingHom≡ (funExt (λ a → sym (applyEqualizerLemma a .fst .snd .snd)))
-  snd χCoh = RingHom≡ (funExt (λ a → sym (applyEqualizerLemma a .fst .snd .fst)))
+  fst χCoh = CommRingHom≡ (funExt (λ a → sym (applyEqualizerLemma a .fst .snd .snd)))
+  snd χCoh = CommRingHom≡ (funExt (λ a → sym (applyEqualizerLemma a .fst .snd .fst)))
 
   χUniqueness : (y : Σ[ θ ∈ CommRingHom A R' ]
                        (ψ ≡ θ ⋆ /1ᵍAsCommRingHom) × (φ ≡ θ ⋆ /1ᶠAsCommRingHom))
               → (χ , χCoh) ≡ y
-  χUniqueness (θ , θCoh) = Σ≡Prop (λ _ → isProp× (isSetRingHom _ _ _ _)
-                                                 (isSetRingHom _ _ _ _))
-    (RingHom≡ (funExt (λ a → cong fst (applyEqualizerLemma a .snd (θtriple a)))))
+  χUniqueness (θ , θCoh) = Σ≡Prop (λ _ → isProp× (isSetCommRingHom _ _ _ _)
+                                                 (isSetCommRingHom _ _ _ _))
+    (CommRingHom≡ (funExt (λ a → cong fst (applyEqualizerLemma a .snd (θtriple a)))))
       where
       θtriple : ∀ a → Σ[ x ∈ R ] (x /1ᶠ ≡ fst φ a) × (x /1ᵍ ≡ fst ψ a)
-      θtriple a = fst θ a , sym (cong (_$r a) (θCoh .snd))
-                          , sym (cong (_$r a) (θCoh .fst))
+      θtriple a = fst θ a , sym (cong (_$cr a) (θCoh .snd))
+                          , sym (cong (_$cr a) (θCoh .fst))
 
 
  -- packaging it all up

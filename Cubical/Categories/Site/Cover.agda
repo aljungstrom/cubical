@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Categories.Site.Cover where
 
 -- A cover of an object is just a family of arrows into that object.
@@ -9,7 +8,7 @@ open import Cubical.Foundations.Structure
 open import Cubical.HITs.PropositionalTruncation
 
 open import Cubical.Categories.Category
-open import Cubical.Categories.Constructions.Slice
+open import Cubical.Categories.Instances.Slice
 
 
 module _

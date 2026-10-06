@@ -13,23 +13,19 @@ This file contains:
 - versions of the point constructors of BiInvInt which satisfy the path constructors judgmentally
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Data.Int.MoreInts.BiInvInt.Base where
-
-open import Cubical.Core.Everything
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
-open import Cubical.Data.Nat
-open import Cubical.Data.Int
-
 open import Cubical.Foundations.GroupoidLaws
-
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Equiv.BiInvertible
 open import Cubical.Foundations.Equiv.HalfAdjoint
+
+open import Cubical.Data.Nat
+open import Cubical.Data.Int
 
 open import Cubical.Relation.Nullary
 
@@ -307,4 +303,3 @@ private
 
   predl'-suc : ∀ z → predl' (suc z) ≡ z
   predl'-suc z = refl
-

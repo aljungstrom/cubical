@@ -3,7 +3,6 @@
 Normalize Integer Matrices
 
 -}
-{-# OPTIONS --safe #-}
 
 module Cubical.Experiments.IntegerMatrix where
 
@@ -16,7 +15,6 @@ open import Cubical.Data.List
 
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.CommRing.Instances.Int
-  renaming (ℤ to ℤRing)
 
 open import Cubical.Algebra.Matrix
 open import Cubical.Algebra.Matrix.CommRingCoefficient
@@ -27,7 +25,7 @@ private
   variable
     m n : ℕ
 
-open Coefficient ℤRing
+open Coefficient ℤCommRing
 
 -- Get divisors directly
 

@@ -9,12 +9,7 @@ A couple of general facts about equivalences:
 - isHAEquiv is a proposition [isPropIsHAEquiv]
 (these are not in 'Equiv.agda' because they need Univalence.agda (which imports Equiv.agda))
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Foundations.Equiv.Properties where
-
-open import Cubical.Core.Everything
-
-open import Cubical.Data.Sigma
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
@@ -24,8 +19,12 @@ open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Path
 open import Cubical.Foundations.HLevels
+open import Cubical.Relation.Nullary
 
 open import Cubical.Functions.FunExtEquiv
+
+open import Cubical.Data.Empty renaming (elim to ⊥-elim)
+open import Cubical.Data.Sigma
 
 private
   variable
@@ -38,8 +37,8 @@ isEquivInvEquiv = isoToIsEquiv goal where
   goal : Iso (A ≃ B) (B ≃ A)
   goal .fun = invEquiv
   goal .inv = invEquiv
-  goal .rightInv g = equivEq refl
-  goal .leftInv f = equivEq refl
+  goal .sec g = equivEq refl
+  goal .ret f = equivEq refl
 
 invEquivEquiv : (A ≃ B) ≃ (B ≃ A)
 invEquivEquiv = _ , isEquivInvEquiv
@@ -258,3 +257,44 @@ isPointedTarget→isEquiv→isEquiv : {A B : Type ℓ} (f : A → B)
     → (B → isEquiv f) → isEquiv f
 equiv-proof (isPointedTarget→isEquiv→isEquiv f hf) =
   λ y → equiv-proof (hf y) y
+
+module _ {ℓ ℓ' ℓ''} {A : Type ℓ} {A' : Type ℓ'} {C : A → Type ℓ''} (is : Iso A' A) where
+  private
+    is* = iso→HAEquiv is .snd
+
+  domIsoDep : Iso ((a : A) → C a) ((a : A') → C (Iso.fun is a))
+  Iso.fun domIsoDep f x = f (Iso.fun is x)
+  Iso.inv domIsoDep f x = subst C (isHAEquiv.rinv is* x) (f (Iso.inv is x))
+  Iso.sec domIsoDep f =
+    funExt λ x → (λ j → subst C (isHAEquiv.com is* x (~ j))
+      (f (Iso.inv is (Iso.fun is x))))
+      ∙ λ j → transp (λ i → C (Iso.fun is (isHAEquiv.linv is* x (i ∨ j)))) j
+          (f (isHAEquiv.linv is* x j))
+  Iso.ret domIsoDep f j x =
+    transp (λ i → C (isHAEquiv.rinv is* x (i ∨ j))) j (f (isHAEquiv.rinv is* x j))
+
+uninhabIsEquiv : (f : A → B) → ¬ A → ¬ B → isEquiv f
+uninhabIsEquiv {A = A} {B = B} f ¬A ¬B = isoToIsEquiv isom
+    where
+        open Iso
+        isom : Iso A B
+        isom .fun = f
+        isom .inv = ⊥-elim ∘ ¬B
+        isom .ret a = ⊥-elim {A = λ _ → isom .inv (f a) ≡ a} (¬A a)
+        isom .sec b = ⊥-elim {A = λ _ → f (isom .inv b) ≡ b} (¬B b)
+
+second-in-isEquiv-comp→isEquiv : (f : A → B) (g : B → C) (h : A → C)
+                                   → isEquiv f → isEquiv h → h ≡ g ∘ f → isEquiv g
+second-in-isEquiv-comp→isEquiv {B = B} {C = C} f g h equivf equivh h≡g∘f = transport (cong isEquiv g'≡g) equivg'
+  where
+        B≃C : B ≃ C
+        B≃C = compEquiv (invEquiv (f , equivf)) (h , equivh)
+
+        g' : B → C
+        g' = B≃C .fst
+
+        equivg' : isEquiv g'
+        equivg' = B≃C .snd
+
+        g'≡g : g' ≡ g
+        g'≡g = funExt λ b → funExt⁻ h≡g∘f _ ∙ cong g (secIsEq equivf b)

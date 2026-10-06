@@ -1,42 +1,22 @@
-{-# OPTIONS --safe #-}
-
-{-
-This file contians a proof that the smash product turns the universe
-of pointed types into a symmetric monoidal precategory. The pentagon
-and hexagon are proved in separate files due to the length of the
-proofs. The remaining identities and the main result are proved here.
--}
-
 module Cubical.HITs.SmashProduct.SymmetricMonoidal where
 
-open import Cubical.HITs.SmashProduct.Base
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Pointed
 open import Cubical.Foundations.Isomorphism
-open import Cubical.HITs.Pushout.Base
-open import Cubical.Data.Unit
-open import Cubical.Data.Sigma
-open import Cubical.HITs.Wedge
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Pointed.Homogeneous
 open import Cubical.Foundations.Path
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
+
+open import Cubical.Data.Unit
+open import Cubical.Data.Sigma
+open import Cubical.Data.Bool
+open import Cubical.HITs.Wedge
+open import Cubical.HITs.Pushout.Base
 open import Cubical.HITs.SmashProduct.Base
 open import Cubical.HITs.SmashProduct.Pentagon
 open import Cubical.HITs.SmashProduct.Hexagon
-open import Cubical.Categories.Category.Precategory
-  renaming (_×_ to _×'_)
-open import Cubical.Data.Bool
-
-open Precategory hiding (_∘_)
-open Prefunctor
-open isSymmetricPrecategory
-open isMonoidalPrecategory
-open PreNatIso
-open PreNatTrans
-open preIsIso
-
 
 private
   variable
@@ -237,7 +217,7 @@ private
    ∙ cong (λ w → ⋀comm→∙ ∘∙ w) (⋀comm-sq f g)
   where
   lem : ⋀comm→∙ ∘∙ ⋀comm→∙ ≡ idfun∙ _
-  lem = ΣPathP ((funExt (Iso.rightInv ⋀CommIso)) , (sym (rUnit refl)))
+  lem = ΣPathP ((funExt (Iso.sec ⋀CommIso)) , (sym (rUnit refl)))
 
 Bool⋀→ : Bool*∙ {ℓ} ⋀ A → typ A
 Bool⋀→ {A = A} (inl x) = pt A
@@ -249,20 +229,19 @@ Bool⋀→ {A = A} (push (inr x) i) = pt A
 Bool⋀→ {A = A} (push (push a i₁) i) = pt A
 
 ⋀lIdIso : Iso (Bool*∙ {ℓ} ⋀ A) (typ A)
-Iso.fun (⋀lIdIso {A = A}) (inl x) = pt A
 Iso.fun ⋀lIdIso = Bool⋀→
 Iso.inv ⋀lIdIso a = inr (false* , a)
-Iso.rightInv ⋀lIdIso a = refl
-Iso.leftInv (⋀lIdIso {A = A}) =
+Iso.sec ⋀lIdIso a = refl
+Iso.ret (⋀lIdIso {A = A}) =
   ⋀-fun≡ _ _ (sym (push (inl false*))) h hₗ
     λ x → compPath-filler (sym (push (inl false*))) (push (inr x))
   where
-  h : (x : (Lift Bool) × fst A) →
+  h : (x : Bool* × fst A) →
       inr (false* , Bool⋀→ (inr x)) ≡ inr x
   h (lift false , a) = refl
   h (lift true , a) = sym (push (inl false*)) ∙ push (inr a)
 
-  hₗ : (x : Lift Bool) →
+  hₗ : (x : Bool*) →
       PathP
       (λ i → inr (false* , Bool⋀→ (push (inl x) i)) ≡ push (inl x) i)
       (λ i → push (inl false*) (~ i)) (h (x , pt A))
@@ -285,12 +264,12 @@ snd ⋀lIdEquiv∙ = refl
   , (sym (rUnit refl) ◁ (λ i j → snd f (~ i ∨ j))
     ▷ lUnit (snd f)))
   where
-  h : (x : Lift Bool) (a : fst A)
+  h : (x : Bool*) (a : fst A)
     → Bool⋀→ (inr (x , fst f a)) ≡ fst f (Bool⋀→ (inr (x , a)))
   h (lift false) a = refl
   h (lift true) a = sym (snd f)
 
-  hₗ : (x : Lift Bool)
+  hₗ : (x : Bool*)
     → PathP (λ i → Bool⋀→ ((idfun∙ Bool*∙ ⋀→ f) (push (inl x) i))
                    ≡ fst f (Bool⋀→ (push (inl x) i)))
              (sym (snd f)) (h x (pt A))
@@ -329,17 +308,17 @@ snd ⋀lIdEquiv∙ = refl
         , (sym (rUnit refl)
           ◁ flipSquare (sym (rUnit refl))))
   where
-  l₁ : (x : Lift Bool) → inl tt ≡ Bool⋀→ (inr (x , inl tt))
+  l₁ : (x : Bool*) → inl tt ≡ Bool⋀→ (inr (x , inl tt))
   l₁ (lift true) = refl
   l₁ (lift false) = refl
 
-  l₂ : (x : Lift Bool) (y : fst A × fst B)
+  l₂ : (x : Bool*) (y : fst A × fst B)
     → inr (Bool⋀→ (inr (x , fst y)) , snd y)
     ≡ Bool⋀→ (inr (x , inr y))
   l₂ (lift true) y = sym (push (inr (snd y)))
   l₂ (lift false) y = refl
 
-  l₁≡l₂-left : (x : Lift Bool) (y : fst A) →
+  l₁≡l₂-left : (x : Bool*) (y : fst A) →
     PathP (λ i → l₁ x i ≡ l₂ x (y , pt B) i)
           (push (inl (Bool⋀→ (inr (x , y)))))
           λ i → Bool⋀→ {ℓ} {A = A ⋀∙ B} (inr (x , push (inl y) i))
@@ -347,7 +326,7 @@ snd ⋀lIdEquiv∙ = refl
                    ◁ λ i j → push (inr (pt B)) (~ i ∧ j)
   l₁≡l₂-left (lift false) y = refl
 
-  l₁≡l₂-right : (x : Lift Bool) (y : fst B)
+  l₁≡l₂-right : (x : Bool*) (y : fst B)
     → PathP (λ i → l₁ x i ≡ l₂ x ((pt A) , y) i)
             (push (inr y) ∙ (λ i → inr (Bool⋀→ {A = A} (push (inl x) i) , y)))
             (λ i → Bool⋀→ {A = A ⋀∙ B} (inr (x , push (inr y) i)))
@@ -355,7 +334,7 @@ snd ⋀lIdEquiv∙ = refl
   l₁≡l₂-right (lift true) y = sym (rUnit (push (inr y)))
                    ◁ λ i j → push (inr y) (j ∧ ~ i)
 
-  mainᵣ : (x : Lift Bool) (y : A ⋀ B)
+  mainᵣ : (x : Bool*) (y : A ⋀ B)
     → (≃∙map ⋀lIdEquiv∙ ⋀→ idfun∙ B)
         (SmashAssocIso .Iso.fun (inr (x , y)))
      ≡ Bool⋀→ {ℓ} (inr (x , y))
@@ -374,7 +353,7 @@ snd ⋀lIdEquiv∙ = refl
                      refl
                    ◁ l₁≡l₂-right x y))
 
-  mainᵣ-pt-coh : (x : Lift Bool)
+  mainᵣ-pt-coh : (x : Bool*)
     → PathP (λ i → inl tt ≡ Bool⋀→ (push (inl x) i))
              refl (mainᵣ x (inl tt))
   mainᵣ-pt-coh (lift false) = refl
@@ -507,7 +486,7 @@ snd ⋀lIdEquiv∙ = refl
      ∙ (λ i → push (inr y) ∙ (λ j → inr (rUnit (λ _ → pt A) (~ i) j , y)))
      ∙ sym (rUnit _)))
 
-  Fₗ≡refl : (x : Lift Bool) (y : fst B) → Fₗ .fst (inr (x , y)) ≡ refl
+  Fₗ≡refl : (x : Bool*) (y : fst B) → Fₗ .fst (inr (x , y)) ≡ refl
   Fₗ≡refl (lift false) y =
      (λ i → Fₗ-false y i ∙∙ refl ∙∙ sym (rUnit (push (inr y)) (~ i)))
     ∙ ∙∙lCancel _
@@ -522,62 +501,8 @@ snd ⋀lIdEquiv∙ = refl
     ∙ cong (_∙ sym (push (inr (pt B)))) (sym (lUnit (push (inr (pt B)))))
     ∙ rCancel _
 
-  Fᵣ≡refl : (x : Lift Bool) (y : fst B) → Fᵣ .fst (inr (x , y)) ≡ refl
+  Fᵣ≡refl : (x : Bool*) (y : fst B) → Fᵣ .fst (inr (x , y)) ≡ refl
   Fᵣ≡refl x y =
     cong (push (inl (snd A)) ∙_)
       (sym (rUnit _) ∙ (λ i j → push (push tt (~ i)) (~ j)))
     ∙ rCancel _
-
-
--- ⋀ as a functor
-⋀F : ∀ {ℓ} → Prefunctor (PointedCat ℓ ×' PointedCat ℓ) (PointedCat ℓ)
-F-ob ⋀F (A , B) = A ⋀∙ B
-F-hom ⋀F (f , g) = f ⋀→∙ g
-F-id ⋀F = ⋀→∙-idfun
-F-seq ⋀F (f , g) (f' , g') = ⋀→∙-comp f f' g g'
-
-⋀lUnitNatIso : PreNatIso (PointedCat ℓ) (PointedCat ℓ)
-      (restrFunctorₗ ⋀F Bool*∙) (idPrefunctor (PointedCat ℓ))
-N-ob (trans ⋀lUnitNatIso) X = ≃∙map ⋀lIdEquiv∙
-N-hom (trans ⋀lUnitNatIso) f = ⋀lId-sq f
-inv' (isIs ⋀lUnitNatIso c) = ≃∙map (invEquiv∙ ⋀lIdEquiv∙)
-sect (isIs (⋀lUnitNatIso {ℓ = ℓ}) c) =
-  ≃∙→ret/sec∙ (⋀lIdEquiv∙ {ℓ = ℓ} {A = c}) .snd
-retr (isIs ⋀lUnitNatIso c) =
-  ≃∙→ret/sec∙ ⋀lIdEquiv∙ .fst
-
-makeIsIso-Pointed : ∀ {ℓ} {A B : Pointed ℓ} {f : A →∙ B}
-  → isEquiv (fst f) → preIsIso {C = PointedCat ℓ} f
-inv' (makeIsIso-Pointed {f = f} eq) = ≃∙map (invEquiv∙ ((fst f , eq) , snd f))
-sect (makeIsIso-Pointed {f = f} eq) = ≃∙→ret/sec∙ ((fst f , eq) , snd f)  .snd
-retr (makeIsIso-Pointed {f = f} eq) = ≃∙→ret/sec∙ ((fst f , eq) , snd f)  .fst
-
-restrₗᵣ : PreNatIso (PointedCat ℓ) (PointedCat ℓ)
-      (restrFunctorᵣ ⋀F Bool*∙) (restrFunctorₗ ⋀F Bool*∙)
-N-ob (trans restrₗᵣ) X = ⋀comm→∙
-N-hom (trans restrₗᵣ) f = ⋀comm-sq f (idfun∙ Bool*∙)
-isIs restrₗᵣ c = makeIsIso-Pointed (isoToIsEquiv ⋀CommIso)
-
--- main result
-⋀Symm : ∀ {ℓ} → isSymmetricPrecategory (PointedCat ℓ)
-_⊗_ (isMonoidal ⋀Symm) = ⋀F
-𝟙 (isMonoidal ⋀Symm) = Bool*∙
-N-ob (trans (⊗assoc (isMonoidal ⋀Symm))) (A , B , C) = ≃∙map SmashAssocEquiv∙
-N-hom (trans (⊗assoc (isMonoidal ⋀Symm))) (f , g , h) = ⋀assoc-⋀→∙ f g h
-inv' (isIs (⊗assoc (isMonoidal ⋀Symm)) (A , B , C)) =
-  ≃∙map (invEquiv∙ SmashAssocEquiv∙)
-sect (isIs (⊗assoc (isMonoidal ⋀Symm)) (A , B , C)) =
-  ≃∙→ret/sec∙ SmashAssocEquiv∙ .snd
-retr (isIs (⊗assoc (isMonoidal ⋀Symm)) (A , B , C)) =
-  ≃∙→ret/sec∙ SmashAssocEquiv∙ .fst
-⊗lUnit (isMonoidal ⋀Symm) = ⋀lUnitNatIso
-⊗rUnit (isMonoidal ⋀Symm) = compPreNatIso _ _ _ restrₗᵣ ⋀lUnitNatIso
-triang (isMonoidal (⋀Symm {ℓ})) X Y = ⋀triang
-⊗pentagon (isMonoidal ⋀Symm) X Y Z W =
-  (∘∙-assoc assc₅∙ assc₄∙ assc₃∙) ∙ pentagon∙
-N-ob (trans (Braid ⋀Symm)) X = ⋀comm→∙
-N-hom (trans (Braid ⋀Symm)) (f , g) = ⋀comm-sq f g
-isIs (Braid ⋀Symm) _ = makeIsIso-Pointed (isoToIsEquiv ⋀CommIso)
-isSymmetricPrecategory.hexagon ⋀Symm a b c = hexagon∙
-symBraiding ⋀Symm X Y =
-  ΣPathP ((funExt (Iso.rightInv ⋀CommIso)) , (sym (rUnit refl)))

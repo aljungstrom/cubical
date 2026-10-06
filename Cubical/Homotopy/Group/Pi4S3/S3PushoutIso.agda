@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 {-
 This file has been split in two due to slow type checking
 combined with insufficient reductions when the
@@ -458,8 +457,8 @@ retrS²→Pushout⋁↪fold⋁S²↺ x =
   → Iso ∥Pushout⋁↪fold⋁S²∥₅ ∥Pushout⋁↪fold⋁S²∥₅
 fun (∥Pushout⋁↪fold⋁S²∥₅≃∥Pushout⋁↪fold⋁S²∥₅ x) = S²→Pushout⋁↪fold⋁S²↺ x
 inv (∥Pushout⋁↪fold⋁S²∥₅≃∥Pushout⋁↪fold⋁S²∥₅ x) = S²→Pushout⋁↪fold⋁S²↺⁻¹ x
-rightInv (∥Pushout⋁↪fold⋁S²∥₅≃∥Pushout⋁↪fold⋁S²∥₅ x) = secS²→Pushout⋁↪fold⋁S²↺ x
-leftInv (∥Pushout⋁↪fold⋁S²∥₅≃∥Pushout⋁↪fold⋁S²∥₅ x) = retrS²→Pushout⋁↪fold⋁S²↺ x
+sec (∥Pushout⋁↪fold⋁S²∥₅≃∥Pushout⋁↪fold⋁S²∥₅ x) = secS²→Pushout⋁↪fold⋁S²↺ x
+ret (∥Pushout⋁↪fold⋁S²∥₅≃∥Pushout⋁↪fold⋁S²∥₅ x) = retrS²→Pushout⋁↪fold⋁S²↺ x
 
 PreCode : (x : Susp S²) → Type
 PreCode north = ∥Pushout⋁↪fold⋁S²∥₅
@@ -678,5 +677,5 @@ IsoΩ∥SuspS²∥₅∥Pushout⋁↪fold⋁S²∥₅ =
   is : Iso _ _
   fun is = encode ∣ north ∣
   inv is = decode ∣ north ∣
-  rightInv is = decode-encode
-  leftInv is = encode-decode ∣ north ∣
+  sec is = decode-encode
+  ret is = encode-decode ∣ north ∣

@@ -1,7 +1,6 @@
 {-
   Definitions for functions
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Foundations.Function where
 
 open import Cubical.Foundations.Prelude
@@ -9,7 +8,7 @@ open import Cubical.Foundations.Prelude
 private
   variable
     ℓ ℓ' ℓ'' : Level
-    A : Type ℓ
+    A A' A'' : Type ℓ
     B : A → Type ℓ
     C : (a : A) → B a → Type ℓ
     D : (a : A) (b : B a) → C a b → Type ℓ
@@ -20,17 +19,30 @@ private
 idfun : (A : Type ℓ) → A → A
 idfun _ x = x
 
+-- The membership relation (used to clarify the type of a term to Agda when inside a definition, like :: in Haskell)
+-- We introduce the syntax "x :> A" below.
+hasType : (A : Type ℓ) → A → A
+hasType _ x = x
+
+infixr -8 hasType
+
+syntax hasType A x = x :> A
+
 infixr -1 _$_
 
 _$_ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : A → Type ℓ'} → ((a : A) → B a) → (a : A) → B a
 f $ a = f a
 {-# INLINE _$_ #-}
 
-infixr 9 _∘_
+infixr 9 _∘_ _∘S_
 
 _∘_ : (g : {a : A} → (b : B a) → C a b) → (f : (a : A) → B a) → (a : A) → C a (f a)
 g ∘ f = λ x → g (f x)
 {-# INLINE _∘_ #-}
+
+_∘S_ : (A' → A'') → (A → A') → A → A''
+g ∘S f = λ x → g (f x)
+{-# INLINE _∘S_ #-}
 
 ∘-assoc : (h : {a : A} {b : B a} → (c : C a b) → D a b c)
           (g : {a : A} → (b : B a) → C a b)
@@ -81,6 +93,9 @@ uncurry4 f (x , y , z , w , u) = f x y z w u
 
 curry : ((p : Σ A B) → C (fst p) (snd p)) → (x : A) → (y : B x) → C x y
 curry f x y = f (x , y)
+
+∘diag : {B : (x y : A) → Type ℓ} → (∀ x y → B x y) → ∀ x → B x x
+∘diag f x = f x x
 
 module _ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} where
   -- Notions of 'coherently constant' functions for low dimensions.

@@ -3,7 +3,7 @@
   Maybe structure: X ↦ Maybe (S X)
 
 -}
-{-# OPTIONS --no-exact-split --safe #-}
+{-# OPTIONS --no-exact-split #-}
 module Cubical.Structures.Maybe where
 
 open import Cubical.Foundations.Prelude
@@ -23,9 +23,9 @@ private
     ℓ ℓ₁ ℓ₁' : Level
 
 MaybeRel : {A B : Type ℓ} (R : A → B → Type ℓ₁) → Maybe A → Maybe B → Type ℓ₁
-MaybeRel R nothing nothing = Lift Unit
-MaybeRel R nothing (just _) = Lift ⊥
-MaybeRel R (just _) nothing = Lift ⊥
+MaybeRel R nothing nothing = Unit*
+MaybeRel R nothing (just _) = ⊥*
+MaybeRel R (just _) nothing = ⊥*
 MaybeRel R (just x) (just y) = R x y
 
 congMaybeRel : {A B : Type ℓ} {R : A → B → Type ℓ₁} {S : A → B → Type ℓ₁'}
@@ -79,8 +79,8 @@ module MaybePathP where
     isom : Iso _ _
     isom .Iso.fun = decode ox oy
     isom .Iso.inv = encode _ ox oy
-    isom .Iso.rightInv = decodeEncode ox oy
-    isom .Iso.leftInv = encodeDecode A ox oy
+    isom .Iso.sec = decodeEncode ox oy
+    isom .Iso.ret = encodeDecode A ox oy
 
 -- Structured isomorphisms
 

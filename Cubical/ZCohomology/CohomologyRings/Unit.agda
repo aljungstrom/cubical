@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-}
 module Cubical.ZCohomology.CohomologyRings.Unit where
 
 {-
@@ -31,9 +31,9 @@ open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.CommRing.Instances.Int renaming (ℤCommRing to ℤCR)
 open import Cubical.Algebra.CommRing.FGIdeal
 open import Cubical.Algebra.CommRing.Quotient
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly-Quotient
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly-notationZ
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly-Quotient
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly-notationZ
 open import Cubical.Algebra.Polynomials.Multivariate.EquivCarac.A[X]X-A
 
 open import Cubical.HITs.Truncation
@@ -124,8 +124,8 @@ module Equiv-Unit-Properties where
   ϕ₀str = snd e₀
   ϕ₀⁻¹ = inv (fst e₀)
   ϕ₀⁻¹str = snd (invGroupIso e₀)
-  ϕ₀-sect = rightInv (fst e₀)
-  ϕ₀-retr = leftInv (fst e₀)
+  ϕ₀-sect = sec (fst e₀)
+  ϕ₀-retr = ret (fst e₀)
 
 
 -----------------------------------------------------------------------------
@@ -302,8 +302,8 @@ module _ where
     is : Iso ℤ[x]/x (H* Unit)
     fun is = ℤ[x]/x→H*-Unit
     inv is = H*-Unit→ℤ[x]/x
-    rightInv is = e-sect
-    leftInv is = e-retr
+    sec is = e-sect
+    ret is = e-retr
   snd Unit-CohomologyRingP = snd ℤ[X]/X→H*R-Unit
 
   CohomologyRing-UnitP : RingEquiv (H*R Unit) (CommRing→Ring ℤ[X]/X)

@@ -3,7 +3,6 @@
 Technical results about elementary transformations
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Algebra.Matrix.Elementaries where
 
 open import Cubical.Foundations.Prelude
@@ -17,7 +16,7 @@ open import Cubical.Data.FinData renaming (znots to znotsFin ; snotz to snotzFin
 
 open import Cubical.Relation.Nullary
 
-open import Cubical.Tactics.CommRingSolver.Reflection
+open import Cubical.Tactics.CommRingSolver
 open import Cubical.Algebra.Ring.BigOps
 open import Cubical.Algebra.CommRing
 
@@ -61,19 +60,19 @@ module ElemTransformation (𝓡 : CommRing ℓ) where
   uniSwapMat t zero zero =
     (mul2 swapMat swapMat zero zero ∙ helper) t
     where helper : 0r · 0r + 1r · 1r ≡ 1r
-          helper = solve 𝓡
+          helper = solve! 𝓡
   uniSwapMat t zero one  =
     (mul2 swapMat swapMat zero one  ∙ helper) t
     where helper : 0r · 1r + 1r · 0r ≡ 0r
-          helper = solve 𝓡
+          helper = solve! 𝓡
   uniSwapMat t one  zero =
     (mul2 swapMat swapMat one  zero ∙ helper) t
     where helper : 1r · 0r + 0r · 1r ≡ 0r
-          helper = solve 𝓡
+          helper = solve! 𝓡
   uniSwapMat t one  one  =
     (mul2 swapMat swapMat one  one  ∙ helper) t
     where helper : 1r · 1r + 0r · 0r ≡ 1r
-          helper = solve 𝓡
+          helper = solve! 𝓡
 
   isInvSwapMat2 : isInv swapMat
   isInvSwapMat2 .fst = swapMat
@@ -89,11 +88,11 @@ module ElemTransformation (𝓡 : CommRing ℓ) where
   isLinear2×2SwapRow2 .transEq M t zero j =
     ((mul2 swapMat M zero j) ∙ helper _ _) (~ t)
     where helper : (a b : R) → 0r · a + 1r · b ≡ b
-          helper = solve 𝓡
+          helper _ _ = solve! 𝓡
   isLinear2×2SwapRow2 .transEq M t one  j =
     ((mul2 swapMat M one  j) ∙ helper _ _) (~ t)
     where helper : (a b : R) → 1r · a + 0r · b ≡ a
-          helper = solve 𝓡
+          helper _ _ = solve! 𝓡
 
   swapRow : (i₀ : Fin m)(M : Mat (suc m) n) → Mat (suc m) n
   swapRow i M zero = M (suc i)
@@ -111,37 +110,37 @@ module ElemTransformation (𝓡 : CommRing ℓ) where
     ∙ (λ t → 0r · M zero j + ∑Mulr1 _ (λ i → M (suc i) j) zero (~ t))
     ∙ (λ t → 0r · M zero j + ∑ (λ i → helper2 (δ i zero) (M (suc i) j) t))) t
     where helper1 : (a b : R) → b ≡ 0r · a + b
-          helper1 = solve 𝓡
+          helper1 _ _ = solve! 𝓡
           helper2 : (a b : R) → b · a ≡ (1r · a) · b
-          helper2 = solve 𝓡
+          helper2 _ _ = solve! 𝓡
   swapRowEq {m = suc m} zero M t one  j =
       (helper _
     ∙ (λ t → (1r · 1r) · M zero j + ∑Mul0r (λ i → M (suc i) j) (~ t))) t
     where helper : (a : R) → a ≡ (1r · 1r) · a + 0r
-          helper = solve 𝓡
+          helper _ = solve! 𝓡
   swapRowEq {m = suc m} zero M t (suc (suc i)) j =
       (helper _ _
     ∙ (λ t → (1r · 0r) · M zero j + ∑Mul1r _ (λ l → M (suc l) j) (suc i) (~ t))) t
     where helper : (a b : R) → b ≡ (1r · 0r) · a + b
-          helper = solve 𝓡
+          helper _ _ = solve! 𝓡
   swapRowEq {m = suc m} (suc i₀) M t zero j =
       (helper1 _ _
     ∙ (λ t → 0r · M zero j + ∑Mul1r _ (λ i → M (suc i) j) (suc i₀) (~ t))
     ∙ (λ t → 0r · M zero j + ∑ (λ l → helper2 (δ (suc i₀) l) (M (suc l) j) t))) t
     where helper1 : (a b : R) → b ≡ 0r · a + b
-          helper1 = solve 𝓡
+          helper1 _ _ = solve! 𝓡
           helper2 : (a b : R) → a · b ≡ (1r · a) · b
-          helper2 = solve 𝓡
+          helper2 _ _ = solve! 𝓡
   swapRowEq {m = suc m} (suc i₀) M t one  j =
         (helper _ _ --helper1 _ _
       ∙ (λ t → (1r · 0r) · M zero j + ∑Mul1r _ (λ i → M (suc i) j) zero (~ t))) t
     where helper : (a b : R) → b ≡ (1r · 0r) · a + b
-          helper = solve 𝓡
+          helper _ _ = solve! 𝓡
   swapRowEq {m = suc m} (suc i₀) M t (suc (suc i)) j =
      ((λ t → swapRowEq i₀ (takeRowsᶜ M) t (suc i) j)
     ∙ helper _ (M one j) _) t
     where helper : (a b c : R) → a + c ≡ a + (0r · b + c)
-          helper = solve 𝓡
+          helper _ _ _ = solve! 𝓡
 
   isLinearSwapRow : (i : Fin m) → isLinear (swapRow {n = n} i)
   isLinearSwapRow i .transMat _ = swapRowMat i
@@ -224,37 +223,37 @@ module ElemTransformation (𝓡 : CommRing ℓ) where
   add⋆subMat t zero zero =
     (mul2 addMat subMat zero zero ∙ helper) t
     where helper : 1r · 1r + 0r · - 1r ≡ 1r
-          helper = solve 𝓡
+          helper = solve! 𝓡
   add⋆subMat t zero one  =
     (mul2 addMat subMat zero one  ∙ helper) t
     where helper : 1r · 0r + 0r · 1r ≡ 0r
-          helper = solve 𝓡
+          helper = solve! 𝓡
   add⋆subMat t one  zero =
     (mul2 addMat subMat one  zero ∙ helper) t
     where helper : 1r · 1r + 1r · - 1r ≡ 0r
-          helper = solve 𝓡
+          helper = solve! 𝓡
   add⋆subMat t one  one  =
     (mul2 addMat subMat one  one  ∙ helper) t
     where helper : 1r · 0r + 1r · 1r ≡ 1r
-          helper = solve 𝓡
+          helper = solve! 𝓡
 
   sub⋆addMat : subMat ⋆ addMat ≡ 𝟙
   sub⋆addMat t zero zero =
     (mul2 subMat addMat  zero zero ∙ helper) t
     where helper : 1r · 1r + 0r · 1r ≡ 1r
-          helper = solve 𝓡
+          helper = solve! 𝓡
   sub⋆addMat t zero one  =
     (mul2 subMat addMat  zero one  ∙ helper) t
     where helper : 1r · 0r + 0r · 1r ≡ 0r
-          helper = solve 𝓡
+          helper = solve! 𝓡
   sub⋆addMat t one  zero =
     (mul2 subMat addMat  one  zero ∙ helper) t
     where helper : - 1r · 1r + 1r · 1r ≡ 0r
-          helper = solve 𝓡
+          helper = solve! 𝓡
   sub⋆addMat t one  one  =
     (mul2 subMat addMat  one  one  ∙ helper) t
     where helper : - 1r · 0r + 1r · 1r ≡ 1r
-          helper = solve 𝓡
+          helper = solve! 𝓡
 
   isInvAddMat2 : isInv addMat
   isInvAddMat2 .fst = subMat
@@ -270,11 +269,11 @@ module ElemTransformation (𝓡 : CommRing ℓ) where
   isLinear2AddRow2 .transEq M t zero j =
     ((mul2 addMat M zero j) ∙ helper _ _) (~ t)
     where helper : (a b : R) → 1r · a + 0r · b ≡ a
-          helper = solve 𝓡
+          helper _ _ = solve! 𝓡
   isLinear2AddRow2 .transEq M t one  j =
     ((mul2 addMat M one  j) ∙ helper _ _) (~ t)
     where helper : (a b : R) → 1r · a + 1r · b ≡ a + b
-          helper = solve 𝓡
+          helper _ _ = solve! 𝓡
 
   -- Add the first row to all other rows
 

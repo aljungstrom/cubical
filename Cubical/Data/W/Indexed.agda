@@ -1,11 +1,9 @@
-{-# OPTIONS --cubical --safe #-}
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Path
 open import Cubical.Foundations.Isomorphism renaming (Iso to _≅_)
 open import Cubical.Foundations.Equiv
-open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.HLevels
 open import Cubical.Functions.FunExtEquiv
 open import Cubical.Data.Unit
@@ -49,14 +47,14 @@ module _ {X : Type ℓX} {S : X → Type ℓS} {P : ∀ x → S x → Type ℓP}
   isoRepIW : (x : X) → IW S P inX x ≅ RepIW S P inX x
   fun (isoRepIW x) (node s subtree) = s , subtree
   inv (isoRepIW x) (s , subtree) = node s subtree
-  rightInv (isoRepIW x) (s , subtree) = refl
-  leftInv (isoRepIW x) (node s subtree) = refl
+  sec (isoRepIW x) (s , subtree) = refl
+  ret (isoRepIW x) (node s subtree) = refl
 
   equivRepIW : (x : X) → IW S P inX x ≃ RepIW S P inX x
   equivRepIW x = isoToEquiv (isoRepIW x)
 
-  pathRepIW : (x : X) → IW S P inX x ≡ RepIW S P inX x
-  pathRepIW x = ua (equivRepIW x)
+  --pathRepIW : (x : X) → IW S P inX x ≡ RepIW S P inX x
+  --pathRepIW x = ua (equivRepIW x)
 
   isPropIW : (∀ x → isProp (S x)) → ∀ x → isProp (IW S P inX x)
   isPropIW isPropS x (node s subtree) (node s' subtree') =
@@ -100,20 +98,20 @@ module IWPath {X : Type ℓX} {S : X → Type ℓS} {P : ∀ x → S x → Type 
     node (cong getShape pw) (fun (isoEncodeSubtree w w' (cong getShape pw)) (cong getSubtree pw))
   inv (isoEncode w@(node s subtree) w'@(node s' subtree')) cw@(node ps csubtree) =
     cong₂ node ps (inv (isoEncodeSubtree w w' ps) csubtree)
-  rightInv (isoEncode w@(node s subtree) w'@(node s' subtree')) cw@(node ps csubtree) =
+  sec (isoEncode w@(node s subtree) w'@(node s' subtree')) cw@(node ps csubtree) =
     cong (node ps) (
       fun (isoEncodeSubtree w w' ps) (inv (isoEncodeSubtree w w' ps) csubtree)
-        ≡⟨ rightInv (isoEncodeSubtree w w' ps) csubtree ⟩
+        ≡⟨ sec (isoEncodeSubtree w w' ps) csubtree ⟩
       csubtree ∎
     )
-  leftInv (isoEncode w@(node s subtree) w'@(node s' subtree')) pw =
+  ret (isoEncode w@(node s subtree) w'@(node s' subtree')) pw =
     cong₂ node (cong getShape pw)
       (inv (isoEncodeSubtree w w' (cong getShape pw))
         (fun (isoEncodeSubtree w w' (cong getShape pw))
           (cong getSubtree pw)
         )
       )
-      ≡⟨ cong (cong₂ node (cong getShape pw)) (leftInv (isoEncodeSubtree w w' (cong getShape pw)) (cong getSubtree pw)) ⟩
+      ≡⟨ cong (cong₂ node (cong getShape pw)) (ret (isoEncodeSubtree w w' (cong getShape pw)) (cong getSubtree pw)) ⟩
     cong₂ node (cong getShape pw) (cong getSubtree pw)
       ≡⟨ flipSquare (λ i → wExt (node (getShape (pw i)) (getSubtree (pw i))) (pw i) refl refl) ⟩
     pw ∎
@@ -125,16 +123,16 @@ module IWPath {X : Type ℓX} {S : X → Type ℓS} {P : ∀ x → S x → Type 
   decode w w' = inv (isoEncode w w')
 
   decodeEncode : ∀ {x} (w w' : IW S P inX x) → (pw : w ≡ w') → decode w w' (encode w w' pw) ≡ pw
-  decodeEncode w w' = leftInv (isoEncode w w')
+  decodeEncode w w' = ret (isoEncode w w')
 
   encodeDecode : ∀ {x} (w w' : IW S P inX x) → (cw : Cover w w') → encode w w' (decode w w' cw) ≡ cw
-  encodeDecode w w' = rightInv (isoEncode w w')
+  encodeDecode w w' = sec (isoEncode w w')
 
   equivEncode : ∀ {x} (w w' : IW S P inX x) → (w ≡ w') ≃ Cover w w'
   equivEncode w w' = isoToEquiv (isoEncode w w')
 
-  pathEncode : ∀ {x} (w w' : IW S P inX x) → (w ≡ w') ≡ Cover w w'
-  pathEncode w w' = ua (equivEncode w w')
+  --pathEncode : ∀ {x} (w w' : IW S P inX x) → (w ≡ w') ≡ Cover w w'
+  --pathEncode w w' = ua (equivEncode w w')
 
 open IWPathTypes
 open IWPath
@@ -143,7 +141,7 @@ isOfHLevelSuc-IW : {X : Type ℓX} {S : X → Type ℓS} {P : ∀ x → S x → 
   (n : HLevel) → (∀ x → isOfHLevel (suc n) (S x)) → ∀ x → isOfHLevel (suc n) (IW S P inX x)
 isOfHLevelSuc-IW zero isHS x = isPropIW isHS x
 isOfHLevelSuc-IW (suc n) isHS x w w' =
-  subst (isOfHLevel (suc n)) (λ i → pathEncode w w' (~ i))
+  isOfHLevelRetractFromIso (suc n) (isoEncode w w')
     (isOfHLevelSuc-IW n
       (λ (y , v , v') → isHS y (getShape v) (getShape v'))
       (x , w , w')

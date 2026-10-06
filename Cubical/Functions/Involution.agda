@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 
 module Cubical.Functions.Involution where
 
@@ -16,8 +15,8 @@ module _ {ℓ} {A : Type ℓ} {f : A → A} (invol : isInvolution f) where
   involIso : Iso A A
   involIso .fun = f
   involIso .inv = f
-  involIso .rightInv = invol
-  involIso .leftInv = invol
+  involIso .sec = invol
+  involIso .ret = invol
 
   involIsEquiv : isEquiv f
   involIsEquiv = isoToIsEquiv involIso

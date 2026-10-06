@@ -6,7 +6,6 @@
   equial to b'.
 -}
 
-{-# OPTIONS --safe #-}
 module Cubical.Displayed.Subst where
 
 open import Cubical.Foundations.Prelude
@@ -41,7 +40,7 @@ record SubstRel {A : Type ℓA} {ℓ≅A : Level} (𝒮-A : UARel A ℓ≅A) (B 
     subst B (sym (≅→≡ p)) (equivFun (act p) (invEq (act p) b))
       ≡⟨ cong (subst B (sym (≅→≡ p))) (sym (uaˢ p (invEq (act p) b))) ⟩
     subst B (sym (≅→≡ p)) (subst B (≅→≡ p) (invEq (act p) b))
-      ≡⟨ pathToIso (cong B (≅→≡ p)) .Iso.leftInv (invEq (act p) b) ⟩
+      ≡⟨ pathToIso (cong B (≅→≡ p)) .Iso.ret (invEq (act p) b) ⟩
     invEq (act p) b
     ∎
 

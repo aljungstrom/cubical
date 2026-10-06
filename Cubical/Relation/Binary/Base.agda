@@ -1,7 +1,4 @@
-{-# OPTIONS --safe #-}
 module Cubical.Relation.Binary.Base where
-
-open import Cubical.Core.Everything
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -19,11 +16,13 @@ open import Cubical.HITs.PropositionalTruncation as ∥₁
 
 open import Cubical.Relation.Nullary.Base
 
+open import Cubical.Induction.WellFounded
+
 private
   variable
     ℓA ℓ≅A ℓA' ℓ≅A' : Level
 
-Rel : ∀ {ℓ} (A B : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
+Rel : ∀ {ℓa ℓb} (A : Type ℓa) (B : Type ℓb) (ℓ' : Level) → Type (ℓ-max (ℓ-max ℓa ℓb) (ℓ-suc ℓ'))
 Rel A B ℓ' = A → B → Type ℓ'
 
 PropRel : ∀ {ℓ} (A B : Type ℓ) (ℓ' : Level) → Type (ℓ-max ℓ (ℓ-suc ℓ'))
@@ -46,6 +45,11 @@ compPropRel R S .snd _ _ = squash₁
 graphRel : ∀ {ℓ} {A B : Type ℓ} → (A → B) → Rel A B ℓ
 graphRel f a b = f a ≡ b
 
+data Ordering : Type where
+  LT : Ordering
+  EQ : Ordering
+  GT : Ordering
+
 module HeterogenousRelation {ℓ ℓ' : Level} {A B : Type ℓ} (R : Rel A B ℓ') where
   isUniversalRel : Type (ℓ-max ℓ ℓ')
   isUniversalRel = (a : A) (b : B) → R a b
@@ -53,6 +57,9 @@ module HeterogenousRelation {ℓ ℓ' : Level} {A B : Type ℓ} (R : Rel A B ℓ
 module BinaryRelation {ℓ ℓ' : Level} {A : Type ℓ} (R : Rel A A ℓ') where
   isRefl : Type (ℓ-max ℓ ℓ')
   isRefl = (a : A) → R a a
+
+  isRefl' : Type (ℓ-max ℓ ℓ')
+  isRefl' = {a : A} → R a a
 
   isIrrefl : Type (ℓ-max ℓ ℓ')
   isIrrefl = (a : A) → ¬ R a a
@@ -69,25 +76,31 @@ module BinaryRelation {ℓ ℓ' : Level} {A : Type ℓ} (R : Rel A A ℓ') where
   isTrans : Type (ℓ-max ℓ ℓ')
   isTrans = (a b c : A) → R a b → R b c → R a c
 
+  isTrans' : Type (ℓ-max ℓ ℓ')
+  isTrans' = {a b c : A} → R a b → R b c → R a c
+
   -- Sum types don't play nicely with props, so we truncate
   isCotrans : Type (ℓ-max ℓ ℓ')
-  isCotrans = (a b c : A) → R a b → (R a c ⊔′ R b c)
+  isCotrans = (a b c : A) → R a b → R a c ⊔′ R b c
 
   isWeaklyLinear : Type (ℓ-max ℓ ℓ')
   isWeaklyLinear = (a b c : A) → R a b → R a c ⊔′ R c b
 
   isConnected : Type (ℓ-max ℓ ℓ')
-  isConnected = (a b : A) → ¬ (a ≡ b) → R a b ⊔′ R b a
+  isConnected = (a b : A) → (¬ R a b) × (¬ R b a) → a ≡ b
 
-  isStronglyConnected : Type (ℓ-max ℓ ℓ')
-  isStronglyConnected = (a b : A) → R a b ⊔′ R b a
-
-  isStronglyConnected→isConnected : isStronglyConnected → isConnected
-  isStronglyConnected→isConnected strong a b _ = strong a b
+  isTotal : Type (ℓ-max ℓ ℓ')
+  isTotal = (a b : A) → R a b ⊔′ R b a
 
   isIrrefl×isTrans→isAsym : isIrrefl × isTrans → isAsym
   isIrrefl×isTrans→isAsym (irrefl , trans) a₀ a₁ Ra₀a₁ Ra₁a₀
     = irrefl a₀ (trans a₀ a₁ a₀ Ra₀a₁ Ra₁a₀)
+
+  WellFounded→isIrrefl : WellFounded R → isIrrefl
+  WellFounded→isIrrefl well = WFI.induction well λ a f Raa → f a Raa Raa
+
+  isAsym→isIrrefl : isAsym → isIrrefl
+  isAsym→isIrrefl asym a Raa = asym a a Raa Raa
 
   IrreflKernel : Rel A A (ℓ-max ℓ ℓ')
   IrreflKernel a b = R a b × (¬ a ≡ b)
@@ -106,6 +119,9 @@ module BinaryRelation {ℓ ℓ' : Level} {A : Type ℓ} (R : Rel A A ℓ') where
 
   NegationRel : Rel A A ℓ'
   NegationRel a b = ¬ (R a b)
+
+  Dual : Rel A A ℓ'
+  Dual a b = R b a
 
   module _
     {ℓ'' : Level}
@@ -145,9 +161,14 @@ module BinaryRelation {ℓ ℓ' : Level} {A : Type ℓ} (R : Rel A A ℓ') where
   isEffective =
     (a b : A) → isEquiv (eq/ {R = R} a b)
 
+  isDecidable : Type (ℓ-max ℓ ℓ')
+  isDecidable = (a b : A) → Dec (R a b)
 
   impliesIdentity : Type _
   impliesIdentity = {a a' : A} → (R a a') → (a ≡ a')
+
+  isTight : Type _
+  isTight = (a b : A) → ¬ R a b → a ≡ b
 
   inequalityImplies : Type _
   inequalityImplies = (a b : A) → ¬ a ≡ b → R a b
@@ -175,12 +196,12 @@ module BinaryRelation {ℓ ℓ' : Level} {A : Type ℓ} (R : Rel A A ℓ') where
       i : Iso (R a a') (a ≡ a')
       Iso.fun i r = cong fst (h aρa (a' , r))
       Iso.inv i = J Q (ρ a)
-      Iso.rightInv i = J (λ y p → cong fst (h aρa (y , J Q (ρ a) p)) ≡ p)
+      Iso.sec i = J (λ y p → cong fst (h aρa (y , J Q (ρ a) p)) ≡ p)
                          (J (λ q _ → cong fst (h aρa (a , q)) ≡ refl)
                            (J (λ α _ → cong fst α ≡ refl) refl
                              (isProp→isSet h _ _ refl (h _ _)))
                            (sym (JRefl Q (ρ a))))
-      Iso.leftInv i r = J (λ w β → J Q (ρ a) (cong fst β) ≡ snd w)
+      Iso.ret i r = J (λ w β → J Q (ρ a) (cong fst β) ≡ snd w)
                           (JRefl Q (ρ a)) (h aρa (a' , r))
 
   isUnivalent→contrRelSingl : isUnivalent → contrRelSingl
@@ -209,8 +230,8 @@ record RelIso {A : Type ℓA} (_≅_ : Rel A A ℓ≅A)
   field
     fun : A → A'
     inv : A' → A
-    rightInv : (a' : A') → fun (inv a') ≅' a'
-    leftInv : (a : A) → inv (fun a) ≅ a
+    sec : (a' : A') → fun (inv a') ≅' a'
+    ret : (a : A) → inv (fun a) ≅ a
 
 open BinaryRelation
 
@@ -221,24 +242,16 @@ RelIso→Iso : {A : Type ℓA} {A' : Type ℓA'}
              → Iso A A'
 Iso.fun (RelIso→Iso _ _ _ _ f) = RelIso.fun f
 Iso.inv (RelIso→Iso _ _ _ _ f) = RelIso.inv f
-Iso.rightInv (RelIso→Iso _ _ uni uni' f) a'
-  = uni' (RelIso.rightInv f a')
-Iso.leftInv (RelIso→Iso _ _ uni uni' f) a
-  = uni (RelIso.leftInv f a)
+Iso.sec (RelIso→Iso _ _ uni uni' f) a'
+  = uni' (RelIso.sec f a')
+Iso.ret (RelIso→Iso _ _ uni uni' f) a
+  = uni (RelIso.ret f a)
 
 isIrreflIrreflKernel : ∀{ℓ ℓ'} {A : Type ℓ} (R : Rel A A ℓ') → isIrrefl (IrreflKernel R)
 isIrreflIrreflKernel _ _ (_ , ¬a≡a) = ¬a≡a refl
 
 isReflReflClosure : ∀{ℓ ℓ'} {A : Type ℓ} (R : Rel A A ℓ') → isRefl (ReflClosure R)
 isReflReflClosure _ _ = inr refl
-
-isConnectedStronglyConnectedIrreflKernel : ∀{ℓ ℓ'} {A : Type ℓ} (R : Rel A A ℓ')
-                                         → isStronglyConnected R
-                                         → isConnected (IrreflKernel R)
-isConnectedStronglyConnectedIrreflKernel R strong a b ¬a≡b
-  = ∥₁.map (λ x → ⊎.rec (λ Rab → inl (Rab , ¬a≡b))
-                        (λ Rba → inr (Rba , (λ b≡a → ¬a≡b (sym b≡a)))) x)
-                        (strong a b)
 
 isSymSymKernel : ∀{ℓ ℓ'} {A : Type ℓ} (R : Rel A A ℓ') → isSym (SymKernel R)
 isSymSymKernel _ _ _ (Rab , Rba) = Rba , Rab

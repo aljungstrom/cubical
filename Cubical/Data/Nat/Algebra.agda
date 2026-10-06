@@ -1,4 +1,4 @@
-{-# OPTIONS --no-exact-split --safe #-}
+{-# OPTIONS --no-exact-split #-}
 
 {-
 
@@ -14,8 +14,6 @@ by Steve Awodey, Nicola Gambino and Kristina Sojakova.
 
 
 module Cubical.Data.Nat.Algebra where
-
-open import Cubical.Core.Everything
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
@@ -138,7 +136,7 @@ module AlgebraHInit→Ind (N : NatAlgebra ℓ') ℓ (hinit : isNatHInitial N (�
   -- the fact that we have to lift the Carrier obstructs readability a bit
   -- this is the same algebra as N, but lifted into the correct universe
   LiftN : NatAlgebra (ℓ-max ℓ' ℓ)
-  Carrier LiftN = Lift {_} {ℓ} (N .Carrier)
+  Carrier LiftN = Lift ℓ (N .Carrier)
   alg-zero LiftN = lift (N .alg-zero)
   alg-suc LiftN = lift ∘ N .alg-suc ∘ lower
 

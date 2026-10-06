@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Foundations.Path where
 
 open import Cubical.Foundations.Prelude
@@ -34,7 +33,7 @@ PathP≡Path⁻ P p q i = PathP (λ j → P (~ i ∧ j)) p (transport⁻-filler 
 PathPIsoPath : ∀ (A : I → Type ℓ) (x : A i0) (y : A i1) → Iso (PathP A x y) (transport (λ i → A i) x ≡ y)
 PathPIsoPath A x y .Iso.fun = fromPathP
 PathPIsoPath A x y .Iso.inv = toPathP
-PathPIsoPath A x y .Iso.rightInv q k i =
+PathPIsoPath A x y .Iso.sec q k i =
   hcomp
     (λ j → λ
       { (i = i0) → slide (j ∨ ~ k)
@@ -68,7 +67,7 @@ PathPIsoPath A x y .Iso.rightInv q k i =
         ; (j = i1) → q (i ∧ l)
         })
       (slide (i ∨ j))
-PathPIsoPath A x y .Iso.leftInv q k i =
+PathPIsoPath A x y .Iso.ret q k i =
   outS
     (hcomp-unique
       (λ j → λ
@@ -289,11 +288,11 @@ Jequiv P = isoToEquiv isom
   isom : Iso _ _
   Iso.fun isom = J P
   Iso.inv isom f = f refl
-  Iso.rightInv isom f =
+  Iso.sec isom f =
     implicitFunExt λ {_} →
     funExt λ t →
     J (λ _ t → J P (f refl) t ≡ f t) (JRefl P (f refl)) t
-  Iso.leftInv isom = JRefl P
+  Iso.ret isom = JRefl P
 
 -- Action of PathP on equivalences (without relying on univalence)
 
@@ -308,7 +307,7 @@ congPathIso {A = A} {B} e {a₀} {a₁} .Iso.inv q i =
       ; (i = i1) → retEq (e i1) a₁ j
       })
     (invEq (e i) (q i))
-congPathIso {A = A} {B} e {a₀} {a₁} .Iso.rightInv q k i =
+congPathIso {A = A} {B} e {a₀} {a₁} .Iso.sec q k i =
   hcomp
     (λ j → λ
       { (i = i0) → commSqIsEq (e i0 .snd) a₀ j k
@@ -326,7 +325,7 @@ congPathIso {A = A} {B} e {a₀} {a₁} .Iso.rightInv q k i =
       })
     (secEq (e i) (q i) k)
     where b = commSqIsEq
-congPathIso {A = A} {B} e {a₀} {a₁} .Iso.leftInv p k i =
+congPathIso {A = A} {B} e {a₀} {a₁} .Iso.ret p k i =
   hcomp
     (λ j → λ
       { (i = i0) → retEq (e i0) a₀ (j ∨ k)
@@ -410,6 +409,16 @@ compPathR→PathP∙∙ {p = p} {q = q} {r = r} {s = s} P j i =
                    ; (j = i1) → doubleCompPath-filler  p s (sym q) (~ k) i})
           (P j i)
 
+PathP→compPathR∙∙ : {a b c d : A} {p : a ≡ c} {q : b ≡ d} {r : a ≡ b} {s : c ≡ d}
+  → PathP (λ i → p i ≡ q i) r s
+  → r ≡ p ∙∙ s ∙∙ sym q
+PathP→compPathR∙∙ {p = p} {q = q} {r = r} {s = s} P j i =
+    hcomp (λ k → λ { (i = i0) → p (j ∧ ~ k)
+                   ; (i = i1) → q (j ∧ ~ k)
+                   ; (j = i0) → r i
+                   ; (j = i1) → doubleCompPath-filler  p s (sym q) k i})
+          (P j i)
+
 compPath→Square-faces : {a b c d : A} (p : a ≡ c) (q : b ≡ d) (r : a ≡ b) (s : c ≡ d)
   → (i j k : I) → Partial (i ∨ ~ i ∨ j ∨ ~ j) A
 compPath→Square-faces p q r s i j k = λ where
@@ -437,3 +446,9 @@ Square→compPathΩ² {a = a} sq k i j =
                  ; (j = i1) → a
                  ; (k = i1) → cong (λ x → rUnit x r) (flipSquare sq) i j})
         (sq j i)
+
+pathFiber : {B : Type ℓ} (f : A → B)
+  (b : B) {a a' : A} {t : f a ≡ b} {t' : f a' ≡ b} →
+  ((a , t) ≡ (a' , t' )) → Σ[ e ∈ a ≡ a' ] (t ≡ cong f e ∙ t')
+pathFiber {A} {B} f b {a} {a'} {t} {t'} e =
+  J (λ X _ → Σ[ e ∈ a ≡ fst X ] (t ≡ cong f e ∙ (snd X))) (refl , lUnit t) e

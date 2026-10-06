@@ -20,7 +20,6 @@ This file proves a variety of basic results about paths:
 - Export universe lifting
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Foundations.Prelude where
 
 open import Cubical.Core.Primitives public
@@ -86,6 +85,16 @@ cong₂ : {C : (a : A) → (b : B a) → Type ℓ} →
         PathP (λ i → C (p i) (q i)) (f x u) (f y v)
 cong₂ f p q i = f (p i) (q i)
 {-# INLINE cong₂ #-}
+
+cong₃ : {C : (a : A) → (b : B a) → Type ℓ}
+        {D : (a : A) (b : B a) → C a b → Type ℓ'}
+        (f : (a : A) (b : B a) (c : C a b) → D a b c) →
+        {x y : A} (p : x ≡ y)
+        {u : B x} {v : B y} (q : PathP (λ i → B (p i)) u v)
+        {s : C x u} {t : C y v} (r : PathP (λ i → C (p i) (q i)) s t)
+      → PathP (λ i → D (p i) (q i) (r i)) (f x u s) (f y v t)
+cong₃ f p q r i = f (p i) (q i) (r i)
+{-# INLINE cong₃ #-}
 
 congP₂ : {A : I → Type ℓ} {B : (i : I) → A i → Type ℓ'}
   {C : (i : I) (a : A i) → B i a → Type ℓ''}
@@ -181,6 +190,16 @@ compPath-filler' {z = z} p q j i =
                  ; (i = i1) → q k
                  ; (j = i0) → q (i ∧ k) })
         (p (i ∨ ~ j))
+
+compPath-filler'' : (p : x ≡ y) (q : y ≡ z)
+    → PathP (λ i → p (~ i) ≡ q i) refl (p ∙ q)
+compPath-filler'' p q i j =
+  hcomp (λ k → λ {(i = i0) → p i1
+                 ; (i = i1) → compPath-filler p q k j
+                 ; (j = i0) → p (~ i)
+                 ; (j = i1) → q (i ∧ k)})
+        (p (~ i ∨ j))
+
 -- Note: We can omit a (j = i1) case here since when (j = i1), the whole expression is
 --  definitionally equal to `p ∙ q`. (Notice that `p ∙ q` is also an hcomp.) Nevertheless,
 --  we could have given `compPath-filler p q k i` as the (j = i1) case.
@@ -326,6 +345,12 @@ funExt⁻ : {B : A → I → Type ℓ'}
   → PathP (λ i → (x : A) → B x i) f g
   → ((x : A) → PathP (B x) (f x) (g x))
 funExt⁻ eq x i = eq i x
+
+congP₂$ : {A : I → Type ℓ} {B : ∀ i → A i → Type ℓ'}
+  {f : ∀ x → B i0 x} {g : ∀ y → B i1 y}
+  → (p : PathP (λ i → ∀ x → B i x) f g)
+  → ∀ {x y} (p : PathP A x y) → PathP (λ i → B i (p i)) (f x) (g y)
+congP₂$ eq x i = eq i (x i)
 
 implicitFunExt⁻ : {B : A → I → Type ℓ'}
   {f : {x : A} → B x i0} {g : {x : A} → B x i1}
@@ -473,6 +498,23 @@ isContrSinglP A a .fst = _ , transport-filler (λ i → A i) a
 isContrSinglP A a .snd (x , p) i =
   _ , λ j → fill A (λ j → λ {(i = i0) → transport-filler (λ i → A i) a j; (i = i1) → p j}) (inS a) j
 
+-- Helpers for carrying equalities into with-abstractions
+-- see `discreteℕ` in Data.Nat.Properties for an example of usage
+
+infixl 0 _UsingEq
+infixl 0 _i0:>_UsingEqP
+
+-- Similar to `inspect`, but more convenient when `a` is not a function
+-- application, or when the applied function is not relevant
+-- Note: when defining a term with `UsingEq`, it's still possible to prove its properties
+-- using a with-abstraction without `UsingEq`, but not the other way around.
+-- See `min`/`max` and their properties in Data.Nat.Properties for examples of this.
+_UsingEq : (a : A) → singl a
+a UsingEq = isContrSingl a .fst
+
+_i0:>_UsingEqP : (A : I → Type ℓ) (a : A i0) → singlP A a
+A i0:> a UsingEqP = isContrSinglP A a .fst
+
 -- Higher cube types
 
 SquareP :
@@ -527,6 +569,8 @@ Cube :
   → Type _
 Cube a₀₋₋ a₁₋₋ a₋₀₋ a₋₁₋ a₋₋₀ a₋₋₁ =
   PathP (λ i → Square (a₋₀₋ i) (a₋₁₋ i) (a₋₋₀ i) (a₋₋₁ i)) a₀₋₋ a₁₋₋
+
+-- See HLevels.agda for CubeP
 
 -- Horizontal composition of squares (along their second dimension)
 -- See Cubical.Foundations.Path for vertical composition
@@ -616,12 +660,16 @@ isPropSinglP = isContr→isProp (isContrSinglP _ _)
 
 -- Universe lifting
 
-record Lift {i j} (A : Type i) : Type (ℓ-max i j) where
+record Lift ℓ' (A : Type ℓ) : Type (ℓ-max ℓ ℓ') where
   constructor lift
   field
     lower : A
 
 open Lift public
 
-liftExt : ∀ {A : Type ℓ} {a b : Lift {ℓ} {ℓ'} A} → (lower a ≡ lower b) → a ≡ b
-liftExt x i = lift (x i)
+liftExt : ∀ {A : Type ℓ} {a b : Lift ℓ' A} → lower a ≡ lower b → a ≡ b
+liftExt p i = lift (p i)
+
+liftFun : ∀ {ℓ ℓ' ℓ'' ℓ'''} {A : Type ℓ} {B : Type ℓ'}
+  (f : A → B) → Lift ℓ'' A → Lift ℓ''' B
+liftFun f (lift a) = lift (f a)

@@ -1,12 +1,10 @@
-{-# OPTIONS --safe #-}
 module Cubical.Data.Int.Properties where
-
-open import Cubical.Core.Everything
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Equiv
 
 open import Cubical.Relation.Nullary
 
@@ -17,6 +15,9 @@ open import Cubical.Data.Nat
   renaming (_·_ to _·ℕ_; _+_ to _+ℕ_ ; ·-assoc to ·ℕ-assoc ;
             ·-comm to ·ℕ-comm ; isEven to isEvenℕ ; isOdd to isOddℕ)
 open import Cubical.Data.Sum
+open import Cubical.Data.Fin.Base
+open import Cubical.Data.Fin.Properties
+
 
 open import Cubical.Data.Int.Base
 
@@ -676,8 +677,7 @@ neg+ (suc m) (suc n) = neg (suc m +ℕ suc n)      ≡⟨ negsuc+ m (suc n) ⟩
 ℕ-AntiComm zero zero       = refl
 ℕ-AntiComm zero (suc n)    = refl
 ℕ-AntiComm (suc m) zero    = refl
-ℕ-AntiComm (suc m) (suc n) = suc m ℕ- suc n  ≡⟨ ℕ-AntiComm m n ⟩
-                          - (suc n ℕ- suc m) ∎
+ℕ-AntiComm (suc m) (suc n) = ℕ-AntiComm m n
 
 pos- : ∀ m n → m ℕ- n ≡ pos m - pos n
 pos- zero zero       = refl
@@ -1454,6 +1454,11 @@ abs· (negsuc m) (pos n) =
   cong abs (negsuc·pos m n) ∙ abs- (pos (suc m) · pos n) ∙ absPos·Pos (suc m) n
 abs· (negsuc m) (negsuc n) = cong abs (negsuc·negsuc m n) ∙ absPos·Pos (suc m) (suc n)
 
+sign·abs : ∀ m → sign m · pos (abs m) ≡ m
+sign·abs (pos zero) = refl
+sign·abs (pos (suc n)) = refl
+sign·abs (negsuc n) = refl
+
 -- ℤ is integral domain
 
 isIntegralℤPosPos : (c m : ℕ) → pos c · pos m ≡ 0 → ¬ c ≡ 0 → m ≡ 0
@@ -1495,3 +1500,17 @@ private
 
 0≢1-ℤ : ¬ 0 ≡ 1
 0≢1-ℤ p = encodeℕ _ _ (injPos p)
+
+-- some lemmas about finite sums
+sumFinℤ0 : (n : ℕ) → sumFinℤ {n = n} (λ (x : Fin n) → 0) ≡ 0
+sumFinℤ0 n = sumFinGen0 _+_ 0 (λ _ → refl) n (λ _ → 0) λ _ → refl
+
+sumFinℤHom : {n : ℕ} (f g : Fin n → ℤ)
+  → sumFinℤ {n = n} (λ x → f x + g x) ≡ sumFinℤ {n = n} f + sumFinℤ {n = n} g
+sumFinℤHom {n = n} = sumFinGenHom _+_ 0 (λ _ → refl) +Comm +Assoc n
+
+{- clamp negative numbers to 0 -}
+
+clamp : ℤ → ℕ
+clamp (pos n) = n
+clamp (negsuc n) = zero

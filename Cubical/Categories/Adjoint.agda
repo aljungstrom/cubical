@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 
 module Cubical.Categories.Adjoint where
 
@@ -31,7 +30,7 @@ equivalence.
 
 private
   variable
-    ℓC ℓC' ℓD ℓD' : Level
+    ℓC ℓC' ℓD ℓD' ℓE ℓE' : Level
 
 {-
 ==============================================
@@ -69,7 +68,7 @@ private
   variable
     C : Category ℓC ℓC'
     D : Category ℓC ℓC'
-
+    E : Category ℓE ℓE'
 
 module _ {F : Functor C D} {G : Functor D C} where
   open UnitCounit
@@ -89,8 +88,8 @@ module _ {F : Functor C D} {G : Functor D C} where
   Iso⊣^opF : Iso (F ⊣ G) ((G ^opF) ⊣ (F ^opF))
   fun Iso⊣^opF = opositeAdjunction
   inv Iso⊣^opF = _
-  rightInv Iso⊣^opF _ = refl
-  leftInv Iso⊣^opF _ = refl
+  sec Iso⊣^opF _ = refl
+  ret Iso⊣^opF _ = refl
 
 private
   variable
@@ -125,8 +124,8 @@ module AdjointUniqeUpToNatIso where
       open _⊣_ H⊣G  using (η ; Δ₂)
       open _⊣_ H'⊣G using (ε ; Δ₁)
       by-N-homs =
-        AssocCong₂⋆R {C = D} _
-        (AssocCong₂⋆L {C = D} (sym (N-hom ε _)) _)
+        AssocCong₂⋆R D
+        (AssocCong₂⋆L D (sym (N-hom ε _)))
           ∙ cong₂ _D⋆_
                (sym (F-seq H' _ _)
                 ∙∙ cong (H' ⟪_⟫) ((sym (N-hom η  _)))
@@ -155,7 +154,7 @@ module AdjointUniqeUpToNatIso where
          (sym (F-seq F _ _)
          ∙∙ cong (F ⟪_⟫) (N-hom (F'⊣G .η) _)
          ∙∙ (F-seq F _ _))
-    ∙∙ AssocCong₂⋆R {C = D} _ (N-hom (F⊣G .ε) _)
+    ∙∙ AssocCong₂⋆R D (N-hom (F⊣G .ε) _)
    where open _⊣_
   inv (nIso F≅ᶜF' _) = _
   sec (nIso F≅ᶜF' _) = s F⊣G F'⊣G
@@ -208,22 +207,22 @@ module NaturalBijection where
                 → g ♯ ⋆⟨ D ⟩ k ≡ (g ⋆⟨ C ⟩ G ⟪ k ⟫) ♯
     adjNatInD' {c} {d} {d'} g k =
       g ♯ ⋆⟨ D ⟩ k
-        ≡⟨ sym (adjIso .leftInv (g ♯ ⋆⟨ D ⟩ k)) ⟩
+        ≡⟨ sym (adjIso .ret (g ♯ ⋆⟨ D ⟩ k)) ⟩
       ((g ♯ ⋆⟨ D ⟩ k) ♭) ♯
         ≡⟨ cong _♯ (adjNatInD (g ♯) k) ⟩
       ((g ♯) ♭ ⋆⟨ C ⟩ G ⟪ k ⟫) ♯
-        ≡⟨ cong _♯ (cong (λ g' → seq' C g' (G ⟪ k ⟫)) (adjIso .rightInv g)) ⟩
+        ≡⟨ cong _♯ (cong (λ g' → seq' C g' (G ⟪ k ⟫)) (adjIso .sec g)) ⟩
       (g ⋆⟨ C ⟩ G ⟪ k ⟫) ♯ ∎
 
     adjNatInC' : ∀ {c' c d} (f : D [ F ⟅ c ⟆ , d ]) (h : C [ c' , c ])
                 → h ⋆⟨ C ⟩ (f ♭) ≡ (F ⟪ h ⟫ ⋆⟨ D ⟩ f) ♭
     adjNatInC' {c'} {c} {d} f h =
       h ⋆⟨ C ⟩ (f ♭)
-        ≡⟨ sym (adjIso .rightInv (h ⋆⟨ C ⟩ (f ♭))) ⟩
+        ≡⟨ sym (adjIso .sec (h ⋆⟨ C ⟩ (f ♭))) ⟩
       ((h ⋆⟨ C ⟩ (f ♭)) ♯) ♭
         ≡⟨ cong _♭ (adjNatInC (f ♭) h) ⟩
       ((F ⟪ h ⟫ ⋆⟨ D ⟩ (f ♭) ♯) ♭)
-        ≡⟨ cong _♭ (cong (λ f' → seq' D (F ⟪ h ⟫) f') (adjIso .leftInv f)) ⟩
+        ≡⟨ cong _♭ (cong (λ f' → seq' D (F ⟪ h ⟫) f') (adjIso .ret f)) ⟩
       (F ⟪ h ⟫ ⋆⟨ D ⟩ f) ♭ ∎
 
   isLeftAdjoint : {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} (F : Functor C D) → Type (ℓ-max (ℓ-max ℓC ℓC') (ℓ-max ℓD ℓD'))
@@ -231,6 +230,20 @@ module NaturalBijection where
 
   isRightAdjoint : {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} (G : Functor D C) → Type (ℓ-max (ℓ-max ℓC ℓC') (ℓ-max ℓD ℓD'))
   isRightAdjoint {C = C}{D} G = Σ[ F ∈ Functor C D ] F ⊣ G
+
+module Compose {F : Functor C D} {G : Functor D C}
+               {L : Functor D E} {R : Functor E D}
+               where
+ open NaturalBijection
+ module _ (F⊣G : F ⊣ G) (L⊣R : L ⊣ R) where
+  open _⊣_
+
+  LF⊣GR : (L ∘F F) ⊣ (G ∘F R)
+  adjIso LF⊣GR = compIso (adjIso L⊣R) (adjIso F⊣G)
+  adjNatInD LF⊣GR f k =
+   cong (adjIso F⊣G .fun) (adjNatInD L⊣R _ _) ∙ adjNatInD F⊣G _ _
+  adjNatInC LF⊣GR f k =
+   cong (adjIso L⊣R .inv) (adjNatInC F⊣G _ _) ∙ adjNatInC L⊣R _ _
 
 {-
 ==============================================
@@ -269,12 +282,12 @@ module _ (F : Functor C D) (G : Functor D C) where
                 (F ⟪ h ⟫ ⋆⟨ D ⟩ g ♯) ♭
               ≡⟨ sym (cong _♭ (adjNatInC _ _)) ⟩
                 (h ⋆⟨ C ⟩ g) ♯ ♭
-              ≡⟨ adjIso .rightInv _ ⟩
+              ≡⟨ adjIso .sec _ ⟩
                 h ⋆⟨ C ⟩ g
               ∎
         C→D : (f ♭ ⋆⟨ C ⟩ G ⟪ k ⟫ ≡ h ⋆⟨ C ⟩ g) → (f ⋆⟨ D ⟩ k ≡ F ⟪ h ⟫ ⋆⟨ D ⟩ g ♯)
         C→D eq = f ⋆⟨ D ⟩ k
-              ≡⟨ sym (adjIso .leftInv _) ⟩
+              ≡⟨ sym (adjIso .ret _) ⟩
                 (f ⋆⟨ D ⟩ k) ♭ ♯
               ≡⟨ cong _♯ (adjNatInD _ _) ⟩
                 (f ♭ ⋆⟨ C ⟩ G ⟪ k ⟫) ♯
@@ -304,7 +317,7 @@ module _ (F : Functor C D) (G : Functor D C) where
         commInD f = (D .⋆IdL _) ∙ sym (D .⋆IdR _)
 
         sharpen1 : ∀ {x y} (f : C [ x , y ]) → F ⟪ f ⟫ ⋆⟨ D ⟩ D .id ≡ F ⟪ f ⟫ ⋆⟨ D ⟩ D .id ♭ ♯
-        sharpen1 f = cong (λ v → F ⟪ f ⟫ ⋆⟨ D ⟩ v) (sym (adjIso .leftInv _))
+        sharpen1 f = cong (λ v → F ⟪ f ⟫ ⋆⟨ D ⟩ v) (sym (adjIso .ret _))
 
         η' : 𝟙⟨ C ⟩ ⇒ G ∘F F
         η' .N-ob x = D .id ♭
@@ -317,7 +330,7 @@ module _ (F : Functor C D) (G : Functor D C) where
         commInC g = (C .⋆IdL _) ∙ sym (C .⋆IdR _)
 
         sharpen2 : ∀ {x y} (g : D [ x , y ]) → C .id ♯ ♭ ⋆⟨ C ⟩ G ⟪ g ⟫ ≡ C .id ⋆⟨ C ⟩ G ⟪ g ⟫
-        sharpen2 g = cong (λ v → v ⋆⟨ C ⟩ G ⟪ g ⟫) (adjIso .rightInv _)
+        sharpen2 g = cong (λ v → v ⋆⟨ C ⟩ G ⟪ g ⟫) (adjIso .sec _)
 
         ε' : F ∘F G ⇒ 𝟙⟨ D ⟩
         ε' .N-ob x  = C .id ♯
@@ -358,7 +371,7 @@ module _ (F : Functor C D) (G : Functor D C) where
     -- takes g to Fg postcomposed with the counit
     adj→adj' .adjIso {d = d} .inv g = F ⟪ g ⟫ ⋆⟨ D ⟩ ε ⟦ d ⟧
     -- invertibility follows from the triangle identities
-    adj→adj' .adjIso {c = c} {d} .rightInv g
+    adj→adj' .adjIso {c = c} {d} .sec g
       = η ⟦ c ⟧ ⋆⟨ C ⟩ G ⟪ F ⟪ g ⟫ ⋆⟨ D ⟩ ε ⟦ d ⟧ ⟫
       ≡⟨ cong (λ v → η ⟦ c ⟧ ⋆⟨ C ⟩ v) (G .F-seq _ _) ⟩
         η ⟦ c ⟧ ⋆⟨ C ⟩ (G ⟪ F ⟪ g ⟫ ⟫ ⋆⟨ C ⟩ G ⟪ ε ⟦ d ⟧ ⟫)
@@ -377,7 +390,7 @@ module _ (F : Functor C D) (G : Functor D C) where
       where
         natu : η ⟦ c ⟧ ⋆⟨ C ⟩ G ⟪ F ⟪ g ⟫ ⟫ ≡ g ⋆⟨ C ⟩ η ⟦ G ⟅ d ⟆ ⟧
         natu = sym (η .N-hom _)
-    adj→adj' .adjIso {c = c} {d} .leftInv f
+    adj→adj' .adjIso {c = c} {d} .ret f
       = F ⟪ η ⟦ c ⟧ ⋆⟨ C ⟩ G ⟪ f ⟫ ⟫ ⋆⟨ D ⟩ ε ⟦ d ⟧
       ≡⟨ cong (λ v → v ⋆⟨ D ⟩ ε ⟦ d ⟧) (F .F-seq _ _) ⟩
         F ⟪ η ⟦ c ⟧ ⟫ ⋆⟨ D ⟩ F ⟪ G ⟪ f ⟫ ⟫ ⋆⟨ D ⟩ ε ⟦ d ⟧

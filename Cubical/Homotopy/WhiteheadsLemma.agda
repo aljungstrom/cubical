@@ -3,7 +3,6 @@
 Whitehead's lemma for truncated spaces.
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Homotopy.WhiteheadsLemma where
 
 open import Cubical.Foundations.Prelude
@@ -158,9 +157,9 @@ private
     sym
     ( funExt
       ( λ x →
-          sym ((Iso.rightInv J) (g x))
+          sym ((Iso.sec J) (g x))
           ∙ cong (λ y → Iso.fun J (Iso.inv J (g y)))
-                 (sym ((Iso.rightInv H) x))
+                 (sym ((Iso.sec H) x))
           ∙ cong (λ h → (Iso.fun J ∘ h ∘ Iso.inv H) x) p))
 
 {-

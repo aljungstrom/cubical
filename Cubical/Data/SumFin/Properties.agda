@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 
 module Cubical.Data.SumFin.Properties where
 
@@ -12,9 +11,11 @@ open import Cubical.Foundations.Univalence
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Unit
 open import Cubical.Data.Bool hiding (_≤_)
-open import Cubical.Data.Nat
-open import Cubical.Data.Nat.Order
+open import Cubical.Data.Nat as Nat
+open import Cubical.Data.Nat.Order as Ord
+open import Cubical.Data.Nat.Order.Inductive
 import Cubical.Data.Fin as Fin
+import Cubical.Data.FinData as FinData
 import Cubical.Data.Fin.LehmerCode as LehmerCode
 open import Cubical.Data.SumFin.Base as SumFin
 open import Cubical.Data.Sum as ⊎
@@ -27,16 +28,19 @@ open import Cubical.Relation.Nullary
 private
   variable
     ℓ : Level
-    k : ℕ
+    n m k : ℕ
 
 SumFin→Fin : Fin k → Fin.Fin k
 SumFin→Fin = SumFin.elim (λ {k} _ → Fin.Fin k) Fin.fzero Fin.fsuc
 
 Fin→SumFin : Fin.Fin k → Fin k
-Fin→SumFin = Fin.elim (λ {k} _ → Fin k) fzero fsuc
+Fin→SumFin {zero}    (m , p) = p
+Fin→SumFin {suc k}   (zero , p) = fzero
+Fin→SumFin {suc k}   (suc m , p) = fsuc (Fin→SumFin (m , p))
 
-Fin→SumFin-fsuc : (fk : Fin.Fin k) → Fin→SumFin (Fin.fsuc fk) ≡ fsuc (Fin→SumFin fk)
-Fin→SumFin-fsuc = Fin.elim-fsuc (λ {k} _ → Fin k) fzero fsuc
+Fin→SumFin-fsuc : (fk : Fin.Fin k) → Fin→SumFin (Fin.fsuc {k} fk) ≡ fsuc (Fin→SumFin fk)
+Fin→SumFin-fsuc {zero} ()
+Fin→SumFin-fsuc {suc k} (m , p) = refl
 
 SumFin→Fin→SumFin : (fk : Fin k) → Fin→SumFin (SumFin→Fin fk) ≡ fk
 SumFin→Fin→SumFin = SumFin.elim (λ fk → Fin→SumFin (SumFin→Fin fk) ≡ fk)
@@ -45,24 +49,21 @@ SumFin→Fin→SumFin = SumFin.elim (λ fk → Fin→SumFin (SumFin→Fin fk) �
   fsuc (Fin→SumFin (SumFin→Fin fk))     ≡⟨ cong fsuc eq ⟩
   fsuc fk                               ∎
 
-Fin→SumFin→Fin : (fk : Fin.Fin k) → SumFin→Fin (Fin→SumFin fk) ≡ fk
-Fin→SumFin→Fin = Fin.elim (λ fk → SumFin→Fin (Fin→SumFin fk) ≡ fk)
-                          refl λ {k} {fk} eq →
-  SumFin→Fin (Fin→SumFin (Fin.fsuc fk)) ≡⟨ cong SumFin→Fin (Fin→SumFin-fsuc fk) ⟩
-  Fin.fsuc (SumFin→Fin (Fin→SumFin fk)) ≡⟨ cong Fin.fsuc eq ⟩
-  Fin.fsuc fk                           ∎
+Fin→SumFin→Fin : (fk : Fin.Fin k) → SumFin→Fin {k} (Fin→SumFin fk) ≡ fk
+Fin→SumFin→Fin {zero}    (m , p) = ⊥.rec p
+Fin→SumFin→Fin {suc k}   (zero , p) = refl
+Fin→SumFin→Fin {suc k}   (suc m , p) = cong Fin.fsuc (Fin→SumFin→Fin {k} (m , p))
 
 SumFin≃Fin : ∀ k → Fin k ≃ Fin.Fin k
-SumFin≃Fin _ =
-  isoToEquiv (iso SumFin→Fin Fin→SumFin Fin→SumFin→Fin SumFin→Fin→SumFin)
+SumFin≃Fin k = isoToEquiv (iso SumFin→Fin Fin→SumFin (Fin→SumFin→Fin {k}) SumFin→Fin→SumFin)
 
 SumFin≡Fin : ∀ k → Fin k ≡ Fin.Fin k
 SumFin≡Fin k = ua (SumFin≃Fin k)
 
-enum : (n : ℕ)(p : n < k) → Fin k
+enum : (n : ℕ)(p : n <ᵗ k) → Fin k
 enum n p = Fin→SumFin (n , p)
 
-enumElim : (P : Fin k → Type ℓ) → ((n : ℕ)(p : n < k) → P (enum _ p)) → (i : Fin k) → P i
+enumElim : (P : Fin k → Type ℓ) → ((n : ℕ)(p : n <ᵗ k) → P (enum _ p)) → (i : Fin k) → P i
 enumElim P f i = subst P (SumFin→Fin→SumFin i) (f (SumFin→Fin i .fst) (SumFin→Fin i .snd))
 
 -- Closure properties of SumFin under type constructors
@@ -264,9 +265,54 @@ isProp→Fin≤1 (suc (suc n)) p = ⊥.rec (fzero≠fone (p fzero (fsuc fzero)))
 
 -- automorphisms of SumFin
 
-SumFin≃≃ : (n : ℕ) → (Fin n ≃ Fin n) ≃ Fin (LehmerCode.factorial n)
-SumFin≃≃ _ =
-    equivComp (SumFin≃Fin _) (SumFin≃Fin _)
-  ⋆ LehmerCode.lehmerEquiv
+SumFin≃≃ : (n : ℕ) → (Fin n ≃ Fin n) ≃ Fin (n !)
+SumFin≃≃ n =
+    equivComp (SumFin≃Fin n) (SumFin≃Fin n)
+  ⋆ LehmerCode.lehmerEquiv {n = n}
   ⋆ LehmerCode.lehmerFinEquiv
-  ⋆ invEquiv (SumFin≃Fin _)
+  ⋆ invEquiv (SumFin≃Fin (n !))
+
+-- Relate SumFin and FinData
+
+FinData→SumFin : FinData.Fin n → SumFin.Fin n
+FinData→SumFin = FinData.elim (λ {n} _ → SumFin.Fin n) fzero fsuc
+
+SumFin→FinData : SumFin.Fin n → FinData.Fin n
+SumFin→FinData = SumFin.elim (λ {n} _ → FinData.Fin n) FinData.zero FinData.suc
+
+FinDataSumFinIso : Iso (FinData.Fin n) (SumFin.Fin n)
+FinDataSumFinIso = iso FinData→SumFin SumFin→FinData
+  (SumFin.elim (λ fn → FinData→SumFin (SumFin→FinData fn) ≡ fn) refl (cong fsuc))
+  (FinData.elim (λ fn → SumFin→FinData (FinData→SumFin fn) ≡ fn) refl (cong FinData.suc))
+
+FinData≃SumFin : FinData.Fin n ≃ SumFin.Fin n
+FinData≃SumFin = isoToEquiv FinDataSumFinIso
+
+≡→FinData≃SumFin : m ≡ n → FinData.Fin m ≃ SumFin.Fin n
+≡→FinData≃SumFin {m} = J (λ n p → FinData.Fin m ≃ SumFin.Fin n) FinData≃SumFin
+
+FinData≡SumFin : FinData.Fin n ≡ SumFin.Fin n
+FinData≡SumFin = ua FinData≃SumFin
+
+DecΣ :
+  (n : ℕ) →
+  (P : Fin n → Type ℓ) →
+  ((k : Fin n) → Dec (P k)) →
+  Dec (Σ (Fin n) P)
+DecΣ = Nat.elim
+  (λ _ _ → no fst)
+  (λ n ih P decP →
+    decRec
+    (yes ∘ (_ ,_))
+    (λ ¬Pzero →
+      mapDec
+      (λ (k , Pk) → (fsuc k , Pk))
+      (λ ¬Psuc →
+        λ { (fzero , Pzero) → ¬Pzero Pzero
+          ; (fsuc k , Pk) → ¬Psuc (k , Pk)
+          })
+      (ih (P ∘ fsuc) (decP ∘ fsuc))
+    )
+    (decP fzero)
+  )
+

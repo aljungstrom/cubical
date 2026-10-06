@@ -4,7 +4,6 @@ This file contains:
   - The inductive construction of James.
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.HITs.James.Inductive.Base where
 
 open import Cubical.Foundations.Prelude
@@ -12,6 +11,7 @@ open import Cubical.Foundations.Pointed
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Data.Nat
+open import Cubical.Data.Sequence
 
 open import Cubical.HITs.SequentialColimit
 

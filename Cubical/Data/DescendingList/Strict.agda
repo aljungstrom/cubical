@@ -2,9 +2,8 @@
 -- Strictly descending lists
 ------------------------------------------------------------------------
 
-{-# OPTIONS --safe #-}
 
-open import Cubical.Core.Everything
+open import Cubical.Foundations.Prelude
 
 module Cubical.Data.DescendingList.Strict
  (A : Type₀)

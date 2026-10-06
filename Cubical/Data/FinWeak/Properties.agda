@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Data.FinWeak.Properties where
 
 open import Cubical.Foundations.Prelude
@@ -63,8 +62,8 @@ FinData→FinWeak→FinData (weaken p) =
 FinWeakIsoFinData : Iso (Fin n) (FD.Fin n)
 fun FinWeakIsoFinData = FinWeak→FinData
 inv FinWeakIsoFinData = FinData→FinWeak
-rightInv FinWeakIsoFinData = FinWeak→FinData→FinWeak
-leftInv FinWeakIsoFinData = FinData→FinWeak→FinData
+sec FinWeakIsoFinData = FinWeak→FinData→FinWeak
+ret FinWeakIsoFinData = FinData→FinWeak→FinData
 
 FinWeak≡FinData : Fin n ≡ FD.Fin n
 FinWeak≡FinData = isoToPath FinWeakIsoFinData

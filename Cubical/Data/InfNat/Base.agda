@@ -1,9 +1,10 @@
-{-# OPTIONS --no-exact-split --safe #-}
+{-# OPTIONS --no-exact-split #-}
 
 module Cubical.Data.InfNat.Base where
 
+open import Cubical.Foundations.Prelude
+
 open import Cubical.Data.Nat as ℕ using (ℕ)
-open import Cubical.Core.Primitives
 
 data ℕ+∞ : Type₀ where
   ∞ : ℕ+∞

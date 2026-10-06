@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-}
 module Cubical.Tactics.FunctorSolver.Solver where
 
 open import Cubical.Foundations.Prelude
@@ -12,8 +12,8 @@ open import Cubical.Data.Equality renaming (refl to reflEq)
   hiding (_∙_; sym; transport)
 
 open import Cubical.Categories.Category
-open import Cubical.Categories.Constructions.Free.Functor
-open import Cubical.Categories.Constructions.Power
+open import Cubical.Categories.Instances.Free.Functor
+open import Cubical.Categories.Instances.Power
 open import Cubical.Categories.Functor renaming (Id to IdF)
 open import Cubical.Categories.Instances.Sets
 open import Cubical.Categories.NaturalTransformation
@@ -55,7 +55,7 @@ module Eval (𝓒 : Category ℓc ℓc') (𝓓 : Category ℓd ℓd')  (𝓕 : F
         → (p : Path _ (YoSem.semH ⟪ e ⟫) (YoSem.semH ⟪ e' ⟫))
         → Path _ (TautoSem.semH ⟪ e ⟫) (TautoSem.semH ⟪ e' ⟫)
   solve {A}{B} e e' p =
-    cong (TautoSem.semH .F-hom) (isFaithfulPseudoYoneda _ _ _ _ lem) where
+    cong (TautoSem.semH .F-hom) (isFaithfulPseudoYoneda {C = Free𝓓} _ _ _ _ lem) where
     lem : Path _ (PsYo ⟪ e ⟫) (PsYo ⟪ e' ⟫)
     lem = transport
           (λ i → Path _

@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-}
 
 module Cubical.Cohomology.EilenbergMacLane.Groups.Sn where
 
@@ -22,8 +22,9 @@ open import Cubical.Foundations.Pointed
 open import Cubical.Foundations.Pointed.Homogeneous
 
 open import Cubical.Data.Nat renaming (_+_ to _+ℕ_)
+open import Cubical.Data.Nat.Order
 open import Cubical.Data.Unit
-open import Cubical.Data.Bool
+open import Cubical.Data.Bool hiding (_≟_)
 open import Cubical.Data.Sigma
 
 open import Cubical.Algebra.Group.MorphismProperties
@@ -108,12 +109,12 @@ module _ (G : AbGroup ℓ) where
     is : Iso _ _
     Iso.fun is = H¹S¹→G
     Iso.inv is = G→H¹S¹
-    Iso.rightInv is = Iso.leftInv (Iso-EM-ΩEM+1 0)
-    Iso.leftInv is =
+    Iso.sec is = Iso.ret (Iso-EM-ΩEM+1 0)
+    Iso.ret is =
       ST.elim (λ _ → isSetPathImplicit)
         (S¹-connElim (isConnectedEM 1) (λ _ → squash₂ _ _)
           embase
-          λ p → cong ∣_∣₂ (cong (S¹fun embase) (Iso.rightInv (Iso-EM-ΩEM+1 0) p)))
+          λ p → cong ∣_∣₂ (cong (S¹fun embase) (Iso.sec (Iso-EM-ΩEM+1 0) p)))
   snd H¹[S¹,G]≅G =
     isGroupHomInv ((invEquiv (fst H¹[S¹,G]≅G))
      , makeIsGroupHom λ x y → cong ∣_∣₂
@@ -142,7 +143,7 @@ module _ (G : AbGroup ℓ) where
     is : Iso _ _
     Iso.fun is = HⁿSⁿ↑ n
     Iso.inv is = HⁿSⁿ↓ n
-    Iso.rightInv is =
+    Iso.sec is =
       ST.elim (λ _ → isSetPathImplicit)
         (Sⁿ-connElim n (isConnectedSubtr 2 (suc n)
           (subst (λ x → isConnected x (EM G (suc (suc n))))
@@ -158,12 +159,12 @@ module _ (G : AbGroup ℓ) where
                                     (merid x) (sym (merid (ptSn (suc n))))
                             ∙ cong (p x ∙_) (cong sym q)
                             ∙ sym (rUnit (p x)))
-                      ∙ Iso.rightInv (Iso-EM-ΩEM+1 (suc n)) (p x)))))
+                      ∙ Iso.sec (Iso-EM-ΩEM+1 (suc n)) (p x)))))
                       (isConnectedPath (suc n)
                         (isConnectedPath (suc (suc n))
                           (isConnectedEM (suc (suc n))) _ _)
                            (p (ptSn _)) refl .fst))
-    Iso.leftInv is = ST.elim (λ _ → isSetPathImplicit)
+    Iso.ret is = ST.elim (λ _ → isSetPathImplicit)
         λ f → TR.rec (isProp→isOfHLevelSuc n (squash₂ _ _))
           (λ q → cong ∣_∣₂ (funExt λ x
           → cong (ΩEM+1→EM (suc n))
@@ -172,7 +173,7 @@ module _ (G : AbGroup ℓ) where
                         (cong sym (cong (EM→ΩEM+1 (suc n)) q
                                 ∙ EM→ΩEM+1-0ₖ (suc n)))
                  ∙ sym (rUnit _))
-                 ∙ Iso.leftInv (Iso-EM-ΩEM+1 (suc n)) (f x)))
+                 ∙ Iso.ret (Iso-EM-ΩEM+1 (suc n)) (f x)))
                  (isConnectedPath (suc n)
                    (isConnectedEM (suc n))
                    (f (ptSn (suc n))) (0ₖ (suc n)) .fst)
@@ -286,6 +287,44 @@ module _ (G : AbGroup ℓ) where
                           (isConnectedEM (suc (suc n))) (0ₖ _) (f north) .fst)))
         isContrUnit*)
   snd (Hⁿ[Sᵐ⁺ⁿ,G]≅0 (suc n) m) = makeIsGroupHom λ _ _ → refl
+  open import Cubical.Data.Sum as ⊎
+  open import Cubical.Data.Empty as ⊥
+  open import Cubical.Relation.Nullary
+  open import Cubical.Cohomology.EilenbergMacLane.Groups.Connected
+
+  H⁰[Sⁿ,G]≅G : (n : ℕ) → AbGroupEquiv (coHomGr 0 G (S₊ (suc n))) G
+  H⁰[Sⁿ,G]≅G n = H⁰conn
+      (∣ ptSn (suc n) ∣ₕ
+    , (TR.elim (λ _ → isOfHLevelPath 2 (isOfHLevelTrunc 2) _ _)
+        (sphereElim n (λ _ → isProp→isOfHLevelSuc n (isOfHLevelTrunc 2 _ _))
+          refl))) G
+
+  Hⁿ[Sᵐ,G]Full : (n m : ℕ)
+    → (((n ≡ 0) ⊎ (n ≡ suc m))
+          → AbGroupEquiv (coHomGr n G (S₊ (suc m))) G)
+     × ((¬ n ≡ 0) × (¬ (n ≡ suc m))
+           → AbGroupEquiv (coHomGr n G (S₊ (suc m))) (trivialAbGroup {ℓ-zero}))
+  fst (Hⁿ[Sᵐ,G]Full zero m) _ = H⁰[Sⁿ,G]≅G m
+  snd (Hⁿ[Sᵐ,G]Full zero  m) p = ⊥.rec (fst p refl)
+  Hⁿ[Sᵐ,G]Full  (suc n) m with (n ≟ m)
+  ... | lt x = (λ { (inl x) → ⊥.rec (snotz x)
+                  ; (inr p) → ⊥.rec (¬m<m (subst (n <_) (sym (cong predℕ p)) x))})
+             , λ _ → subst (λ m → AbGroupEquiv (coHomGr (suc n) G (S₊ m))
+                                                 (trivialAbGroup {ℓ-zero}))
+                            (cong suc (snd x))
+                            (Hⁿ[Sᵐ⁺ⁿ,G]≅0 n (fst x))
+  ... | eq x =
+      (λ { (inl x) → ⊥.rec (snotz x)
+         ; (inr x) → subst (λ m → AbGroupEquiv (coHomGr (suc n) G (S₊ m)) G)
+                            x
+                            (Hⁿ[Sⁿ,G]≅G n)})
+    , (λ p → ⊥.rec (p .snd (cong suc x)))
+  ... | gt x = (λ { (inl x) → ⊥.rec (snotz x)
+                  ; (inr p) → ⊥.rec (¬m<m (subst (m <_) (cong predℕ p) x))})
+             , λ _ → subst (λ n → AbGroupEquiv (coHomGr n G (S₊ (suc m)))
+                                                 (trivialAbGroup {ℓ-zero}))
+                            (cong suc (snd x))
+                            (Hᵐ⁺ⁿ[Sⁿ,G]≅0 m (fst x))
 
 -- In fact, the above induces an equivalence (S₊∙ n →∙ EM∙ G n) ≃ G
 isSet-Sn→∙EM : (G : AbGroup ℓ) (n : ℕ) → isSet (S₊∙ n →∙ EM∙ G n)
@@ -374,11 +413,11 @@ gen-HⁿSⁿ-raw↦1 R (suc (suc n)) =
                (merid x) (sym (merid (ptSn (suc n)))))
         ∙ ΩEM+1→EM-hom (suc n) _ _)
         ∙ cong₂ _+ₖ_
-           (Iso.leftInv (Iso-EM-ΩEM+1 (suc n))
+           (Iso.ret (Iso-EM-ΩEM+1 (suc n))
            (gen-HⁿSⁿ-raw R (suc n) .fst x))
             (((λ i → ΩEM+1→EM-sym (suc n)
               (EM→ΩEM+1 (suc n) (snd (gen-HⁿSⁿ-raw R (suc n)) i)) i)
-            ∙ cong -ₖ_ (Iso.leftInv (Iso-EM-ΩEM+1 (suc n)) (0ₖ (suc n)))
+            ∙ cong -ₖ_ (Iso.ret (Iso-EM-ΩEM+1 (suc n)) (0ₖ (suc n)))
             ∙ -0ₖ (suc n)))
         ∙ rUnitₖ (suc n) _))
   ∙ gen-HⁿSⁿ-raw↦1 R (suc n)
@@ -418,7 +457,7 @@ HⁿSⁿ-raw≃G-inv-isInv R (suc (suc n)) r =
             (isHomogeneousEM _)
             (funExt λ z →
               cong (ΩEM+1→EM (suc n)) (lem z)
-            ∙ Iso-EM-ΩEM+1 (suc n) .Iso.leftInv (subst (EM (Ring→AbGroup R))
+            ∙ Iso-EM-ΩEM+1 (suc n) .Iso.ret (subst (EM (Ring→AbGroup R))
               (+'-comm (suc n) 0) (_⌣ₖ_ {m = 0}
                 (fst (gen-HⁿSⁿ-raw R (suc n)) z) r)))))
   ∙ HⁿSⁿ-raw≃G-inv-isInv R (suc n) r

@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.HITs.S3.Base where
 
 open import Cubical.Foundations.Prelude
@@ -20,5 +19,5 @@ flip₀₂S³Id (surf j i i₁) = refl
 flip₀₂S³Iso : Iso S³ S³
 fun flip₀₂S³Iso = flip₀₂S³
 inv flip₀₂S³Iso = flip₀₂S³
-rightInv flip₀₂S³Iso = flip₀₂S³Id
-leftInv flip₀₂S³Iso = flip₀₂S³Id
+sec flip₀₂S³Iso = flip₀₂S³Id
+ret flip₀₂S³Iso = flip₀₂S³Id

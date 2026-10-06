@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Algebra.AbGroup.Base where
 
 open import Cubical.Foundations.Prelude
@@ -314,10 +313,6 @@ module _ {ℓ ℓ' : Level} (AGr : Group ℓ) (BGr : AbGroup ℓ') where
     open GroupStr strA
       renaming (_·_ to _∙A_ ; inv to -A_
                 ; 1g to 1A ; ·IdR to ·IdRA)
-
-  trivGroupHom : GroupHom AGr (BGr *)
-  fst trivGroupHom x = 0B
-  snd trivGroupHom = makeIsGroupHom λ _ _ → sym (+IdRB 0B)
 
   compHom : GroupHom AGr (BGr *) → GroupHom AGr (BGr *) → GroupHom AGr (BGr *)
   fst (compHom f g) x = fst f x +B fst g x

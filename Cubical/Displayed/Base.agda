@@ -1,9 +1,15 @@
 {-
 
-  Definition of univalent and displayed univalent relations
+  Definition of univalent and displayed univalent relations.
+  This approach to structures is based on the master's thesis
+
+    Johannes Schipp von Branitz
+    “Higher Groups via Displayed Univalent Reflexive Graphs in Cubical Type Theory”
+    https://jsvb.xyz/files/master.pdf
+
+  with slightly modified definitions.
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Displayed.Base where
 
 open import Cubical.Foundations.Prelude
@@ -84,4 +90,3 @@ module _ {A : Type ℓA} {𝒮-A : UARel A ℓ≅A}
     compEquiv
       (Σ-cong-equiv (ua a a') (λ p → uaᴰ b p b'))
       ΣPath≃PathΣ
-

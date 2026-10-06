@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Data.Empty.Properties where
 
 open import Cubical.Foundations.Prelude
@@ -10,7 +9,7 @@ open import Cubical.Data.Empty.Base
 isProp⊥ : isProp ⊥
 isProp⊥ ()
 
-isProp⊥* : ∀ {ℓ} → isProp {ℓ} ⊥*
+isProp⊥* : ∀ {ℓ} → isProp (⊥* {ℓ})
 isProp⊥* _ ()
 
 isContr⊥→A : ∀ {ℓ} {A : Type ℓ} → isContr (⊥ → A)
@@ -33,5 +32,5 @@ uninhabEquiv ¬a ¬b = isoToEquiv isom
   isom : Iso _ _
   isom .fun a = rec (¬a a)
   isom .inv b = rec (¬b b)
-  isom .rightInv b = rec (¬b b)
-  isom .leftInv a = rec (¬a a)
+  isom .sec b = rec (¬b b)
+  isom .ret a = rec (¬a a)

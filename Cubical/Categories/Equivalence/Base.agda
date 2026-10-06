@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Categories.Equivalence.Base where
 
 open import Cubical.Foundations.Prelude
@@ -33,6 +32,7 @@ isEquivalence func = ∥ WeakInverse func ∥₁
 
 record _≃ᶜ_ (C : Category ℓC ℓC') (D : Category ℓD ℓD') :
                Type (ℓ-max (ℓ-max ℓC ℓC') (ℓ-max ℓD ℓD')) where
+  constructor equivᶜ
   field
     func : Functor C D
     isEquiv : isEquivalence func

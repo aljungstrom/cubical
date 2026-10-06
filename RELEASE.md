@@ -11,6 +11,12 @@ Start by making a branch for the release. Change the following things:
 
 * If needed, Increment the `version` field in `flake.nix`.
 
+* If needed, increment the version in the url of the Agda flake input.
+
+  ```diff
+  -url = "github:agda/agda/v2.8.0";
+  +url = "github:agda/agda/v2.9.0";
+  ```
 * Update flake inputs by running `nix flake update`.
 
 * Increment the version number in the name field in the library file
@@ -22,6 +28,7 @@ Start by making a branch for the release. Change the following things:
    include: .
    depend:
   ```
+  Once [this agda issue](https://github.com/agda/agda/issues/8005) is fixed, remove `--guardedness` from `cubical.agda-lib`.
 
 * Update CITATION.cff with the new version and date of release.
 
@@ -43,3 +50,5 @@ Fill in the form with something like this:
   zip -r cubical-0.5.zip cubical
   tar cfz cubical-0.5.tar.gz cubical
   ```
+
+Create and push a tag for the new version of the library.

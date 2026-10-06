@@ -1,7 +1,4 @@
-{-# OPTIONS --safe #-}
 module Cubical.Data.Bool.SwitchStatement where
-
-open import Cubical.Core.Everything
 
 open import Cubical.Foundations.Prelude
 

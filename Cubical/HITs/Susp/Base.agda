@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.HITs.Susp.Base where
 
 open import Cubical.Foundations.Prelude
@@ -10,6 +9,7 @@ open import Cubical.Foundations.Pointed
 open import Cubical.Data.Unit
 open import Cubical.Data.Bool
 open import Cubical.Data.Empty
+open import Cubical.Data.Nat
 
 open import Cubical.HITs.S1
 open import Cubical.HITs.S2.Base
@@ -36,13 +36,44 @@ suspFun f north = north
 suspFun f south = south
 suspFun f (merid a i) = merid (f a) i
 
+-- pointed version
+suspFun∙ : {A : Type ℓ} {B : Type ℓ'} (f : A → B)
+       → Susp∙ A →∙ Susp∙ B
+fst (suspFun∙ f) = suspFun f
+snd (suspFun∙ f) = refl
+
+suspFun↑ : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'}
+  → (b : B)
+  → ((a : A) → Path B b b)
+  → Susp A → B
+suspFun↑ b f north = b
+suspFun↑ b f south = b
+suspFun↑ b f (merid a i) = f a i
+
+-- Iterated suspensions
+Susp^ : ℕ → Type ℓ → Type ℓ
+Susp^ 0 X = X
+Susp^ (suc n) X = Susp^ n (Susp X)
+
+Susp^' : ℕ → Type ℓ → Type ℓ
+Susp^' zero x = x
+Susp^' (suc n) x = Susp (Susp^' n x)
+
+Susp^'≡Susp^ : (n : ℕ) {A : Type ℓ} → Susp^' n A ≡ Susp^ n A
+Susp^'≡Susp^ zero {A = A} = refl
+Susp^'≡Susp^ (suc n) {A = A} = lem n ∙ Susp^'≡Susp^ n {A = Susp A}
+  where
+  lem : (n : ℕ) → Susp (Susp^' n A) ≡ Susp^' n (Susp A)
+  lem zero = refl
+  lem (suc n) = cong Susp (lem n)
+
 UnitIsoSuspUnit : Iso Unit (Susp Unit)
 fun UnitIsoSuspUnit _ = north
 inv UnitIsoSuspUnit _ = tt
-rightInv UnitIsoSuspUnit north = refl
-rightInv UnitIsoSuspUnit south = merid tt
-rightInv UnitIsoSuspUnit (merid tt j) k = merid tt (j ∧ k)
-leftInv UnitIsoSuspUnit _ = refl
+sec UnitIsoSuspUnit north = refl
+sec UnitIsoSuspUnit south = merid tt
+sec UnitIsoSuspUnit (merid tt j) k = merid tt (j ∧ k)
+ret UnitIsoSuspUnit _ = refl
 
 Unit≃SuspUnit : Unit ≃ Susp Unit
 Unit≃SuspUnit = isoToEquiv UnitIsoSuspUnit
@@ -50,8 +81,8 @@ Unit≃SuspUnit = isoToEquiv UnitIsoSuspUnit
 BoolIsoSusp⊥ : Iso Bool (Susp ⊥)
 fun BoolIsoSusp⊥ = λ {true  → north; false → south}
 inv BoolIsoSusp⊥ = λ {north → true;  south → false}
-rightInv BoolIsoSusp⊥ = λ {north → refl;  south → refl}
-leftInv BoolIsoSusp⊥  = λ {true  → refl;  false → refl}
+sec BoolIsoSusp⊥ = λ {north → refl;  south → refl}
+ret BoolIsoSusp⊥  = λ {true  → refl;  false → refl}
 
 Bool≃Susp⊥ : Bool ≃ Susp ⊥
 Bool≃Susp⊥ = isoToEquiv BoolIsoSusp⊥
@@ -87,8 +118,8 @@ S¹→SuspBool→S¹ (loop i) j = hfill (λ k → λ { (i = i0) → base
 S¹IsoSuspBool : Iso S¹ SuspBool
 fun S¹IsoSuspBool      = S¹→SuspBool
 inv S¹IsoSuspBool      = SuspBool→S¹
-rightInv S¹IsoSuspBool = SuspBool→S¹→SuspBool
-leftInv S¹IsoSuspBool  = S¹→SuspBool→S¹
+sec S¹IsoSuspBool = SuspBool→S¹→SuspBool
+ret S¹IsoSuspBool  = S¹→SuspBool→S¹
 
 S¹≃SuspBool : S¹ ≃ SuspBool
 S¹≃SuspBool = isoToEquiv S¹IsoSuspBool
@@ -131,8 +162,8 @@ SuspS¹→S²→SuspS¹ (merid (loop j) i) k = meridian-contraction i j (~ k)
 S²IsoSuspS¹ : Iso S² SuspS¹
 fun S²IsoSuspS¹      = S²→SuspS¹
 inv S²IsoSuspS¹      = SuspS¹→S²
-rightInv S²IsoSuspS¹ = SuspS¹→S²→SuspS¹
-leftInv S²IsoSuspS¹  = S²→SuspS¹→S²
+sec S²IsoSuspS¹ = SuspS¹→S²→SuspS¹
+ret S²IsoSuspS¹  = S²→SuspS¹→S²
 
 S²≃SuspS¹ : S² ≃ SuspS¹
 S²≃SuspS¹ = isoToEquiv S²IsoSuspS¹
@@ -177,8 +208,8 @@ SuspS²→S³→SuspS² (merid (surf j k) i) l = meridian-contraction-2 i j k (~
 S³IsoSuspS² : Iso S³ SuspS²
 fun S³IsoSuspS²      = S³→SuspS²
 inv S³IsoSuspS²      = SuspS²→S³
-rightInv S³IsoSuspS² = SuspS²→S³→SuspS²
-leftInv S³IsoSuspS²  = S³→SuspS²→S³
+sec S³IsoSuspS² = SuspS²→S³→SuspS²
+ret S³IsoSuspS²  = S³→SuspS²→S³
 
 S³≃SuspS² : S³ ≃ SuspS²
 S³≃SuspS² = isoToEquiv S³IsoSuspS²
@@ -193,12 +224,12 @@ fun (IsoType→IsoSusp is) (merid a i) = merid (fun is a) i
 inv (IsoType→IsoSusp is) north = north
 inv (IsoType→IsoSusp is) south = south
 inv (IsoType→IsoSusp is) (merid a i) = merid (inv is a) i
-rightInv (IsoType→IsoSusp is) north = refl
-rightInv (IsoType→IsoSusp is) south = refl
-rightInv (IsoType→IsoSusp is) (merid a i) j = merid (rightInv is a j) i
-leftInv (IsoType→IsoSusp is) north = refl
-leftInv (IsoType→IsoSusp is) south = refl
-leftInv (IsoType→IsoSusp is) (merid a i) j = merid (leftInv is a j) i
+sec (IsoType→IsoSusp is) north = refl
+sec (IsoType→IsoSusp is) south = refl
+sec (IsoType→IsoSusp is) (merid a i) j = merid (sec is a j) i
+ret (IsoType→IsoSusp is) north = refl
+ret (IsoType→IsoSusp is) south = refl
+ret (IsoType→IsoSusp is) (merid a i) j = merid (ret is a j) i
 
 IsoSuspS²SuspSuspS¹ : Iso (Susp S²) (Susp (Susp S¹))
 IsoSuspS²SuspSuspS¹ = IsoType→IsoSusp S²IsoSuspS¹

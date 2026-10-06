@@ -2,16 +2,16 @@
   Definition of a functor displayed over another functor.
   Some definitions were guided by those at https://1lab.dev
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Categories.Displayed.Functor where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.HLevels
-open import Cubical.Data.Sigma
 open import Cubical.Categories.Category.Base
-open import Cubical.Categories.Functor
+open import Cubical.Categories.Functor.Base
+open import Cubical.Categories.Functor.Properties
+
 open import Cubical.Categories.Displayed.Base
 
 private
@@ -39,6 +39,10 @@ record Functorᴰ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'}
       {xᴰ : Cᴰ.ob[ x ]} {yᴰ : Cᴰ.ob[ y ]} {zᴰ : Cᴰ.ob[ z ]}
       (fᴰ : Cᴰ [ f ][ xᴰ , yᴰ ]) (gᴰ : Cᴰ [ g ][ yᴰ , zᴰ ])
       → F-homᴰ (fᴰ Cᴰ.⋆ᴰ gᴰ) Dᴰ.≡[ F-seq f g ] F-homᴰ fᴰ Dᴰ.⋆ᴰ F-homᴰ gᴰ
+
+Functorⱽ : {C : Category ℓC ℓC'} (Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ') (Dᴰ : Categoryᴰ C ℓDᴰ ℓDᴰ')
+  → Type _
+Functorⱽ = Functorᴰ Id
 
 module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} {F G : Functor C D} {H : F ≡ G}
   {Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ'} {Dᴰ : Categoryᴰ D ℓDᴰ ℓDᴰ'}
@@ -142,18 +146,38 @@ module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'} {F : Functor C D}
   F-rUnitᴰ i .F-idᴰ {x} = rUnitP' (Dᴰ [_][ _ , _ ]) Fᴰ.F-idᴰ (~ i)
   F-rUnitᴰ i .F-seqᴰ _ _ = rUnitP' (Dᴰ [_][ _ , _ ]) (Fᴰ.F-seqᴰ _ _) (~ i)
 
--- Total functor of a displayed functor
+-- Displayed opposite functor
 module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'}
-  {F : Functor C D} {Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ'} {Dᴰ : Categoryᴰ D ℓDᴰ ℓDᴰ'}
-  (Fᴰ : Functorᴰ F Cᴰ Dᴰ)
+  {Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ'} {Dᴰ : Categoryᴰ D ℓDᴰ ℓDᴰ'}
+  where
+  open Functorᴰ
+
+  -- TODO: move to Displayed.Constructions.Opposite
+  introOpᴰ : ∀ {F} → Functorᴰ F (Cᴰ ^opᴰ) Dᴰ → Functorᴰ (introOp F) Cᴰ (Dᴰ ^opᴰ)
+  introOpᴰ Fᴰ .F-obᴰ = Fᴰ .F-obᴰ
+  introOpᴰ Fᴰ .F-homᴰ = Fᴰ .F-homᴰ
+  introOpᴰ Fᴰ .F-idᴰ = Fᴰ .F-idᴰ
+  introOpᴰ Fᴰ .F-seqᴰ fᴰ gᴰ = Fᴰ .F-seqᴰ gᴰ fᴰ
+
+  recOpᴰ : ∀ {F} → Functorᴰ F Cᴰ (Dᴰ ^opᴰ) → Functorᴰ (recOp F) (Cᴰ ^opᴰ) Dᴰ
+  recOpᴰ Fᴰ .F-obᴰ = Fᴰ .F-obᴰ
+  recOpᴰ Fᴰ .F-homᴰ = Fᴰ .F-homᴰ
+  recOpᴰ Fᴰ .F-idᴰ = Fᴰ .F-idᴰ
+  recOpᴰ Fᴰ .F-seqᴰ fᴰ gᴰ = Fᴰ .F-seqᴰ gᴰ fᴰ
+module _ {C : Category ℓC ℓC'} {Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ'} where
+  toOpOpᴰ : Functorᴰ toOpOp Cᴰ ((Cᴰ ^opᴰ) ^opᴰ)
+  toOpOpᴰ = introOpᴰ 𝟙ᴰ⟨ _ ⟩
+
+  fromOpOpᴰ : Functorᴰ fromOpOp ((Cᴰ ^opᴰ) ^opᴰ) Cᴰ
+  fromOpOpᴰ = recOpᴰ 𝟙ᴰ⟨ _ ⟩
+module _ {C : Category ℓC ℓC'} {D : Category ℓD ℓD'}
+  {Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ'} {Dᴰ : Categoryᴰ D ℓDᴰ ℓDᴰ'}
   where
 
-  open Functor
-  private
-    module Fᴰ = Functorᴰ Fᴰ
+  _^opFᴰ : ∀ {F} → Functorᴰ F Cᴰ Dᴰ
+                 → Functorᴰ (F ^opF) (Cᴰ ^opᴰ) (Dᴰ ^opᴰ)
+  Fᴰ ^opFᴰ = recOpᴰ (toOpOpᴰ ∘Fᴰ Fᴰ)
 
-  ∫F : Functor (∫C Cᴰ) (∫C Dᴰ)
-  ∫F .F-ob (x , xᴰ) = _ , Fᴰ.F-obᴰ xᴰ
-  ∫F .F-hom (_ , fᴰ) = _ , Fᴰ.F-homᴰ fᴰ
-  ∫F .F-id = ΣPathP (_ , Fᴰ.F-idᴰ)
-  ∫F .F-seq _ _ = ΣPathP (_ , (Fᴰ.F-seqᴰ _ _))
+  _^opF⁻ᴰ : ∀ {F} → Functorᴰ F (Cᴰ ^opᴰ) (Dᴰ ^opᴰ)
+                 → Functorᴰ (F ^opF⁻) Cᴰ Dᴰ
+  Fᴰ ^opF⁻ᴰ = fromOpOpᴰ ∘Fᴰ introOpᴰ Fᴰ

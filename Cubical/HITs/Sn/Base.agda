@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.HITs.Sn.Base where
 
 open import Cubical.HITs.Susp.Base
@@ -18,6 +17,11 @@ S₊ : ℕ → Type₀
 S₊ 0 = Bool
 S₊ 1 = S¹
 S₊ (suc (suc n)) = Susp (S₊ (suc n))
+
+-- Sⁿ⁻¹
+S⁻ : ℕ → Type
+S⁻ zero = ⊥
+S⁻ (suc n) = S₊ n
 
 ptSn : (n : ℕ) → S₊ n
 ptSn zero = true

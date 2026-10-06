@@ -1,13 +1,12 @@
-{-# OPTIONS --no-exact-split --safe #-}
+{-# OPTIONS --no-exact-split #-}
 
 module Cubical.HITs.InfNat.Properties where
 
-open import Cubical.Core.Everything
-open import Cubical.Data.Maybe
-open import Cubical.Data.Nat
-
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
+
+open import Cubical.Data.Maybe
+open import Cubical.Data.Nat
 
 open import Cubical.HITs.InfNat.Base
 import Cubical.Data.InfNat as Coprod
@@ -57,5 +56,5 @@ open Iso
 ℕ+∞⇔Cℕ+∞ : Iso ℕ+∞ Coprod.ℕ+∞
 ℕ+∞⇔Cℕ+∞ .fun = ℕ+∞→Cℕ+∞
 ℕ+∞⇔Cℕ+∞ .inv = Cℕ+∞→ℕ+∞
-ℕ+∞⇔Cℕ+∞ .leftInv = ℕ+∞→Cℕ+∞→ℕ+∞
-ℕ+∞⇔Cℕ+∞ .rightInv = Cℕ+∞→ℕ+∞→Cℕ+∞
+ℕ+∞⇔Cℕ+∞ .ret = ℕ+∞→Cℕ+∞→ℕ+∞
+ℕ+∞⇔Cℕ+∞ .sec = Cℕ+∞→ℕ+∞→Cℕ+∞

@@ -1,9 +1,8 @@
-{-# OPTIONS --safe #-}
 module Cubical.Data.Sum.Base where
 
 open import Cubical.Relation.Nullary.Base
 
-open import Cubical.Core.Everything
+open import Cubical.Foundations.Prelude
 
 private
   variable

@@ -1,17 +1,19 @@
-{-# OPTIONS --safe #-}
 
 module Cubical.Categories.Functor.Properties where
 
 open import Cubical.Foundations.Prelude
+import Cubical.Foundations.Isomorphism as Iso
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Equiv.Properties
 open import Cubical.Foundations.Function hiding (_∘_)
 open import Cubical.Foundations.GroupoidLaws using (lUnit; rUnit; assoc; cong-∙)
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Path
 open import Cubical.Functions.Surjection
 open import Cubical.Functions.Embedding
 open import Cubical.HITs.PropositionalTruncation as Prop
 open import Cubical.Data.Sigma
+open import Cubical.Data.Nat using (_+_)
 open import Cubical.Categories.Category
 open import Cubical.Categories.Isomorphism
 open import Cubical.Categories.Morphism
@@ -47,20 +49,6 @@ module _ {F : Functor C D} where
   F-rUnit i .F-hom f = F ⟪ f ⟫
   F-rUnit i .F-id {x} = rUnit (F .F-id) (~ i)
   F-rUnit i .F-seq f g = rUnit (F .F-seq f g) (~ i)
-
-  -- functors preserve commutative diagrams (specificallysqures here)
-  preserveCommF : ∀ {x y z w} {f : C [ x , y ]} {g : C [ y , w ]} {h : C [ x , z ]} {k : C [ z , w ]}
-                → f ⋆⟨ C ⟩ g ≡ h ⋆⟨ C ⟩ k
-                → (F ⟪ f ⟫) ⋆⟨ D ⟩ (F ⟪ g ⟫) ≡ (F ⟪ h ⟫) ⋆⟨ D ⟩ (F ⟪ k ⟫)
-  preserveCommF {f = f} {g = g} {h = h} {k = k} eq
-    = (F ⟪ f ⟫) ⋆⟨ D ⟩ (F ⟪ g ⟫)
-    ≡⟨ sym (F .F-seq _ _) ⟩
-      F ⟪ f ⋆⟨ C ⟩ g ⟫
-    ≡⟨ cong (F ⟪_⟫) eq ⟩
-      F ⟪ h ⋆⟨ C ⟩ k ⟫
-    ≡⟨ F .F-seq _ _ ⟩
-      (F ⟪ h ⟫) ⋆⟨ D ⟩ (F ⟪ k ⟫)
-    ∎
 
   -- functors preserve isomorphisms
   preserveIsosF : ∀ {x y} → CatIso C x y → CatIso D (F ⟅ x ⟆) (F ⟅ y ⟆)
@@ -103,26 +91,50 @@ module _ {F : Functor C D} where
                → PathP (λ i → D [ F .F-ob (p i) , F. F-ob (q i) ]) (F .F-hom f) (F .F-hom g)
   functorCongP r i = F .F-hom (r i)
 
+isEquivFunctor≡ : ∀ {F} {G} → isEquiv (uncurry (Functor≡ {C = C} {D = D} {F = F} {G = G}))
+isEquivFunctor≡ {C = C} {D = D} = Iso.isoToIsEquiv isom
+ where
+ open Iso.Iso
+ isom : Iso.Iso _ _
+ fun isom = _
+ inv isom x = (λ c i → F-ob (x i) c) , λ {c} {c'} f i → F-hom (x i) {c} {c'} f
+ F-ob (sec isom b _ i₁) = F-ob (b i₁)
+ F-hom (sec isom b _ i₁) = F-hom (b i₁)
+ F-id (sec isom b i i₁) = isProp→SquareP
+      (λ i i₁ → D .isSetHom (F-hom (b i₁) (C .id)) (D .id)) refl refl
+     (isProp→PathP (λ j → isSetHom D _ _) _ _) (λ i₁ → F-id (b i₁)) i i₁
+ F-seq (sec isom b i i₁) f g = isProp→SquareP
+     (λ i i₁ → D .isSetHom (F-hom (b i₁) _) (seq' D (F-hom (b i₁) f) _))
+     refl refl (isProp→PathP (λ j → isSetHom D _ _) _ _) (λ i₁ → F-seq (b i₁) f g) i i₁
+ ret isom _ = refl
+
+isOfHLevelFunctor : ∀ hLevel → isOfHLevel (2 + hLevel) (D .ob)
+                             → isOfHLevel (2 + hLevel) (Functor C D)
+isOfHLevelFunctor  {D = D} {C = C} hLevel x _ _ =
+ isOfHLevelRespectEquiv (1 + hLevel) (_ , isEquivFunctor≡)
+   (isOfHLevelΣ (1 + hLevel) (isOfHLevelΠ (1 + hLevel) (λ _ → x _ _))
+     λ _ → isOfHLevelPlus' 1 (isPropImplicitΠ2
+      λ _ _ → isPropΠ λ _ → isOfHLevelPathP' 1 (λ _ _ → D .isSetHom _ _) _ _ ))
+
+
 isSetFunctor : isSet (D .ob) → isSet (Functor C D)
-isSetFunctor {D = D} {C = C} isSet-D-ob F G p q = w
-  where
-    w : _
-    F-ob (w i i₁) = isSetΠ (λ _ → isSet-D-ob) _ _ (cong F-ob p) (cong F-ob q) i i₁
-    F-hom (w i i₁) z =
-     isSet→SquareP
-       (λ i i₁ → D .isSetHom {(F-ob (w i i₁) _)} {(F-ob (w i i₁) _)})
-        (λ i₁ → F-hom (p i₁) z) (λ i₁ → F-hom (q i₁) z) refl refl i i₁
+isSetFunctor = isOfHLevelFunctor 0
 
-    F-id (w i i₁) =
-       isSet→SquareP
-       (λ i i₁ → isProp→isSet (D .isSetHom (F-hom (w i i₁) _) (D .id)))
-       (λ i₁ → F-id (p i₁)) (λ i₁ → F-id (q i₁)) refl refl i i₁
+module _ (F : Functor C D) where
 
-    F-seq (w i i₁) _ _ =
-     isSet→SquareP
-       (λ i i₁ → isProp→isSet (D .isSetHom (F-hom (w i i₁) _) ((F-hom (w i i₁) _) ⋆⟨ D ⟩ (F-hom (w i i₁) _))))
-       (λ i₁ → F-seq (p i₁) _ _) (λ i₁ → F-seq (q i₁) _ _) refl refl i i₁
-
+  -- functors preserve commutative diagrams (specifically squres here)
+  preserveCommF : ∀ {x y z w} {f : C [ x , y ]} {g : C [ y , w ]} {h : C [ x , z ]} {k : C [ z , w ]}
+                → f ⋆⟨ C ⟩ g ≡ h ⋆⟨ C ⟩ k
+                → (F ⟪ f ⟫) ⋆⟨ D ⟩ (F ⟪ g ⟫) ≡ (F ⟪ h ⟫) ⋆⟨ D ⟩ (F ⟪ k ⟫)
+  preserveCommF {f = f} {g = g} {h = h} {k = k} eq
+    = (F ⟪ f ⟫) ⋆⟨ D ⟩ (F ⟪ g ⟫)
+    ≡⟨ sym (F .F-seq _ _) ⟩
+      F ⟪ f ⋆⟨ C ⟩ g ⟫
+    ≡⟨ cong (F ⟪_⟫) eq ⟩
+      F ⟪ h ⋆⟨ C ⟩ k ⟫
+    ≡⟨ F .F-seq _ _ ⟩
+      (F ⟪ h ⟫) ⋆⟨ D ⟩ (F ⟪ k ⟫)
+    ∎
 
 -- Conservative Functor,
 -- namely if a morphism f is mapped to an isomorphism,
@@ -232,3 +244,67 @@ module _
       (subst isEquiv (F-pathToIso-∘ {F = F})
       (compEquiv (_ , isUnivC .univ _ _)
         (_ , isFullyFaithful→isEquivF-Iso {F = F} fullfaith x y) .snd))
+
+TransportFunctor : (C ≡ D) → Functor C D
+F-ob (TransportFunctor p) = subst ob p
+F-hom (TransportFunctor p) {x} {y} =
+ transport λ i → cong Hom[_,_] p i
+   (transport-filler (cong ob p) x i)
+   (transport-filler (cong ob p) y i)
+F-id (TransportFunctor p) {x} i =
+  transp (λ jj → Hom[ p (i ∨ jj) , transport-filler (λ i₁ → ob (p i₁)) x (i ∨ jj) ]
+          (transport-filler (λ i₁ → ob (p i₁)) x (i ∨ jj))) i
+    (id (p i) {(transport-filler (cong ob p) x i)})
+
+F-seq (TransportFunctor p) {x} {y} {z} f g i =
+  let q : ∀ {x y} → _ ≡ _
+      q = λ {x y} → λ i₁ →
+             Hom[ p i₁ , transport-filler (λ i₂ → ob (p i₂)) x i₁ ]
+                        (transport-filler (λ i₂ → ob (p i₂)) y i₁)
+  in transp (λ jj → Hom[ p (i ∨ jj)
+       , transport-filler (λ i₁ → ob (p i₁)) x (i ∨ jj) ]
+        (transport-filler (λ i₁ → ob (p i₁)) z (i ∨ jj))) i
+     (_⋆_ (p i) (transport-filler q f i) (transport-filler q g i))
+
+
+module _ {F : Functor C D} {G : Functor D E} where
+  open Category
+  open Functor
+
+  module _
+    (isFullyFaithfulF : isFullyFaithful F)
+    (isFullyFaithfulG : isFullyFaithful G)
+    where
+    isFullyFaithfulG∘F : isFullyFaithful (G ∘F F)
+    isFullyFaithfulG∘F x y =
+      equivIsEquiv
+        (compEquiv (_ , isFullyFaithfulF x y)
+                 (_ , isFullyFaithfulG (F ⟅ x ⟆) (F ⟅ y ⟆)))
+
+  module _
+    (isFullG : isFull G)
+    (isFullF : isFull F)
+    where
+    isFullG∘F : isFull (G ∘F F)
+    isFullG∘F x y G∘F[f] =
+      rec
+        isPropPropTrunc
+        (λ Ff → rec
+          isPropPropTrunc
+          (λ f → ∣ f .fst , cong (G .F-hom) (f .snd) ∙ Ff .snd ∣₁)
+          (isFullF x y (Ff .fst)))
+        (isFullG (F ⟅ x ⟆) (F ⟅ y ⟆) G∘F[f])
+
+  module _
+    (isFaithfulF : isFaithful F)
+    (isFaithfulG : isFaithful G)
+    where
+
+    isFaithfulG∘F : isFaithful (G ∘F F)
+    isFaithfulG∘F x y =
+      isEmbedding→Inj
+        (compEmbedding
+        ((λ v → F-hom G v) ,
+          (injEmbedding (E .isSetHom) (isFaithfulG (F ⟅ x ⟆) (F ⟅ y ⟆) _ _)))
+        ((λ z → F-hom F z) ,
+          (injEmbedding (D .isSetHom) (isFaithfulF x y _ _))) .snd)

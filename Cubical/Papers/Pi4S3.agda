@@ -11,15 +11,19 @@ Formalizing π₄(S³) ≅ ℤ/2ℤ and Computing a Brunerie Number in Cubical A
 
 -- The "--safe" flag ensures that there are no postulates or
 -- unfinished goals
-{-# OPTIONS --safe --cubical #-}
 
 module Cubical.Papers.Pi4S3 where
 
 -- Misc.
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Pointed
+open import Cubical.Foundations.HLevels
+
 open import Cubical.Data.Int hiding (_+_)
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order
-open import Cubical.Foundations.Everything
 open import Cubical.Data.Sum
 open import Cubical.Data.Sigma
 
@@ -30,6 +34,7 @@ open import Cubical.Foundations.Prelude                     as Prelude
 open import Cubical.HITs.Susp                               as Suspensions
 open import Cubical.HITs.Sn                                 as Spheres
   hiding (S) renaming (S₊ to S)
+open import Cubical.HITs.Sn.Multiplication                  as SMult
 open import Cubical.HITs.Pushout                            as Pushouts
 open import Cubical.HITs.Wedge                           as Wedges
 open import Cubical.HITs.Join                               as Joins
@@ -207,11 +212,11 @@ open James₁ using (IsoΩ∥SuspS²∥₅∥Pushout⋁↪fold⋁S²∥₅)
 
 ---- C. Formalization of the James construction ----
 -- Proposition 8: Sⁿ * Sᵐ ≃ Sⁿ⁺ᵐ⁺¹
-open Spheres using (IsoSphereJoin)
+open SMult using (IsoSphereJoin)
 
 -- Definition 6: W + whitehead product
 W = joinTo⋁
-open Whitehead using ([_∣_]₂)
+open Whitehead using ([_∣_])
 
 -- Theorem 3 is omitted as it is used implicitly in the proof of the main result
 

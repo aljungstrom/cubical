@@ -6,7 +6,6 @@
            (2017) https://arxiv.org/abs/1704.05770
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.HITs.RPn.Base where
 
 open import Cubical.Foundations.Prelude
@@ -38,7 +37,7 @@ open import Cubical.Data.Sum as ⊎ hiding (elim)
 open import Cubical.HITs.PropositionalTruncation as PropTrunc hiding (elim)
 open import Cubical.HITs.Sn
 open import Cubical.HITs.Susp
-open import Cubical.HITs.Join
+open import Cubical.HITs.Join hiding (elim)
 open import Cubical.HITs.Pushout
 open import Cubical.HITs.Pushout.Flattening
 
@@ -382,9 +381,9 @@ RP1≡S1 = Pushout {A = Total (cov⁻¹ 0)} {B = RP 0} (pr (cov⁻¹ 0)) (λ _ �
 ≡RP∞-charac : (X Y : RP∞) → Iso (fst X ≡ fst Y) (X ≡ Y)
 Iso.fun (≡RP∞-charac X Y) p = Σ≡Prop (λ _ → squash₁) p
 Iso.inv (≡RP∞-charac X Y) = cong fst
-Iso.rightInv (≡RP∞-charac X Y) p =
+Iso.sec (≡RP∞-charac X Y) p =
   ΣSquareSet (λ _ → isProp→isSet squash₁) λ _ i → p i .fst
-Iso.leftInv (≡RP∞-charac X Y) p = refl
+Iso.ret (≡RP∞-charac X Y) p = refl
 
 isGroupoidRP∞ : isGroupoid RP∞
 isGroupoidRP∞ =
@@ -433,10 +432,10 @@ notRP∞Equiv =
     fst help = notEquiv , (λ p → true≢false (funExt⁻ (cong fst p) false))
     snd help (e , g) =
       Σ≡Prop (λ _ → isProp¬ _)
-        (⊎.rec (λ p → ⊥.rec (g (sym (Iso.leftInv Bool≃Charac e)
+        (⊎.rec (λ p → ⊥.rec (g (sym (Iso.ret Bool≃Charac e)
                       ∙ cong (Iso.inv Bool≃Charac) p)))
                 (λ p → sym (cong (Iso.inv Bool≃Charac) p)
-                          ∙ (Iso.leftInv Bool≃Charac e))
+                          ∙ (Iso.ret Bool≃Charac e))
                 (dichotomyBool (fst e true)))
 
   isPropNegRP∞ : (X : RP∞) → isProp (Σ[ e ∈ (fst X ≃ fst X) ] ¬ e ≡ idEquiv (fst X))
@@ -529,28 +528,28 @@ isRP∞→≃Bool : (ℓ : Level) (X : Type) → is2Type ℓ X → X → X ≃ B
 isRP∞→≃Bool ℓ X f x = compEquiv (isoToEquiv (theIs f x)) (invEquiv LiftEquiv)
   where
   module _ (f : is2Type ℓ X) (x : X) where
-    help : X → Lift Bool
-    help = fst (f .snd .snd (λ _ → Lift Bool)) x (lift true)
+    help : X → Lift ℓ Bool
+    help = fst (f .snd .snd (λ _ → Lift ℓ Bool)) x (lift true)
       (lift false)
 
-    LiftB→X : Lift Bool → X
+    LiftB→X : Lift ℓ Bool → X
     LiftB→X (lift false) = fst f x
     LiftB→X (lift true) = x
 
-    theIs : Iso X (Lift Bool)
+    theIs : Iso X (Lift ℓ Bool)
     Iso.fun theIs = help
     Iso.inv theIs = LiftB→X
-    Iso.rightInv theIs (lift false) =
-      f .snd .snd (λ _ → Lift Bool) .snd x (lift true) (lift false) .snd
-    Iso.rightInv theIs (lift true) =
-      f .snd .snd (λ _ → Lift Bool) .snd x (lift true) (lift false) .fst
-    Iso.leftInv theIs x' = cong (invEq (LiftEquiv {ℓ' = ℓ})) (liftEq x')
+    Iso.sec theIs (lift false) =
+      f .snd .snd (λ _ → Lift ℓ Bool) .snd x (lift true) (lift false) .snd
+    Iso.sec theIs (lift true) =
+      f .snd .snd (λ _ → Lift ℓ Bool) .snd x (lift true) (lift false) .fst
+    Iso.ret theIs x' = cong (invEq (LiftEquiv {ℓ' = ℓ})) (liftEq x')
       where
       liftEq : (x' : X) → lift (LiftB→X (help x')) ≡ lift x'
       liftEq =  f .snd .snd _ .fst x
         (cong lift (cong LiftB→X
-          (f .snd .snd (λ _ → Lift Bool) .snd x (lift true) (lift false) .fst)))
-        (cong lift (cong LiftB→X (f .snd .snd (λ _ → Lift Bool) .snd
+          (f .snd .snd (λ _ → Lift ℓ Bool) .snd x (lift true) (lift false) .fst)))
+        (cong lift (cong LiftB→X (f .snd .snd (λ _ → Lift ℓ Bool) .snd
           x (lift true) (lift false) .snd)))
 
 -- instances
@@ -612,7 +611,7 @@ isPropis2Type {ℓ = ℓ} =
     notConst : ¬ (f false ≡ f true)
     notConst r = true≢false (isContr→isProp isContrBool _ _)
       where
-      Lift→ : ∀ {ℓ'} {A : Type} → Lift {ℓ-zero} {ℓ'} A → A
+      Lift→ : ∀ {ℓ'} {A : Type} → Lift ℓ' A → A
       Lift→ (lift lower₁) = lower₁
 
       main : (x : _) → f false ≡ x → (z : Bool) → z ≡ f false
@@ -772,11 +771,11 @@ RP∞'→SetRecβ :
      (h : (x : fst X) → f x ≡ f (RP∞'-fields.notRP∞' X x))
      (x : fst X)
      → RP∞'→SetRec s X f h ≡ f x
-RP∞'→SetRecβ {A = A} s = uncurry λ X → uncurry
-  λ 2x → PropTrunc.elim (λ _ → isPropΠ3 λ _ _ _ → s _ _)
-    λ x f h → RP∞'-fields.elimRP∞' (X , 2x , ∣ x ∣₁) x
-      (λ i → transportRefl (transportRefl (f (transportRefl x i)) i) i)
-      ((λ i → transportRefl (transportRefl (f (transportRefl x i)) i) i) ∙ h x)
+RP∞'→SetRecβ {A = A} s =
+  uncurry λ X → uncurry
+    λ 2x → PropTrunc.elim (λ _ → isPropΠ3 λ _ _ _ → s _ _)
+      λ x f h → RP∞'-fields.elimRP∞' (X , 2x , ∣ x ∣₁) x
+        refl (h x)
 
 abstract
   notNotRP∞' : ∀ {ℓ} (X : RP∞' ℓ) (x : fst X)
@@ -869,10 +868,10 @@ eval⊎≃Equiv {ℓ} I J = eval⊎≃ ,
     (λ _ → isPropIsEquiv _)
     (isoToIsEquiv (invIso iso₂)) I
   where
-  f₁ : (J : RP∞' ℓ) → Lift (fst J ⊎ (Bool ≃ fst J)) → _
+  f₁ : (J : RP∞' ℓ) → Lift ℓ (fst J ⊎ (Bool ≃ fst J)) → _
   f₁ J = invEq LiftEquiv
 
-  f₂ : (J : RP∞' ℓ) → fst J × fst J → Lift (fst J ⊎ (Bool ≃ fst J))
+  f₂ : (J : RP∞' ℓ) → fst J × fst J → Lift ℓ (fst J ⊎ (Bool ≃ fst J))
   f₂ J = uncurry λ j
    → RP∞'-fields.elimRP∞' J j
        (lift (inl j))
@@ -880,7 +879,7 @@ eval⊎≃Equiv {ℓ} I J = eval⊎≃ ,
 
   βs : (J : RP∞' ℓ) → (j : fst J) → _
   βs J j = RP∞'-fields.elimRP∞'β J
-    {B = λ _ → Lift (fst J ⊎ (Bool ≃ fst J))} j
+    {B = λ _ → Lift ℓ (fst J ⊎ (Bool ≃ fst J))} j
     (lift (inl j))
     (lift (inr (invEquiv (isRP∞→≃Bool _ (fst J) (snd J .fst) j))))
 
@@ -890,14 +889,14 @@ eval⊎≃Equiv {ℓ} I J = eval⊎≃ ,
   iso₁ : Iso (fst J × fst J) (fst J ⊎ (Bool ≃ fst J))
   Iso.fun iso₁ = f₁ J ∘ (f₂ J)
   Iso.inv iso₁ f = Iso.fun ΠBool×Iso (eval⊎≃ f)
-  Iso.rightInv iso₁ (inl j) =
+  Iso.sec iso₁ (inl j) =
     cong (invEq (LiftEquiv {ℓ' = ℓ})) (βs J j .fst)
-  Iso.rightInv iso₁ (inr eq) =
+  Iso.sec iso₁ (inr eq) =
     EquivJRP∞' (RP∞'∙ ℓ) {B = λ J eq
       → invEq LiftEquiv (f₂ J (ΠBool→× (fst eq))) ≡ inr eq}
       (cong inr* (Σ≡Prop (λ _ → isPropIsEquiv _)
         (funExt (CasesBool true refl refl)))) J eq
-  Iso.leftInv iso₁ =
+  Iso.ret iso₁ =
     uncurry (JRP∞' {B = λ J x → (y : fst J)
                 → ΠBool→× (eval⊎≃ (f₁ J (f₂ J (x , y)))) ≡ (x , y)}
       (CasesBool true refl refl) J)
@@ -905,10 +904,10 @@ eval⊎≃Equiv {ℓ} I J = eval⊎≃ ,
   iso₂ : Iso (Bool → fst J) (fst J ⊎ (Bool ≃ fst J))
   Iso.fun iso₂ = f₁ J ∘ f₂ J ∘ Iso.fun ΠBool×Iso
   Iso.inv iso₂ = eval⊎≃
-  Iso.rightInv iso₂ x = Iso.rightInv iso₁ x
-  Iso.leftInv iso₂ x =
-    (sym (Iso.leftInv ΠBool×Iso (eval⊎≃ (f₁ J (f₂ J (x true , x false)))))
-    ∙ cong (Iso.inv ΠBool×Iso) (Iso.leftInv iso₁ (x true , x false)))
+  Iso.sec iso₂ x = Iso.sec iso₁ x
+  Iso.ret iso₂ x =
+    (sym (Iso.ret ΠBool×Iso (eval⊎≃ (f₁ J (f₂ J (x true , x false)))))
+    ∙ cong (Iso.inv ΠBool×Iso) (Iso.ret iso₁ (x true , x false)))
     ∙ funExt (CasesBool true refl refl)
 
 -- elimination principle for (I → J)
@@ -932,3 +931,18 @@ module _ {ℓ : Level} {I J : RP∞' ℓ} {A : (fst I → fst J) → Type ℓ}
     → eval⊎≃Equiv-elim (fst (eval⊎≃Equiv I J) x) ≡ ind x
   eval⊎≃Equiv-elim-coh =
     eval⊎≃Equiv-elim' {C = A} (eval⊎≃Equiv I J) ind
+
+RP²FunCharacIso : {A : RP² → Type ℓ}
+  → Iso ((x : RP²) → A x)
+         (Σ[ x ∈ A point ]
+           Σ[ p ∈ PathP (λ i → A (line i)) x x ]
+             SquareP (λ i j → A (square i j))
+               p (λ i → p (~ i)) refl refl)
+Iso.fun RP²FunCharacIso f = f point , cong f line , cong (cong f) square
+Iso.inv RP²FunCharacIso (x , p , q) point = x
+Iso.inv RP²FunCharacIso (x , p , q) (line i) = p i
+Iso.inv RP²FunCharacIso (x , p , q) (square i j) = q i j
+Iso.sec RP²FunCharacIso _ = refl
+Iso.ret RP²FunCharacIso f =
+  funExt λ { point → refl ; (line i) → refl ; (square i i₁) → refl}
+

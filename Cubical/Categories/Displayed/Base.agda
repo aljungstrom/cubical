@@ -2,17 +2,19 @@
   Definition of a category displayed over another category.
   Some definitions were guided by those at https://1lab.dev
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Categories.Displayed.Base where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Equiv.Dependent
 open import Cubical.Foundations.HLevels
-open import Cubical.Data.Sigma
-open import Cubical.Categories.Category.Base
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Reflection.RecordEquiv
+open import Cubical.Categories.Category.Base renaming (isIso to isCatIso)
 
 private
   variable
-    ℓC ℓC' ℓCᴰ ℓCᴰ' ℓDᴰ ℓDᴰ' : Level
+    ℓC ℓC' ℓD ℓD' ℓCᴰ ℓCᴰ' ℓDᴰ ℓDᴰ' : Level
 
 -- Displayed categories with hom-sets
 record Categoryᴰ (C : Category ℓC ℓC') ℓCᴰ ℓCᴰ' : Type (ℓ-suc (ℓ-max (ℓ-max ℓC ℓC') (ℓ-max ℓCᴰ ℓCᴰ'))) where
@@ -49,81 +51,65 @@ record Categoryᴰ (C : Category ℓC ℓC') ℓCᴰ ℓCᴰ' : Type (ℓ-suc (�
 -- Helpful syntax/notation
 _[_][_,_] = Categoryᴰ.Hom[_][_,_]
 
--- Total category of a displayed category
-module _ {C : Category ℓC ℓC'} (Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ') where
-
-  open Category
-  open Categoryᴰ Cᴰ
-  private
-    module C = Category C
-
-  ∫C : Category (ℓ-max ℓC ℓCᴰ) (ℓ-max ℓC' ℓCᴰ')
-  ∫C .ob = Σ _ ob[_]
-  ∫C .Hom[_,_] (_ , xᴰ) (_ , yᴰ) = Σ _ Hom[_][ xᴰ , yᴰ ]
-  ∫C .id = _ , idᴰ
-  ∫C ._⋆_ (_ , fᴰ) (_ , gᴰ) = _ , fᴰ ⋆ᴰ gᴰ
-  ∫C .⋆IdL _ = ΣPathP (_ , ⋆IdLᴰ _)
-  ∫C .⋆IdR _ = ΣPathP (_ , ⋆IdRᴰ _)
-  ∫C .⋆Assoc _ _ _ = ΣPathP (_ , ⋆Assocᴰ _ _ _)
-  ∫C .isSetHom = isSetΣ C.isSetHom (λ _ → isSetHomᴰ)
-
--- Displayed total category, i.e. Σ for displayed categories
-module _ {C : Category ℓC ℓC'}
-  (Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ')
-  (Dᴰ : Categoryᴰ (∫C Cᴰ) ℓDᴰ ℓDᴰ')
-  where
-
-  open Categoryᴰ
-  private
-    module Cᴰ = Categoryᴰ Cᴰ
-    module Dᴰ = Categoryᴰ Dᴰ
-
-  ∫Cᴰ : Categoryᴰ C (ℓ-max ℓCᴰ ℓDᴰ) (ℓ-max ℓCᴰ' ℓDᴰ')
-  ∫Cᴰ .ob[_] x = Σ[ xᴰ ∈ Cᴰ.ob[ x ] ] Dᴰ.ob[ x , xᴰ ]
-  ∫Cᴰ .Hom[_][_,_] f (_ , zᴰ) (_ , wᴰ) = Σ[ fᴰ ∈ Cᴰ.Hom[ f ][ _ , _ ] ] Dᴰ.Hom[ f , fᴰ ][ zᴰ , wᴰ ]
-  ∫Cᴰ .idᴰ = Cᴰ.idᴰ , Dᴰ.idᴰ
-  ∫Cᴰ ._⋆ᴰ_ (_ , hᴰ) (_ , kᴰ) = _ , hᴰ Dᴰ.⋆ᴰ kᴰ
-  ∫Cᴰ .⋆IdLᴰ _ = ΣPathP (_ , Dᴰ.⋆IdLᴰ _)
-  ∫Cᴰ .⋆IdRᴰ _ = ΣPathP (_ , Dᴰ.⋆IdRᴰ _)
-  ∫Cᴰ .⋆Assocᴰ _ _ _ = ΣPathP (_ , Dᴰ.⋆Assocᴰ _ _ _)
-  ∫Cᴰ .isSetHomᴰ = isSetΣ Cᴰ.isSetHomᴰ (λ _ → Dᴰ.isSetHomᴰ)
-
-module _ {C : Category ℓC ℓC'}
-  (Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ')
-  (Dᴰ : Categoryᴰ C ℓDᴰ ℓDᴰ')
-  where
-
-  open Categoryᴰ
-  private
-    module Dᴰ = Categoryᴰ Dᴰ
-
-  weakenᴰ : Categoryᴰ (∫C Cᴰ) ℓDᴰ ℓDᴰ'
-  weakenᴰ .ob[_] (x , _) = Dᴰ.ob[ x ]
-  weakenᴰ .Hom[_][_,_] (f , _) = Dᴰ.Hom[ f ][_,_]
-  weakenᴰ .idᴰ = Dᴰ.idᴰ
-  weakenᴰ ._⋆ᴰ_ = Dᴰ._⋆ᴰ_
-  weakenᴰ .⋆IdLᴰ = Dᴰ.⋆IdLᴰ
-  weakenᴰ .⋆IdRᴰ = Dᴰ.⋆IdRᴰ
-  weakenᴰ .⋆Assocᴰ = Dᴰ.⋆Assocᴰ
-  weakenᴰ .isSetHomᴰ = Dᴰ.isSetHomᴰ
-
 module _ {C : Category ℓC ℓC'} (Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ') where
   open Category C
   open Categoryᴰ Cᴰ
 
-  record isIsoᴰ {a b : ob} {f : C [ a , b ]} (f-isIso : isIso C f)
+  record isIsoᴰ {a b : ob} {f : C [ a , b ]} (f-isIso : isCatIso C f)
     {aᴰ : ob[ a ]} {bᴰ : ob[ b ]} (fᴰ : Hom[ f ][ aᴰ , bᴰ ])
     : Type ℓCᴰ'
     where
     constructor isisoᴰ
-    open isIso f-isIso
+    open isCatIso f-isIso
     field
       invᴰ : Hom[ inv ][ bᴰ , aᴰ ]
       secᴰ : invᴰ ⋆ᴰ fᴰ ≡[ sec ] idᴰ
       retᴰ : fᴰ ⋆ᴰ invᴰ ≡[ ret ] idᴰ
 
+  unquoteDecl isIsoᴰIsoΣ = declareRecordIsoΣ isIsoᴰIsoΣ (quote isIsoᴰ)
+
   CatIsoᴰ : {a b : ob} → CatIso C a b → ob[ a ] → ob[ b ] → Type ℓCᴰ'
   CatIsoᴰ (f , f-isIso) aᴰ bᴰ = Σ[ fᴰ ∈ Hom[ f ][ aᴰ , bᴰ ] ] isIsoᴰ f-isIso fᴰ
 
+  isSetCatIsoᴰ : ∀ {a b : ob} {f : CatIso C a b} {aᴰ : ob[ a ]} {bᴰ : ob[ b ]}
+    → isSet (CatIsoᴰ f aᴰ bᴰ)
+  isSetCatIsoᴰ = isSetΣ isSetHomᴰ (λ fᴰ →
+    isSetRetract (isIsoᴰIsoΣ .Iso.fun) (isIsoᴰIsoΣ .Iso.inv) (isIsoᴰIsoΣ .Iso.ret)
+    (isSetΣSndProp isSetHomᴰ (λ fᴰ⁻ →
+    isProp× (isOfHLevelPathP' 1 isSetHomᴰ _ _)
+            (isOfHLevelPathP' 1 isSetHomᴰ _ _))))
+
+  CatIsoⱽ : {a : ob} → ob[ a ] → ob[ a ] → Type ℓCᴰ'
+  CatIsoⱽ = CatIsoᴰ idCatIso
+
   idᴰCatIsoᴰ : {x : ob} {xᴰ : ob[ x ]} → CatIsoᴰ idCatIso xᴰ xᴰ
   idᴰCatIsoᴰ = idᴰ , isisoᴰ idᴰ (⋆IdLᴰ idᴰ) (⋆IdLᴰ idᴰ)
+
+  pathToIsoᴰ : ∀ {x y : ob} {xᴰ : ob[ x ]}{yᴰ : ob[ y ]}
+    → (p : x ≡ y)
+    → (pᴰ : PathP (λ i → ob[ p i ]) xᴰ yᴰ)
+    → CatIsoᴰ (pathToIso p) xᴰ yᴰ
+  pathToIsoᴰ {x} {y} {xᴰ} {yᴰ} p pᴰ = transport Type≡ idᴰCatIsoᴰ
+    where
+    Type≡ : CatIsoᴰ idCatIso xᴰ xᴰ ≡ CatIsoᴰ (pathToIso p) xᴰ yᴰ
+    Type≡ i = CatIsoᴰ (transp (λ j → CatIso C x (p (i ∧ j))) (~ i) idCatIso) xᴰ (pᴰ i)
+
+  isUnivalentᴰ : Type (ℓ-max (ℓ-max ℓC ℓCᴰ) ℓCᴰ')
+  isUnivalentᴰ = ∀ x y (xᴰ : ob[ x ]) (yᴰ : ob[ y ])
+    → isEquivOver {Q = λ f → CatIsoᴰ f xᴰ yᴰ}{f = pathToIso {C = C}} pathToIsoᴰ
+
+module _ {C : Category ℓC ℓC'} (Cᴰ : Categoryᴰ C ℓCᴰ ℓCᴰ') where
+  open Category
+  private
+    module Cᴰ = Categoryᴰ Cᴰ
+
+  open Categoryᴰ
+  _^opᴰ : Categoryᴰ (C ^op) ℓCᴰ ℓCᴰ'
+  _^opᴰ .ob[_] x = Cᴰ.ob[ x ]
+  _^opᴰ .Hom[_][_,_] f xᴰ yᴰ = Cᴰ.Hom[ f ][ yᴰ , xᴰ ]
+  _^opᴰ .idᴰ = Cᴰ.idᴰ
+  _^opᴰ ._⋆ᴰ_ fᴰ gᴰ = gᴰ Cᴰ.⋆ᴰ fᴰ
+  _^opᴰ .⋆IdLᴰ = Cᴰ .⋆IdRᴰ
+  _^opᴰ .⋆IdRᴰ = Cᴰ .⋆IdLᴰ
+  _^opᴰ .⋆Assocᴰ fᴰ gᴰ hᴰ = symP (Cᴰ.⋆Assocᴰ _ _ _)
+  _^opᴰ .isSetHomᴰ = Cᴰ .isSetHomᴰ

@@ -10,14 +10,18 @@ This file contains:
 
 - Ganea's theorem
 
+- eliminator for join
+- Join is contractible if either side is contractible
+- Join is prop if both sides are prop
+
 -}
 
-{-# OPTIONS --safe #-}
 
 module Cubical.HITs.Join.Properties where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Function
@@ -28,13 +32,22 @@ open import Cubical.Data.Sigma renaming (fst to proj₁; snd to proj₂)
 open import Cubical.Data.Unit
 
 open import Cubical.HITs.Join.Base
-open import Cubical.HITs.Pushout
+open import Cubical.HITs.Pushout hiding (elimProp)
 
 open import Cubical.Homotopy.Loopspace
 
 private
   variable
-    ℓ ℓ' : Level
+    ℓ ℓ' ℓ'' : Level
+
+-- the inclusion maps are null-homotopic
+join-inl-null : {X : Pointed ℓ} {Y : Pointed ℓ'} (x : typ X)
+  → Path (join (typ X) (typ Y)) (inl x) (inl (pt X))
+join-inl-null {X = X} {Y} x = push x (pt Y) ∙ sym (push (pt X) (pt Y))
+
+join-inr-null : {X : Pointed ℓ} {Y : Type ℓ'} (y : Y)
+  → Path (join (typ X) Y) (inr y) (inl (pt X))
+join-inr-null {X = X} y = sym (push (pt X) y)
 
 open Iso
 
@@ -47,8 +60,8 @@ fun IsoFunSpaceJoin f = (f ∘ inl) , ((f ∘ inr) , (λ a b → cong f (push a 
 inv IsoFunSpaceJoin (f , g , p) (inl x) = f x
 inv IsoFunSpaceJoin (f , g , p) (inr x) = g x
 inv IsoFunSpaceJoin (f , g , p) (push a b i) = p a b i
-rightInv IsoFunSpaceJoin (f , g , p) = refl
-leftInv IsoFunSpaceJoin f =
+sec IsoFunSpaceJoin (f , g , p) = refl
+ret IsoFunSpaceJoin f =
   funExt λ { (inl x) → refl ; (inr x) → refl ; (push a b i) → refl}
 
 -- Alternative definition of the join using a pushout
@@ -457,8 +470,8 @@ join-comm : ∀ {ℓ'} {A : Type ℓ} {B : Type ℓ'}
   → Iso (join A B) (join B A)
 fun join-comm = join-commFun
 inv join-comm = join-commFun
-rightInv join-comm = join-commFun²
-leftInv join-comm = join-commFun²
+sec join-comm = join-commFun²
+ret join-comm = join-commFun²
 
 join→ : ∀ {ℓ'' ℓ'''}
      {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''} {D : Type ℓ'''}
@@ -473,14 +486,14 @@ Iso→joinIso : ∀ {ℓ'' ℓ'''}
   → Iso A C → Iso B D → Iso (join A B) (join C D)
 fun (Iso→joinIso is1 is2) x = join→ (Iso.fun is1) (Iso.fun is2) x
 inv (Iso→joinIso is1 is2) x = join→ (Iso.inv is1) (Iso.inv is2) x
-rightInv (Iso→joinIso is1 is2) (inl x) i = inl (rightInv is1 x i)
-rightInv (Iso→joinIso is1 is2) (inr x) i = inr (rightInv is2 x i)
-rightInv (Iso→joinIso is1 is2) (push a b j) i =
-  push (rightInv is1 a i) (rightInv is2 b i) j
-leftInv (Iso→joinIso is1 is2) (inl x) i = inl (leftInv is1 x i)
-leftInv (Iso→joinIso is1 is2) (inr x) i = inr (leftInv is2 x i)
-leftInv (Iso→joinIso is1 is2) (push a b i) j =
-  push (leftInv is1 a j) (leftInv is2 b j) i
+sec (Iso→joinIso is1 is2) (inl x) i = inl (sec is1 x i)
+sec (Iso→joinIso is1 is2) (inr x) i = inr (sec is2 x i)
+sec (Iso→joinIso is1 is2) (push a b j) i =
+  push (sec is1 a i) (sec is2 b i) j
+ret (Iso→joinIso is1 is2) (inl x) i = inl (ret is1 x i)
+ret (Iso→joinIso is1 is2) (inr x) i = inr (ret is2 x i)
+ret (Iso→joinIso is1 is2) (push a b i) j =
+  push (ret is1 a j) (ret is2 b j) i
 
 
 joinAnnihilL : {A : Type ℓ} → isContr (join (Unit* {ℓ'}) A)
@@ -701,5 +714,51 @@ module _ {A : Pointed ℓ} {B : Pointed ℓ'} (f : A →∙ B) where
   GaneaIso : Iso GaneaFib (join (fiber (fst f) (pt B)) (Ω B .fst))
   fun GaneaIso = GaneaFib→join
   inv GaneaIso = join→GaneaFib
-  rightInv GaneaIso = join→GaneaFib→join
-  leftInv GaneaIso = GaneaFib→join→GaneaFib
+  sec GaneaIso = join→GaneaFib→join
+  ret GaneaIso = GaneaFib→join→GaneaFib
+
+-- Characterizing when Join isContr, isProp
+module _ {A : Type ℓ}{B : Type ℓ'} where
+  elim : {C : join A B → Type ℓ''}
+    → (l : (a : A) → C (inl a))
+    → (r : (b : B) → C (inr b))
+    → (p : ∀ a b → PathP (λ i → C (push a b i)) (l a) (r b))
+    → ∀ j → C j
+  elim l r p (inl a) = l a
+  elim l r p (inr b) = r b
+  elim l r p (push a b i) = p a b i
+
+  elimProp : {C : join A B → Type ℓ''} (isPropC : ∀ j → isProp (C j))
+    → (l : (a : A) → C (inl a))
+    → (r : (b : B) → C (inr b))
+    → ∀ j → C j
+  elimProp isPropC l r = elim l r (λ a b →
+    isProp→PathP (λ i → isPropC (push a b i)) (l a) (r b))
+
+  isContrJoinL : isContr A → isContr (join A B)
+  isContrJoinL isContrA .fst = inl (isContrA .fst)
+  isContrJoinL isContrA .snd (inl a) = cong inl (isContrA .snd a)
+  isContrJoinL isContrA .snd (inr b) = push (isContrA .fst) b
+  isContrJoinL isContrA .snd (push a b i) j = hcomp (λ where
+    k (i = i0) → inl (isContrA .snd a (~ k ∨ j))
+    k (i = i1) → push (isContrA .snd a (~ k)) b j
+    k (j = i0) → inl (isContrA .snd a (~ k))
+    k (j = i1) → push a b i)
+    (push a b (i ∧ j))
+
+  isContrJoinR : isContr B → isContr (join A B)
+  isContrJoinR isContrB .fst = inr (isContrB .fst)
+  isContrJoinR isContrB .snd (inl a) = sym $ push a (isContrB .fst)
+  isContrJoinR isContrB .snd (inr b) = cong inr (isContrB .snd b)
+  isContrJoinR isContrB .snd (push a b i) j = hcomp (λ where
+    k (i = i0) → push a (isContrB .snd b (~ k)) (~ j)
+    k (i = i1) → inr (isContrB .snd b (~ k ∨ j))
+    k (j = i0) → inr (isContrB .snd b (~ k))
+    k (j = i1) → push a b i)
+    (push a b (i ∨ (~ j)))
+
+  isPropJoin : isProp A → isProp B → isProp (join A B)
+  isPropJoin isPropA isPropB = isContrIfInhabited→isProp (elimProp
+    (λ _ → isPropIsContr)
+    (λ a → isContrJoinL (inhProp→isContr a isPropA))
+    (λ b → isContrJoinR (inhProp→isContr b isPropB)))

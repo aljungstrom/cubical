@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-}
 
 module Cubical.ZCohomology.CohomologyRings.KleinBottle where
 
@@ -35,9 +35,9 @@ open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.CommRing.FGIdeal
 open import Cubical.Algebra.CommRing.Quotient
 open import Cubical.Algebra.CommRing.Instances.Int renaming (ℤCommRing to ℤCR)
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly-Quotient
-open import Cubical.Algebra.CommRing.Instances.Polynomials.MultivariatePoly-notationZ
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly-Quotient
+open import Cubical.Algebra.CommRing.Polynomials.MultivariatePoly-notationZ
 
 open import Cubical.HITs.Truncation
 open import Cubical.HITs.SetTruncation as ST
@@ -176,22 +176,22 @@ module Equiv-𝕂²-Properties
   ϕ₀str = snd e₀
   ϕ₀⁻¹ = inv (fst e₀)
   ϕ₀⁻¹str = snd (invGroupIso e₀)
-  ϕ₀-sect = rightInv (fst e₀)
-  ϕ₀-retr = leftInv (fst e₀)
+  ϕ₀-sect = sec (fst e₀)
+  ϕ₀-retr = ret (fst e₀)
 
   ϕ₁ = fun (fst e₁)
   ϕ₁str = snd e₁
   ϕ₁⁻¹ = inv (fst e₁)
   ϕ₁⁻¹str = snd (invGroupIso e₁)
-  ϕ₁-sect = rightInv (fst e₁)
-  ϕ₁-retr = leftInv (fst e₁)
+  ϕ₁-sect = sec (fst e₁)
+  ϕ₁-retr = ret (fst e₁)
 
   ϕ₂ = fun (fst e₂)
   ϕ₂str = snd e₂
   ϕ₂⁻¹ = inv (fst e₂)
   ϕ₂⁻¹str = snd (invGroupIso e₂)
-  ϕ₂-sect = rightInv (fst e₂)
-  ϕ₂-retr = leftInv (fst e₂)
+  ϕ₂-sect = sec (fst e₂)
+  ϕ₂-retr = ret (fst e₂)
 
   module PblComp
     (null-H¹  : (a b : ℤ) → (ϕ₁ a) ⌣  (ϕ₁ b) ≡ 0ₕ 2)
@@ -564,8 +564,8 @@ module _ where
     is : Iso ℤ[x,y]/<2y,y²,xy,x²> (H* KleinBottle)
     fun is = ℤ[x,y]/<2y,y²,xy,x²>→H*-𝕂²
     inv is = H*-𝕂²→ℤ[x,y]/<2y,y²,xy,x²>
-    rightInv is = e-sect
-    leftInv is = e-retr
+    sec is = e-sect
+    ret is = e-retr
   snd 𝕂²-CohomologyRing = snd ℤ[X,Y]/<2Y,Y²,XY,X²>→H*R-𝕂²
 
   CohomologyRing-𝕂² : RingEquiv (H*R KleinBottle) (CommRing→Ring ℤ[X,Y]/<2Y,Y²,XY,X²>)

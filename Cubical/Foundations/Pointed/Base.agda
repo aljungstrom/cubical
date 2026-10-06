@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Foundations.Pointed.Base where
 
 open import Cubical.Foundations.Prelude
@@ -22,6 +21,9 @@ pt : ∀ {ℓ} (A∙ : Pointed ℓ) → typ A∙
 pt = str
 
 Pointed₀ = Pointed ℓ-zero
+
+Lift∙ : ∀ ℓ' → (A : Pointed ℓ) → Pointed (ℓ-max ℓ ℓ')
+Lift∙ ℓ' A = Lift ℓ' (typ A) , lift (pt A)
 
 {- Pointed functions -}
 _→∙_ : (A : Pointed ℓ) (B : Pointed ℓ') → Type (ℓ-max ℓ ℓ')
@@ -55,6 +57,10 @@ compEquiv∙ : ∀ {ℓ ℓ' ℓ''} {A : Pointed ℓ} {B : Pointed ℓ'} {C : Po
   → A ≃∙ B → B ≃∙ C → A ≃∙ C
 fst (compEquiv∙ e1 e2) = compEquiv (fst e1) (fst e2)
 snd (compEquiv∙ e1 e2) = cong (fst (fst e2)) (snd e1) ∙ snd e2
+
+Lift∙≃Lift∙ : ∀ {ℓ ℓ' ℓ'' ℓ'''} {A : Pointed ℓ} {B : Pointed ℓ'}
+            → A ≃∙ B → Lift∙ ℓ'' A ≃∙ Lift∙ ℓ''' B
+Lift∙≃Lift∙ (e , p) = Lift≃Lift e , liftExt p
 
 Equiv∙J : {B : Pointed ℓ} (C : (A : Pointed ℓ) → A ≃∙ B → Type ℓ')
           → C B (idEquiv (fst B) , refl)
@@ -103,10 +109,10 @@ Iso.fun IsoPointedPointer = ⌊_⌋
 Iso.inv (IsoPointedPointer {A = A}) pt₀ = pt A
 Iso.inv IsoPointedPointer ⌊ x ⌋ = x
 Iso.inv (IsoPointedPointer {A = A}) (id i) = pt A
-Iso.rightInv IsoPointedPointer pt₀ = id
-Iso.rightInv IsoPointedPointer ⌊ x ⌋ = refl
-Iso.rightInv IsoPointedPointer (id i) j = id (i ∧ j)
-Iso.leftInv IsoPointedPointer x = refl
+Iso.sec IsoPointedPointer pt₀ = id
+Iso.sec IsoPointedPointer ⌊ x ⌋ = refl
+Iso.sec IsoPointedPointer (id i) j = id (i ∧ j)
+Iso.ret IsoPointedPointer x = refl
 
 Pointed≡Pointer : {A : Pointed ℓ} → typ A ≡ Pointer A
 Pointed≡Pointer = isoToPath IsoPointedPointer

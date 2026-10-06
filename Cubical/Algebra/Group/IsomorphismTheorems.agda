@@ -4,7 +4,6 @@ This file contains the classic isomorphism theorems for groups (so far
 only the first theorem)
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Algebra.Group.IsomorphismTheorems where
 
 open import Cubical.Foundations.Prelude
@@ -43,12 +42,6 @@ module _ {G H : Group ℓ} (ϕ : GroupHom G H) where
   private
     imϕ : Group ℓ
     imϕ = imGroup ϕ
-
-  -- for completeness:
-  imNormalSubgroup : ((x y : ⟨ H ⟩)
-    → GroupStr._·_ (snd H) x y ≡ GroupStr._·_ (snd H) y x)
-    → NormalSubgroup H
-  imNormalSubgroup comm = imSubgroup ϕ , isNormalIm ϕ comm
 
   private
     module G = GroupStr (snd G)
@@ -105,8 +98,8 @@ module _ {G H : Group ℓ} (ϕ : GroupHom G H) where
   isoThm1 : GroupIso imϕ (G / kerNormalSubgroup)
   fun (fst isoThm1) = f1
   inv (fst isoThm1) = f2
-  rightInv (fst isoThm1) = f12
-  leftInv (fst isoThm1) = f21
+  sec (fst isoThm1) = f12
+  ret (fst isoThm1) = f21
   snd isoThm1 = makeIsGroupHom f1-isHom
 
   -- The SIP lets us turn the isomorphism theorem into a path

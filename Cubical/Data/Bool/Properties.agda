@@ -1,7 +1,4 @@
-{-# OPTIONS --safe #-}
 module Cubical.Data.Bool.Properties where
-
-open import Cubical.Core.Everything
 
 open import Cubical.Functions.Involution
 
@@ -13,6 +10,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Pointed
+open import Cubical.Foundations.Function
 
 open import Cubical.Data.Sum hiding (elim)
 open import Cubical.Data.Bool.Base
@@ -44,8 +42,8 @@ notnot false = refl
 notIso : Iso Bool Bool
 Iso.fun notIso = not
 Iso.inv notIso = not
-Iso.rightInv notIso = notnot
-Iso.leftInv notIso = notnot
+Iso.sec notIso = notnot
+Iso.ret notIso = notnot
 
 notIsEquiv : isEquiv not
 notIsEquiv = involIsEquiv {f = not} notnot
@@ -69,17 +67,23 @@ K-Bool
   : (P : {b : Bool} → b ≡ b → Type ℓ)
   → (∀{b} → P {b} refl)
   → ∀{b} → (q : b ≡ b) → P q
-K-Bool P Pr {false} = J (λ{ false q → P q ; true _ → Lift ⊥ }) Pr
-K-Bool P Pr {true}  = J (λ{ true q → P q ; false _ → Lift ⊥ }) Pr
+K-Bool P Pr {false} = J (λ{ false q → P q ; true _ → ⊥* }) Pr
+K-Bool P Pr {true}  = J (λ{ true q → P q ; false _ → ⊥* }) Pr
 
 isSetBool : isSet Bool
-isSetBool a b = J (λ _ p → ∀ q → p ≡ q) (K-Bool (refl ≡_) refl)
+isSetBool a = J> K-Bool (refl ≡_) refl
 
 true≢false : ¬ true ≡ false
 true≢false p = subst (λ b → if b then Bool else ⊥) p true
 
 false≢true : ¬ false ≡ true
 false≢true p = subst (λ b → if b then ⊥ else Bool) p true
+
+true*≢false* : ¬ (true* {ℓ} ≡ false* {ℓ})
+true*≢false* p = subst (λ b → if b .lower then Bool else ⊥) p true
+
+false*≢true* : ¬ (false* {ℓ} ≡ true* {ℓ})
+false*≢true* p = subst⁻ (λ b → if b .lower then Bool else ⊥) p true
 
 ¬true→false : (x : Bool) → ¬ x ≡ true → x ≡ false
 ¬true→false false _ = refl
@@ -88,6 +92,10 @@ false≢true p = subst (λ b → if b then ⊥ else Bool) p true
 ¬false→true : (x : Bool) → ¬ x ≡ false → x ≡ true
 ¬false→true false p = Empty.rec (p refl)
 ¬false→true true _ = refl
+
+¬≡b→≡notb : ∀ x y → ¬ x ≡ y → x ≡ not y
+¬≡b→≡notb x false = ¬false→true x
+¬≡b→≡notb x true = ¬true→false x
 
 not≢const : ∀ x → ¬ not x ≡ x
 not≢const false = true≢false
@@ -237,8 +245,8 @@ module BoolReflection where
   reflectIso : Iso Bool (Bool ≡ Bool)
   reflectIso .fun = ⊕-Path
   reflectIso .inv P = transport P false
-  reflectIso .leftInv = ⊕-identityʳ
-  reflectIso .rightInv P = sym (⊕-complete P)
+  reflectIso .ret = ⊕-identityʳ
+  reflectIso .sec P = sym (⊕-complete P)
 
   reflectEquiv : Bool ≃ (Bool ≡ Bool)
   reflectEquiv = isoToEquiv reflectIso
@@ -275,8 +283,8 @@ Iso.fun IsoBool→∙ f = fst f false
 fst (Iso.inv IsoBool→∙ a) false = a
 fst (Iso.inv (IsoBool→∙ {A = A}) a) true = pt A
 snd (Iso.inv IsoBool→∙ a) = refl
-Iso.rightInv IsoBool→∙ a = refl
-Iso.leftInv IsoBool→∙ (f , p) =
+Iso.sec IsoBool→∙ a = refl
+Iso.ret IsoBool→∙ (f , p) =
   ΣPathP ((funExt (λ { false → refl ; true → sym p}))
         , λ i j → p (~ i ∨ j))
 
@@ -382,6 +390,12 @@ P→PropBoolP : (dec : Dec A) → A → Bool→Type (Dec→Bool dec)
 P→PropBoolP (yes p) _ = tt
 P→PropBoolP (no ¬p) = ¬p
 
+DecΠBool : {A : Bool → Type ℓ} → (∀ b → Dec (A b)) → Dec (∀ b → A b)
+DecΠBool {A = A} x = isDecBiimpl {A = A true × A false} (λ { as false → as .snd ; as true → as .fst }) (λ z z₁ → z (z₁ true , z₁ false)) (Dec× (x true) (x false))
+
+¬ΠBool→¬Σ : {A : Bool → Type ℓ} → (∀ b → Dec (A b)) → ¬ (∀ b → A b) → Σ[ b ∈ Bool ] (¬ (A b))
+¬ΠBool→¬Σ decA ¬∀ = decRec (decRec (λ Afalse Atrue → Empty.rec (¬∀ (λ { false → Afalse ; true → Atrue }))) (λ z z₁ → false , z) (decA false)) (λ z → true , z) (decA true)
+
 Bool≡ : Bool → Bool → Bool
 Bool≡ true true = true
 Bool≡ true false = false
@@ -402,10 +416,10 @@ Iso-⊤⊎⊤-Bool .fun (inl tt) = true
 Iso-⊤⊎⊤-Bool .fun (inr tt) = false
 Iso-⊤⊎⊤-Bool .inv true = inl tt
 Iso-⊤⊎⊤-Bool .inv false = inr tt
-Iso-⊤⊎⊤-Bool .leftInv (inl tt) = refl
-Iso-⊤⊎⊤-Bool .leftInv (inr tt) = refl
-Iso-⊤⊎⊤-Bool .rightInv true = refl
-Iso-⊤⊎⊤-Bool .rightInv false = refl
+Iso-⊤⊎⊤-Bool .ret (inl tt) = refl
+Iso-⊤⊎⊤-Bool .ret (inr tt) = refl
+Iso-⊤⊎⊤-Bool .sec true = refl
+Iso-⊤⊎⊤-Bool .sec false = refl
 
 separatedBool : Separated Bool
 separatedBool = Discrete→Separated _≟_
@@ -476,9 +490,9 @@ CasesBoolη f i true = f true
   → Iso ((x : _) → A x) (A true × A false)
 Iso.fun ΠBool×Iso = ΠBool→×
 Iso.inv ΠBool×Iso = ×→ΠBool
-Iso.rightInv ΠBool×Iso a = refl
-Iso.leftInv ΠBool×Iso a i false = a false
-Iso.leftInv ΠBool×Iso a i true = a true
+Iso.sec ΠBool×Iso a = refl
+Iso.ret ΠBool×Iso a i false = a false
+Iso.ret ΠBool×Iso a i true = a true
 
 private
   Bool≃Bool-elim' : ∀ {ℓ} (A : Bool ≃ Bool → Type ℓ)
@@ -506,9 +520,9 @@ Bool→Bool→∙Bool true = const∙ _ _
 Iso-Bool→∙Bool-Bool : Iso ((Bool , true) →∙ (Bool , true)) Bool
 Iso.fun Iso-Bool→∙Bool-Bool f = fst f false
 Iso.inv Iso-Bool→∙Bool-Bool = Bool→Bool→∙Bool
-Iso.rightInv Iso-Bool→∙Bool-Bool false = refl
-Iso.rightInv Iso-Bool→∙Bool-Bool true = refl
-Iso.leftInv Iso-Bool→∙Bool-Bool f = Σ≡Prop (λ _ → isSetBool _ _) (help _ refl)
+Iso.sec Iso-Bool→∙Bool-Bool false = refl
+Iso.sec Iso-Bool→∙Bool-Bool true = refl
+Iso.ret Iso-Bool→∙Bool-Bool f = Σ≡Prop (λ _ → isSetBool _ _) (help _ refl)
   where
   help : (x : Bool) → fst f false ≡ x
     → Bool→Bool→∙Bool (fst f false) .fst ≡ f .fst
@@ -517,3 +531,43 @@ Iso.leftInv Iso-Bool→∙Bool-Bool f = Σ≡Prop (λ _ → isSetBool _ _) (help
       ; true → (λ j → Bool→Bool→∙Bool (p j) .fst true) ∙ sym (snd f)}
   help true p = (λ j → Bool→Bool→∙Bool (p j) .fst)
               ∙ funExt λ { false → sym p ; true → sym (snd f)}
+
+ΣBool : (b : Bool) (c : (Bool→Type b) → Bool) → Bool
+ΣBool false c = false
+ΣBool true c = c tt
+
+ΣBoolΣIso : {b : Bool} {c : (Bool→Type b) → Bool} →
+  Iso (Bool→Type (ΣBool b c)) (Σ[ z ∈ Bool→Type b ] Bool→Type (c z))
+
+Iso.fun (ΣBoolΣIso {true}) x = tt , x
+Iso.inv (ΣBoolΣIso {true}) x = snd x
+Iso.ret (ΣBoolΣIso {true}) _ = refl
+Iso.sec (ΣBoolΣIso {true}) _ = refl
+
+ΣBool≃Σ : {b : Bool} {c : (Bool→Type b) → Bool} →
+  (Bool→Type (ΣBool b c)) ≃ (Σ[ z ∈ Bool→Type b ] Bool→Type (c z))
+ΣBool≃Σ = isoToEquiv ΣBoolΣIso
+
+⊥≢Bool : ¬ ⊥ ≡ Bool
+⊥≢Bool ⊥≡Bool = transport⁻ ⊥≡Bool true
+
+⊥*≢Bool* : ¬ ⊥* {ℓ} ≡ Bool* {ℓ}
+⊥*≢Bool* ⊥≡Bool = transport⁻ ⊥≡Bool true* .lower
+
+Bool≢⊥ : ¬ Bool ≡ ⊥
+Bool≢⊥ Bool≡⊥ = transport Bool≡⊥ true
+
+Bool*≢⊥* : ¬ Bool* {ℓ} ≡ ⊥* {ℓ}
+Bool*≢⊥* Bool≡⊥ = transport Bool≡⊥ true* .lower
+
+Unit≢Bool : ¬ (Unit ≡ Bool)
+Unit≢Bool p = false≢true (≡-from-isProp→isProp p isPropUnit false true)
+
+Bool≢Unit : ¬ (Bool ≡ Unit)
+Bool≢Unit p = false≢true (≡-to-isProp→isProp p isPropUnit false true)
+
+Unit*≢Bool* : ¬ (Unit* {ℓ} ≡ Bool* {ℓ})
+Unit*≢Bool* p = false*≢true* (≡-from-isProp→isProp p isPropUnit* false* true*)
+
+Bool*≢Unit* : ¬ (Bool* {ℓ} ≡ Unit* {ℓ})
+Bool*≢Unit* p = false*≢true* (≡-to-isProp→isProp p isPropUnit* false* true*)

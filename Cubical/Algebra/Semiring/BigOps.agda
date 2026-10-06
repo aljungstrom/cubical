@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Algebra.Semiring.BigOps where
 
 open import Cubical.Foundations.Prelude
@@ -14,7 +13,7 @@ open import Cubical.Algebra.Monoid
 open import Cubical.Algebra.Monoid.BigOp
 
 private variable
-  ℓ : Level
+  ℓ ℓ' : Level
 
 
 module KroneckerDelta (S : Semiring ℓ) where

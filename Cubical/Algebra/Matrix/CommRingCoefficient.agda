@@ -3,7 +3,6 @@
 Matrix with coefficients in a commutative ring
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Algebra.Matrix.CommRingCoefficient where
 
 open import Cubical.Foundations.Prelude
@@ -22,7 +21,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Algebra.Ring
 open import Cubical.Algebra.Ring.BigOps
 open import Cubical.Algebra.CommRing
-open import Cubical.Tactics.CommRingSolver.Reflection
+open import Cubical.Tactics.CommRingSolver
 
 open import Cubical.Algebra.Matrix
 
@@ -183,35 +182,35 @@ module Coefficient (𝓡 : CommRing ℓ) where
     isInvMat2x2 .snd .fst i zero zero =
       (mul2 M M⁻¹ zero zero ∙ helper _ _ _ _ _ ∙ ·rInv) i
       where helper : (x y z w d : R) → x · (w · d) + y · (- z · d) ≡  (x · w - y · z) · d
-            helper = solve 𝓡
+            helper _ _ _ _ _ = solve! 𝓡
     isInvMat2x2 .snd .fst i zero one  =
       (mul2 M M⁻¹ zero one  ∙ helper _ _ _) i
       where helper : (x y d : R) → x · (- y · d) + y · (x · d) ≡ 0r
-            helper = solve 𝓡
+            helper _ _ _ = solve! 𝓡
     isInvMat2x2 .snd .fst i one  zero =
       (mul2 M M⁻¹ one  zero ∙ helper _ _ _) i
       where helper : (z w d : R) → z · (w · d) + w · (- z · d) ≡ 0r
-            helper = solve 𝓡
+            helper _ _ _ = solve! 𝓡
     isInvMat2x2 .snd .fst i one  one  =
       (mul2 M M⁻¹ one  one  ∙ helper _ _ _ _ _ ∙ ·rInv) i
       where helper : (x y z w d : R) → z · (- y · d) + w · (x · d) ≡  (x · w - y · z) · d
-            helper = solve 𝓡
+            helper _ _ _ _ _ = solve! 𝓡
     isInvMat2x2 .snd .snd i zero zero =
       (mul2 M⁻¹ M zero zero ∙ helper _ _ _ _ _ ∙ ·rInv) i
       where helper : (x y z w d : R) → (w · d) · x + (- y · d) · z ≡  (x · w - y · z) · d
-            helper = solve 𝓡
+            helper _ _ _ _ _ = solve! 𝓡
     isInvMat2x2 .snd .snd i zero one  =
       (mul2 M⁻¹ M zero one  ∙ helper _ _ _) i
       where helper : (y w d : R) → (w · d) · y + (- y · d) · w ≡ 0r
-            helper = solve 𝓡
+            helper _ _ _ = solve! 𝓡
     isInvMat2x2 .snd .snd i one  zero =
       (mul2 M⁻¹ M one  zero ∙ helper _ _ _) i
       where helper : (x z d : R) → (- z · d) · x + (x · d) · z ≡ 0r
-            helper = solve 𝓡
+            helper _ _ _ = solve! 𝓡
     isInvMat2x2 .snd .snd i one  one  =
       (mul2 M⁻¹ M one  one  ∙ helper _ _ _ _ _ ∙ ·rInv) i
       where helper : (x y z w d : R) → (- z · d) · y + (x · d) · w ≡  (x · w - y · z) · d
-            helper = solve 𝓡
+            helper _ _ _ _ _ = solve! 𝓡
 
   -- Similarity of matrices
 
@@ -308,16 +307,16 @@ module Coefficient (𝓡 : CommRing ℓ) where
   ⊕-⋆ {n = n} a b M N t zero zero =
     ((λ t → a · b + ∑Mul0r {n = n} (λ i → 0r) t) ∙ helper _ _) t
     where helper : (a b : R) → a · b + 0r ≡ a · b
-          helper = solve 𝓡
+          helper _ _ = solve! 𝓡
   ⊕-⋆ a b M N t zero (suc j) = (helper a _ ∙ ∑Mul0r (λ i → N i j)) t
     where helper : (a c : R) → a · 0r + c ≡ c
-          helper = solve 𝓡
+          helper _ _ = solve! 𝓡
   ⊕-⋆ a b M N t (suc i) zero = (helper b _ ∙ ∑Mulr0 (λ j → M i j)) t
     where helper : (b c : R) → 0r · b + c ≡ c
-          helper = solve 𝓡
+          helper _ _ = solve! 𝓡
   ⊕-⋆ _ _ M N t (suc i) (suc j) = helper ((M ⋆ N) i j) t
     where helper : (c : R) → 0r · 0r + c ≡ c
-          helper = solve 𝓡
+          helper _ = solve! 𝓡
 
   isInv⊕ : (M : Mat m m) → isInv M → (isInv (1r ⊕ M))
   isInv⊕ M isInvM .fst = 1r ⊕ isInvM .fst
@@ -334,7 +333,7 @@ module Coefficient (𝓡 : CommRing ℓ) where
     ∙ sym (⊕-⋆ _ _ _ Q)
     ∙ (λ t → ⊕-⋆ 1r a P M (~ t) ⋆ (1r ⊕ Q))
     where helper : (a : R) → a ≡ (1r · a) · 1r
-          helper = solve 𝓡
+          helper _ = solve! 𝓡
   ⊕SimRel _ sim .isInvTransL = isInv⊕ _ (sim .isInvTransL)
   ⊕SimRel _ sim .isInvTransR = isInv⊕ _ (sim .isInvTransR)
 

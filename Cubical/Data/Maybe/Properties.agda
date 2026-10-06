@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Data.Maybe.Properties where
 
 open import Cubical.Foundations.Prelude
@@ -11,7 +10,7 @@ open import Cubical.Foundations.Structure using (⟨_⟩)
 
 open import Cubical.Functions.Embedding using (isEmbedding)
 
-open import Cubical.Data.Empty as ⊥ using (⊥; isProp⊥)
+open import Cubical.Data.Empty as ⊥ using (⊥*; isProp⊥*)
 open import Cubical.Data.Unit
 open import Cubical.Data.Nat using (suc)
 open import Cubical.Data.Sum using (_⊎_; inl; inr)
@@ -32,8 +31,8 @@ module _ {ℓ} (A : Type ℓ) {ℓ'} (B : Pointed ℓ') where
   freelyPointedIso : Iso (Maybe∙ A →∙ B) (A → ⟨ B ⟩)
   Iso.fun freelyPointedIso f∙ = fst f∙ ∘ just
   Iso.inv freelyPointedIso f = Maybe.rec (pt B) f , refl
-  Iso.rightInv freelyPointedIso f = refl
-  Iso.leftInv freelyPointedIso f∙ =
+  Iso.sec freelyPointedIso f = refl
+  Iso.ret freelyPointedIso f∙ =
     ΣPathP
       ( funExt (Maybe.elim _ (sym (snd f∙)) (λ a → refl))
       , λ i j → snd f∙ (~ i ∨ j))
@@ -45,9 +44,9 @@ map-Maybe-id (just _) = refl
 -- Path space of Maybe type
 module MaybePath {ℓ} {A : Type ℓ} where
   Cover : Maybe A → Maybe A → Type ℓ
-  Cover nothing  nothing   = Lift Unit
-  Cover nothing  (just _)  = Lift ⊥
-  Cover (just _) nothing   = Lift ⊥
+  Cover nothing  nothing   = Unit*
+  Cover nothing  (just _)  = ⊥*
+  Cover (just _) nothing   = ⊥*
   Cover (just a) (just a') = a ≡ a'
 
   reflCode : (c : Maybe A) → Cover c c
@@ -89,9 +88,9 @@ module MaybePath {ℓ} {A : Type ℓ} where
   isOfHLevelCover : (n : HLevel)
     → isOfHLevel (suc (suc n)) A
     → ∀ c c' → isOfHLevel (suc n) (Cover c c')
-  isOfHLevelCover n p nothing  nothing   = isOfHLevelLift (suc n) (isOfHLevelUnit (suc n))
-  isOfHLevelCover n p nothing  (just a') = isOfHLevelLift (suc n) (isProp→isOfHLevelSuc n isProp⊥)
-  isOfHLevelCover n p (just a) nothing   = isOfHLevelLift (suc n) (isProp→isOfHLevelSuc n isProp⊥)
+  isOfHLevelCover n p nothing  nothing   = isOfHLevelUnit* (suc n)
+  isOfHLevelCover n p nothing  (just a') = isProp→isOfHLevelSuc n isProp⊥*
+  isOfHLevelCover n p (just a) nothing   = isProp→isOfHLevelSuc n isProp⊥*
   isOfHLevelCover n p (just a) (just a') = p a a'
 
 isOfHLevelMaybe : ∀ {ℓ} (n : HLevel) {A : Type ℓ}
@@ -114,16 +113,16 @@ fromJust-def a nothing = a
 fromJust-def _ (just a) = a
 
 just-inj : (x y : A) → just x ≡ just y → x ≡ y
-just-inj x _ eq = cong (fromJust-def x) eq
+just-inj x y = MaybePath.encode _ _
 
 isEmbedding-just : isEmbedding (just {A = A})
 isEmbedding-just  w z = MaybePath.Cover≃Path (just w) (just z) .snd
 
 ¬nothing≡just : ∀ {x : A} → ¬ (nothing ≡ just x)
-¬nothing≡just {A = A} {x = x} p = lower (subst (caseMaybe (Maybe A) (Lift ⊥)) p (just x))
+¬nothing≡just p = lower (MaybePath.encode _ _ p)
 
 ¬just≡nothing : ∀ {x : A} → ¬ (just x ≡ nothing)
-¬just≡nothing {A = A} {x = x} p = lower (subst (caseMaybe (Lift ⊥) (Maybe A)) p (just x))
+¬just≡nothing p = lower (MaybePath.encode _ _ p)
 
 isProp-x≡nothing : (x : Maybe A) → isProp (x ≡ nothing)
 isProp-x≡nothing nothing x w =
@@ -175,7 +174,7 @@ congMaybeEquiv e = isoToEquiv isom
   isom : Iso _ _
   isom .fun = map-Maybe (equivFun e)
   isom .inv = map-Maybe (invEq e)
-  isom .rightInv nothing = refl
-  isom .rightInv (just b) = cong just (secEq e b)
-  isom .leftInv nothing = refl
-  isom .leftInv (just a) = cong just (retEq e a)
+  isom .sec nothing = refl
+  isom .sec (just b) = cong just (secEq e b)
+  isom .ret nothing = refl
+  isom .ret (just a) = cong just (retEq e a)

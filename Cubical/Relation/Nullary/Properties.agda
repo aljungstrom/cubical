@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 {-
 
 Properties of nullary relations, i.e. structures on types.
@@ -17,15 +16,25 @@ open import Cubical.Functions.Fixpoint
 
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sigma.Base using (_×_)
+open import Cubical.Data.Sum.Base
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.HITs.PropositionalTruncation.Base
 
 private
   variable
-    ℓ : Level
+    ℓ ℓ' : Level
     A B : Type ℓ
     P : A -> Type ℓ
+
+isDecBiimpl : (A → B) → (¬ A → ¬ B) → Dec A → Dec B
+isDecBiimpl f g (yes p) = yes (f p)
+isDecBiimpl f g (no ¬p) = no (g ¬p)
+
+Dec× : Dec A → Dec B → Dec (A × B)
+Dec× (yes p) (yes p₁) = yes (p , p₁)
+Dec× (yes p) (no ¬p) = no (λ z → ¬p (z .snd))
+Dec× (no ¬p) db = no (λ z → ¬p (z .fst))
 
 -- Functions with a section preserve discreteness.
 sectionDiscrete
@@ -35,7 +44,7 @@ sectionDiscrete f g sect dA x y with dA (g x) (g y)
 ... | no ¬p = no (λ p → ¬p (cong g p))
 
 isoPresDiscrete : Iso A B → Discrete A → Discrete B
-isoPresDiscrete e = sectionDiscrete fun inv rightInv
+isoPresDiscrete e = sectionDiscrete fun inv sec
   where open Iso e
 
 EquivPresDiscrete : ∀ {ℓ ℓ'}{A : Type ℓ} {B : Type ℓ'} → A ≃ B
@@ -60,6 +69,13 @@ Stable× : Stable A -> Stable B -> Stable (A × B)
 Stable× As Bs e = λ where
   .fst → As λ k → e (k ∘ fst)
   .snd → Bs λ k → e (k ∘ snd)
+
+StableΣ : ∀ {A : Type ℓ} {P : A → Type ℓ'} →
+  Stable A → isProp A → ((a : A) → Stable (P a)) → Stable (Σ A P)
+StableΣ {P = P} As Aprop Ps e =
+  let a = (As (λ notA → e (λ (a , _) → notA a))) in
+  a ,
+  Ps a λ notPa → e (λ (a' , p) → notPa (subst P (Aprop a' a) p))
 
 fromYes : A → Dec A → A
 fromYes _ (yes a) = a
@@ -201,3 +217,12 @@ Discrete→Separated d x y = Dec→Stable (d x y)
 
 Discrete→isSet : Discrete A → isSet A
 Discrete→isSet = Separated→isSet ∘ Discrete→Separated
+
+≡no : ∀ {A : Type ℓ} x y → Path (Dec A) x (no y)
+≡no (yes p) y = ⊥.rec (y p)
+≡no (no ¬p) y i = no (isProp¬ _ ¬p y i)
+
+inhabitedFibres? : ∀ {ℓ'} {A : Type ℓ} {B : Type ℓ'}
+  (f : A → B) → Type (ℓ-max ℓ ℓ')
+inhabitedFibres? {A = A} {B = B} f =
+  (y : B) → (Σ[ x ∈ A ] f x ≡ y) ⊎ ((x : A) → ¬ f x ≡ y)

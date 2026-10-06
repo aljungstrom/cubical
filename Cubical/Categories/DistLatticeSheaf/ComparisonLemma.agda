@@ -10,7 +10,7 @@
 
 -}
 
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --lossy-unification #-}
 module Cubical.Categories.DistLatticeSheaf.ComparisonLemma where
 
 open import Cubical.Foundations.Prelude
@@ -45,6 +45,7 @@ open import Cubical.Categories.Limits.Limits
 open import Cubical.Categories.Limits.Pullback
 open import Cubical.Categories.Limits.Terminal
 open import Cubical.Categories.Limits.RightKan
+open import Cubical.Categories.Instances.FullSubcategory
 open import Cubical.Categories.Instances.Poset
 open import Cubical.Categories.Instances.Semilattice
 open import Cubical.Categories.Instances.Lattice
@@ -399,7 +400,7 @@ module _ (L : DistLattice ℓ) (C : Category ℓ' ℓ'') (limitC : Limits {ℓ} 
                          (NatTransCone _ _ _ F (idTrans _) x)
                    ⋆⟨ C ⟩ limOfArrows (FLimCone (α ∘ˡ i) _) (GLimCone (α ∘ˡ i) _)
                                       (↓nt (α ∘ˡ i) x)
-         goal x = sym (limArrowUnique _ _ _ _ (isConeMorComp x))
+         goal x = sym (limArrowUnique {C = C} _ _ _ _ (isConeMorComp x))
                 ∙ limArrowCompLimOfArrows _ _ _ _ _
 
      nIso (η winv) (F , isSheafF) = isIsoΣPropCat _ _ _

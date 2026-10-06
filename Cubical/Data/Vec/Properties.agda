@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Data.Vec.Properties where
 
 open import Cubical.Foundations.Prelude
@@ -100,7 +99,7 @@ module VecPath {A : Type ℓ}
     is : Iso (v ≡ v') (code v v')
     fun is = encode v v'
     inv is = decode v v'
-    rightInv is = sect v v'
+    sec is = sect v v'
       where
       sect : {n : ℕ} → (v v' : Vec A n) → (r : code v v')
              → encode v v' (decode v v' r) ≡ r
@@ -108,7 +107,7 @@ module VecPath {A : Type ℓ}
       sect (a ∷ v) (a' ∷ v') (p , q) = J (λ a' p → encode (a ∷ v) (a' ∷ v') (decode (a ∷ v) (a' ∷ v') (p , q)) ≡ (p , q))
                                        (J (λ v' q → encode (a ∷ v) (a ∷ v') (decode (a ∷ v) (a ∷ v') (refl , q)) ≡ (refl , q))
                                        (encodeRefl (a ∷ v)) q) p
-    leftInv is = retr v v'
+    ret is = retr v v'
       where
       retr : {n : ℕ} → (v v' : Vec A n) → (p : v ≡ v')
              → decode v v' (encode v v' p) ≡ p

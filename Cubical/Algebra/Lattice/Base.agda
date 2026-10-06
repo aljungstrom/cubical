@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Algebra.Lattice.Base where
 
 open import Cubical.Foundations.Prelude
@@ -231,5 +230,19 @@ LatticePath = ∫ 𝒮ᴰ-Lattice .UARel.ua
 Lattice→JoinSemilattice : Lattice ℓ → Semilattice ℓ
 Lattice→JoinSemilattice (A , latticestr _ _ _ _ L) = semilattice _ _ _ (L .IsLattice.joinSemilattice )
 
+LatticeHom→JoinSemilatticeHom : {L : Lattice ℓ} {L' : Lattice ℓ'}
+   → LatticeHom L L'
+   → SemilatticeHom (Lattice→JoinSemilattice L) (Lattice→JoinSemilattice L')
+fst (LatticeHom→JoinSemilatticeHom φ) = fst φ
+IsMonoidHom.presε (snd (LatticeHom→JoinSemilatticeHom φ)) = φ .snd .IsLatticeHom.pres0
+IsMonoidHom.pres· (snd (LatticeHom→JoinSemilatticeHom φ)) = φ .snd .IsLatticeHom.pres∨l
+
 Lattice→MeetSemilattice : Lattice ℓ → Semilattice ℓ
 Lattice→MeetSemilattice (A , latticestr _ _ _ _ L) = semilattice _ _ _ (L .IsLattice.meetSemilattice )
+
+LatticeHom→MeetSemilatticeHom : {L : Lattice ℓ} {L' : Lattice ℓ'}
+   → LatticeHom L L'
+   → SemilatticeHom (Lattice→MeetSemilattice L) (Lattice→MeetSemilattice L')
+fst (LatticeHom→MeetSemilatticeHom φ) = fst φ
+IsMonoidHom.presε (snd (LatticeHom→MeetSemilatticeHom φ)) = φ .snd .IsLatticeHom.pres1
+IsMonoidHom.pres· (snd (LatticeHom→MeetSemilatticeHom φ)) = φ .snd .IsLatticeHom.pres∧l

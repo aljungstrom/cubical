@@ -4,7 +4,6 @@
 - transport is an equivalence ([pathToEquiv])
 
 -}
-{-# OPTIONS --safe #-}
 module Cubical.Foundations.Transport where
 
 open import Cubical.Foundations.Prelude
@@ -74,6 +73,10 @@ substSubst⁻ {x = x} {y = y} B p v = transportTransport⁻ {A = B x} {B = B y} 
 substEquiv : ∀ {ℓ ℓ'} {A : Type ℓ} {a a' : A} (P : A → Type ℓ') (p : a ≡ a') → P a ≃ P a'
 substEquiv P p = (subst P p , isEquivTransport (λ i → P (p i)))
 
+subst2Equiv : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {a a' : A} {b b' : B} (P : A → B → Type ℓ'')
+            (p : a ≡ a') (q : b ≡ b') → P a b ≃ P a' b'
+subst2Equiv P p q = (subst2 P p q , isEquivTransport (λ i → P (p i) (q i)))
+
 liftEquiv : ∀ {ℓ ℓ'} {A B : Type ℓ} (P : Type ℓ → Type ℓ') (e : A ≃ B) → P A ≃ P B
 liftEquiv P e = substEquiv P (ua e)
 
@@ -88,8 +91,8 @@ uaTransportη = uaη
 pathToIso : ∀ {ℓ} {A B : Type ℓ} → A ≡ B → Iso A B
 Iso.fun (pathToIso x) = transport x
 Iso.inv (pathToIso x) = transport⁻ x
-Iso.rightInv (pathToIso x) = transportTransport⁻ x
-Iso.leftInv (pathToIso x) = transport⁻Transport x
+Iso.sec (pathToIso x) = transportTransport⁻ x
+Iso.ret (pathToIso x) = transport⁻Transport x
 
 substIso : ∀ {ℓ ℓ'} {A : Type ℓ} (B : A → Type ℓ') {x y : A} (p : x ≡ y) → Iso (B x) (B y)
 substIso B p = pathToIso (cong B p)
@@ -205,3 +208,31 @@ module _ {ℓ : Level} {A : Type ℓ} {a x1 x2 : A} (p : x1 ≡ x2) where
     ≡⟨ assoc (sym p) q refl ⟩
       (sym p ∙ q) ∙ refl
     ≡⟨ sym (rUnit (sym p ∙ q))⟩ sym p ∙ q ∎
+
+transport-filler-ua : ∀ {ℓ} {A B : Type ℓ} (e : A ≃ B) (a : A)
+  → SquareP (λ _ i → ua e i)
+     (transport-filler (ua e) a)
+     (ua-gluePath e refl)
+     refl
+     (transportRefl (fst e a))
+transport-filler-ua {A = A} {B = B} (e , _) a j i =
+ let b = e a
+     tr = transportRefl b
+     z = tr (j ∧ ~ i)
+ in glue (λ { (i = i0) → a ; (i = i1) → tr j })
+      (hcomp (λ k → λ { (i = i0) → b ; (i = i1) → tr (j ∧ k) ; (j = i1) → tr (~ i ∨ k)  })
+      (hcomp (λ k → λ { (i = i0) → tr (j ∨ k) ; (i = i1) → z ; (j = i1) → z }) z))
+
+transport→≡∘ : {ℓ ℓ' : Level} {A B : Type ℓ} {C : Type ℓ'}
+                (f : A → C) (g : B → C) (p : A ≡ B) →
+                (transport (λ i → p i → C) f ≡ g) ≡ (f ≡ g ∘ (transport p))
+transport→≡∘ {C = C} f g p = q ∙∙ r ∙∙ s
+    where
+        q : (transport (λ i → p i → C) f ≡ g) ≡ (transport (λ i → p i → C) f ≡ g ∘ (transport refl))
+        q = cong (λ t → (transport (λ i → p i → C) f ≡ g ∘ t)) (funExt (λ x → sym (transportRefl x)))
+
+        r : (transport (λ i → p i → C) f ≡ g ∘ (transport refl)) ≡ (transport refl f ≡ g ∘ (transport p))
+        r i = transport (λ j → p (j ∧ (~ i)) → C) f ≡ g ∘ (transport λ j → p (j ∨ ~ i))
+
+        s : (transport refl f ≡ g ∘ (transport p)) ≡ (f ≡ g ∘ (transport p))
+        s = cong (λ t → t ≡ g ∘ transport p) (transportRefl f)

@@ -1,4 +1,3 @@
-{-# OPTIONS --safe #-}
 module Cubical.Categories.Site.Sheaf where
 
 -- Definition of sheaves on a site.
@@ -19,7 +18,8 @@ open import Cubical.Categories.Site.Sieve
 open import Cubical.Categories.Site.Coverage
 open import Cubical.Categories.Presheaf
 open import Cubical.Categories.Functor
-open import Cubical.Categories.Constructions.FullSubcategory
+open import Cubical.Categories.Instances.FullSubcategory
+open import Cubical.Categories.Yoneda
 
 module _
   {ℓ ℓ' : Level}
@@ -61,6 +61,11 @@ module _
       isSetΣSndProp
         (isSetΠ (λ i → str (P ⟅ patchObj cov i ⟆)))
         isPropIsCompatibleFamily
+
+    CompatibleFamily≡ : (fam fam' : CompatibleFamily)
+                      → (∀ i → fam .fst i ≡ fam' .fst i)
+                      → fam ≡ fam'
+    CompatibleFamily≡ fam fam' p = Σ≡Prop isPropIsCompatibleFamily (funExt p)
 
     elementToCompatibleFamily : ⟨ P ⟅ c ⟆ ⟩ → CompatibleFamily
     elementToCompatibleFamily x =
@@ -136,3 +141,16 @@ module _
       (ℓ-max (ℓ-max (ℓ-max (ℓ-max ℓ ℓ') ℓcov) ℓpat) (ℓ-suc ℓF))
       (ℓ-max (ℓ-max ℓ ℓ') ℓF)
   SheafCategory = FullSubcategory (PresheafCategory C ℓF) (isSheaf J)
+
+
+module _
+  {ℓ ℓ' ℓcov ℓpat : Level}
+  {C : Category ℓ ℓ'}
+  (J : Coverage C ℓcov ℓpat)
+  where
+
+  isSubcanonical : Type (ℓ-max (ℓ-max (ℓ-max ℓ ℓ') ℓcov) ℓpat)
+  isSubcanonical = ∀ c → isSheaf J (yo c)
+
+  isPropIsSubcanonical : isProp isSubcanonical
+  isPropIsSubcanonical = isPropΠ λ c → isPropIsSheaf J (yo c)

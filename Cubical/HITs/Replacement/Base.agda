@@ -24,8 +24,13 @@ https://arxiv.org/abs/1701.07538
 
 but higher IR allows for a particularly simple construction.
 
+---
+
+The datatype defined in this module originally included a third constructor
+forcing the path constructor to preserve reflexivity, but Amélia Liao and David
+Wärn independently observed that this was unnecessary.
+
 -}
-{-# OPTIONS --safe #-}
 module Cubical.HITs.Replacement.Base where
 
 open import Cubical.Foundations.Prelude
@@ -35,7 +40,9 @@ open import Cubical.Functions.Image
 open import Cubical.HITs.PropositionalTruncation as Prop
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Equiv.Fiberwise
 open import Cubical.Functions.Surjection
+open import Cubical.Data.Sigma
 open import Cubical.Displayed.Base
 
 module _ {ℓA ℓB ℓ≅B} {A : Type ℓA} {B : Type ℓB} (𝒮-B : UARel B ℓ≅B) (f : A → B)  where
@@ -48,11 +55,9 @@ module _ {ℓA ℓB ℓ≅B} {A : Type ℓA} {B : Type ℓB} (𝒮-B : UARel B �
   data Replacement where
     rep : A → Replacement
     quo : ∀ r r' → unrep r B.≅ unrep r' → r ≡ r'
-    quoid : ∀ r → quo r r (B.ρ (unrep r)) ≡ refl
 
   unrep (rep a) = f a
   unrep (quo r r' eqv i) = B.≅→≡ eqv i
-  unrep (quoid r j i) = B.uaIso (unrep r) (unrep r) .Iso.rightInv refl j i
 
   {-
     To eliminate into a proposition, we need only provide the point constructor
@@ -69,13 +74,6 @@ module _ {ℓA ℓB ℓ≅B} {A : Type ℓA} {B : Type ℓB} (𝒮-B : UARel B �
       (elimProp prop g r)
       (elimProp prop g r')
       i
-  elimProp prop g (quoid r i j) =
-    isSet→SquareP (λ i j → isProp→isSet (prop (quoid r i j)))
-      (isProp→PathP (λ i → prop (quo r r _ i)) _ _)
-      (λ _ → elimProp prop g r)
-      (λ _ → elimProp prop g r)
-      (λ _ → elimProp prop g r)
-      i j
 
   {-
     Our image factorization is F ≡ unrep ∘ rep.
@@ -90,17 +88,19 @@ module _ {ℓA ℓB ℓ≅B} {A : Type ℓA} {B : Type ℓB} (𝒮-B : UARel B �
   -- Embedding half of the image factorization
 
   isEmbeddingUnrep : isEmbedding unrep
-  isEmbeddingUnrep r r' =
-    isoToIsEquiv (iso _ (inv r r') (elInv r r') (invEl r r'))
+  isEmbeddingUnrep =
+    hasPropFibersOfImage→isEmbedding λ r →
+    isOfHLevelRetract 1
+      (map-snd (λ p → sym (inv _ r p)))
+      (map-snd (λ p → sym (cong unrep p)))
+      (λ (r' , p) → ΣPathP (refl , unrepInv r' r p))
+      isPropSingl
     where
     inv : ∀ r r' → unrep r ≡ unrep r' → r ≡ r'
     inv r r' Q = quo r r' (B.≡→≅ Q)
 
-    elInv : ∀ r r' Q →  cong unrep (inv r r' Q) ≡ Q
-    elInv r r' Q = B.uaIso (unrep r) (unrep r') .Iso.rightInv Q
-
-    invEl : ∀ r r' p → inv r r' (cong unrep p) ≡ p
-    invEl r = J> quoid r
+    unrepInv : ∀ r r' Q → cong unrep (inv r r' Q) ≡ Q
+    unrepInv r r' Q = B.uaIso (unrep r) (unrep r') .Iso.sec Q
 
   -- Equivalence to the image with level (ℓ-max ℓA ℓB) that always exists
 

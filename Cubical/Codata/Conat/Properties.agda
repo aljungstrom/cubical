@@ -20,7 +20,7 @@ The standard library also defines bisimulation on conaturals:
 https://github.com/agda/agda-stdlib/blob/master/src/Codata/Conat/Bisimilarity.agda
 -}
 
-{-# OPTIONS --safe --guardedness #-}
+{-# OPTIONS --guardedness #-}
 module Cubical.Codata.Conat.Properties where
 
 open import Cubical.Data.Unit
@@ -32,8 +32,6 @@ open import Cubical.Data.Bool
 
 import Cubical.Data.Nat as Nat
 import Cubical.Data.Nat.Order.Recursive as Nat
-
-open import Cubical.Core.Everything
 
 open import Cubical.Functions.Embedding
 

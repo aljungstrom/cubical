@@ -1,10 +1,4 @@
-{-# OPTIONS --safe #-}
 module Cubical.Data.Prod.Properties where
-
-open import Cubical.Core.Everything
-
-open import Cubical.Data.Prod.Base
-open import Cubical.Data.Sigma renaming (_×_ to _×Σ_) hiding (prodIso ; toProdIso ; curryIso)
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
@@ -12,6 +6,9 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Univalence
+
+open import Cubical.Data.Prod.Base
+open import Cubical.Data.Sigma renaming (_×_ to _×Σ_) hiding (prodIso ; toProdIso ; curryIso)
 
 private
   variable
@@ -22,7 +19,7 @@ private
 -- Swapping is an equivalence
 
 ×≡ : {a b : A × B} → proj₁ a ≡ proj₁ b → proj₂ a ≡ proj₂ b → a ≡ b
-×≡ {a = (a1 , b1)} {b = (a2 , b2)} id1 id2 i = (id1 i) , (id2 i)
+×≡ {a = (_ , _)} {b = (_ , _)} id1 id2 i = (id1 i) , (id2 i)
 
 swap : A × B → B × A
 swap (x , y) = (y , x)
@@ -94,22 +91,22 @@ prodIso : ∀ {ℓ ℓ' ℓ'' ℓ'''} {A : Type ℓ} {B : Type ℓ'} {C : Type �
        → Iso (A × B) (C × D)
 Iso.fun (prodIso iAC iBD) (a , b) = (Iso.fun iAC a) , Iso.fun iBD b
 Iso.inv (prodIso iAC iBD) (c , d) = (Iso.inv iAC c) , Iso.inv iBD d
-Iso.rightInv (prodIso iAC iBD) (c , d) = ×≡ (Iso.rightInv iAC c) (Iso.rightInv iBD d)
-Iso.leftInv (prodIso iAC iBD) (a , b) = ×≡ (Iso.leftInv iAC a) (Iso.leftInv iBD b)
+Iso.sec (prodIso iAC iBD) (c , d) = ×≡ (Iso.sec iAC c) (Iso.sec iBD d)
+Iso.ret (prodIso iAC iBD) (a , b) = ×≡ (Iso.ret iAC a) (Iso.ret iBD b)
 
 toProdIso : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''}
          → Iso (A → B × C) ((A → B) × (A → C))
 Iso.fun toProdIso = λ f → (λ a → proj₁ (f a)) , (λ a → proj₂ (f a))
 Iso.inv toProdIso (f , g) = λ a → (f a) , (g a)
-Iso.rightInv toProdIso (f , g) = refl
-Iso.leftInv toProdIso b = funExt λ a → sym (×-η _)
+Iso.sec toProdIso (f , g) = refl
+Iso.ret toProdIso b = funExt λ a → sym (×-η _)
 
 curryIso : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''}
          → Iso (A × B → C) (A → B → C)
 Iso.fun curryIso f a b = f (a , b)
 Iso.inv curryIso f (a , b) = f a b
-Iso.rightInv curryIso a = refl
-Iso.leftInv curryIso f = funExt λ {(a , b) → refl}
+Iso.sec curryIso a = refl
+Iso.ret curryIso f = funExt λ {(a , b) → refl}
 
 fiber-map-× : ∀ {ℓ ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''}
     (f : B → C) (a : A) (c : C)
@@ -119,8 +116,8 @@ fiber-map-× f a c .Iso.fun z .fst .snd = z .fst
 fiber-map-× f a c .Iso.fun z .snd = ≡-× refl (z .snd)
 fiber-map-× f a c .Iso.inv z .fst = z .fst .snd
 fiber-map-× f a c .Iso.inv z .snd = cong snd (z .snd)
-fiber-map-× f a c .Iso.rightInv ((az , bz) , e) j .fst .fst = cong fst e (~ j)
-fiber-map-× f a c .Iso.rightInv ((az , bz) , e) j .fst .snd = bz
-fiber-map-× f a c .Iso.rightInv ((az , bz) , e) j .snd k .fst = cong fst e (k ∨ ~ j)
-fiber-map-× f a c .Iso.rightInv ((az , bz) , e) j .snd k .snd = cong snd e k
-fiber-map-× f a c .Iso.leftInv z = refl
+fiber-map-× f a c .Iso.sec ((az , bz) , e) j .fst .fst = cong fst e (~ j)
+fiber-map-× f a c .Iso.sec ((az , bz) , e) j .fst .snd = bz
+fiber-map-× f a c .Iso.sec ((az , bz) , e) j .snd k .fst = cong fst e (k ∨ ~ j)
+fiber-map-× f a c .Iso.sec ((az , bz) , e) j .snd k .snd = cong snd e k
+fiber-map-× f a c .Iso.ret z = refl

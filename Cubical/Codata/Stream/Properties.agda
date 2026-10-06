@@ -1,7 +1,5 @@
-{-# OPTIONS --safe --guardedness #-}
+{-# OPTIONS --guardedness #-}
 module Cubical.Codata.Stream.Properties where
-
-open import Cubical.Core.Everything
 
 open import Cubical.Data.Nat
 

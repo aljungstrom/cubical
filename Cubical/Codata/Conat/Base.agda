@@ -1,4 +1,4 @@
-{- Conatural numbers (Tesla Ice Zhang, Feb. 2019)
+{- Conatural numbers (Tesla Zhang, Feb. 2019)
 
 This file defines:
 
@@ -18,19 +18,18 @@ The first approach is chosen to exploit guarded recursion and to avoid the use
 of Sized Types.
 -}
 
-{-# OPTIONS --safe --guardedness #-}
+{-# OPTIONS --guardedness #-}
 module Cubical.Codata.Conat.Base where
+
+open import Cubical.Foundations.Prelude
 
 open import Cubical.Data.Unit
 open import Cubical.Data.Sum
-
-open import Cubical.Core.Everything
 
 record Conat : Type₀
 Conat′ = Unit ⊎ Conat
 record Conat where
   coinductive
-  constructor conat′
   field force : Conat′
 open Conat public
 
